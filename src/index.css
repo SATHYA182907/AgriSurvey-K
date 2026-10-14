@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary-bg: #FFFFFF;
+    --secondary-bg: #F8FAFC;
+    --primary-green: #15803D;
+    --primary-teal: #0F766E;
+    --accent-cyan: #0891B2;
+    --light-mint: #ECFDF5;
+    --pale-cyan: #ECFEFF;
+    --primary-text: #0F172A;
+    --secondary-text: #64748B;
+    --border-color: #E2E8F0;
+    --success: #16A34A;
+    --warning: #D97706;
+    --error: #DC2626;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* AgriSurvey Primary Gradient */
+.bg-agri-gradient {
+  background: linear-gradient(135deg, #15803D 0%, #0F766E 55%, #0891B2 100%);
+}
+
+.text-agri-gradient {
+  background: linear-gradient(135deg, #15803D 0%, #0F766E 55%, #0891B2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-agri-gradient {
+  border-image: linear-gradient(135deg, #15803D 0%, #0F766E 55%, #0891B2 100%) 1;
+}
+
+/* Glassmorphism subtle styles */
+.agri-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.agri-glass-mint {
+  background: rgba(236, 253, 245, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(167, 243, 208, 0.6);
+}
+
+/* Soft elevation shadows */
+.agri-card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+}
+
+.agri-card-shadow-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agri-card-shadow-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px rgba(15, 118, 110, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Leaflet map fix */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  z-index: 1;
+}
