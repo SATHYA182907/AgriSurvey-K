@@ -1,6 +1,6 @@
-# AgriSurvey: AI-Powered Smart Agriculture Administration & Land Verification Platform
+# AgriSurvey-K: AI-Powered Smart Agriculture Administration & Land Verification Platform
 
-**AgriSurvey** is a modern, centralized agricultural land registration, administration, and drone-based verification platform. It connects **Farmers**, **Tahsildars (Revenue Officers)**, **Field Verification Workers (Drone Pilots)**, and **Administrators** to replace paper-bound land record friction with an evidence-backed verification pipeline.
+**AgriSurvey-K** is a modern, centralized agricultural land registration, administration, and drone-based verification platform. It connects **Farmers**, **Tahsildars (Revenue Officers)**, **Field Verification Workers (Drone Pilots)**, and **Administrators** to replace paper-bound land record friction with an evidence-backed verification pipeline.
 
 ---
 

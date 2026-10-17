@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
-import { FarmerRegistrationPage } from '@/pages/farmer/FarmerRegistrationPage';
 import { FarmerDashboardPage } from '@/pages/farmer/FarmerDashboardPage';
 import { LandImageUploadPage } from '@/pages/farmer/LandImageUploadPage';
 import { TahsildarDashboardPage } from '@/pages/tahsildar/TahsildarDashboardPage';
@@ -14,8 +14,9 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 
 export function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth/login" element={<AuthPage />} />
@@ -23,7 +24,7 @@ export function App() {
 
         {/* Farmer Portal */}
         <Route path="/farmer/dashboard" element={<FarmerDashboardPage />} />
-        <Route path="/farmer/register" element={<FarmerRegistrationPage />} />
+        <Route path="/farmer/register" element={<Navigate to="/farmer/dashboard" replace />} />
         <Route path="/farmer/upload-images" element={<LandImageUploadPage />} />
         <Route path="/farmer/properties" element={<FarmerDashboardPage />} />
         <Route path="/farmer/inspection-status" element={<FarmerDashboardPage />} />
@@ -57,6 +58,7 @@ export function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+  </LanguageProvider>
   );
 }
 

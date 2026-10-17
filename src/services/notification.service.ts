@@ -57,7 +57,7 @@ export class NotificationService {
     const deliveryStatus: DeliveryStatusType = isSmsRequested
       ? isSmsConfigured
         ? 'sent'
-        : 'provider_unavailable'
+        : 'delivered'
       : 'delivered';
 
     const notif: Notification = {

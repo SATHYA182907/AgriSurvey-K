@@ -12,7 +12,6 @@ import {
   Sprout,
   AlertCircle,
   FileCheck2,
-  PlusCircle,
   Sparkles,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -105,15 +104,16 @@ export const FarmerDashboardPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-            <Link to="/farmer/register">
-              <Button icon={<PlusCircle className="w-4 h-4" />}>
-                Register New Land
-              </Button>
-            </Link>
-            {selectedApp?.status === 'APPROVED' && (
+            {selectedApp?.status === 'APPROVED' ? (
               <Link to="/farmer/upload-images">
-                <Button variant="secondary" icon={<UploadCloud className="w-4 h-4" />}>
+                <Button icon={<UploadCloud className="w-4 h-4" />}>
                   Upload Land Images
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/farmer/properties">
+                <Button variant="secondary" icon={<MapPin className="w-4 h-4" />}>
+                  View My Properties
                 </Button>
               </Link>
             )}

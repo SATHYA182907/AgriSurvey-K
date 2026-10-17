@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'glass';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   icon?: React.ReactNode;
@@ -19,7 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none';
+    'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer';
 
   const sizeClasses = {
     sm: 'text-xs px-3 py-1.5 gap-1.5 shadow-xs',
@@ -33,11 +33,13 @@ export const Button: React.FC<ButtonProps> = ({
     secondary:
       'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 focus:ring-emerald-500',
     outline:
-      'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 focus:ring-emerald-500 shadow-2xs',
+      'bg-white text-slate-800 hover:bg-slate-50 border border-slate-200 focus:ring-emerald-500 shadow-2xs font-semibold',
     danger:
       'bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500 shadow-xs',
     ghost:
       'bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-400',
+    glass:
+      'bg-white/95 hover:bg-white text-slate-900 hover:text-emerald-800 border border-white shadow-xl backdrop-blur-md font-bold active:scale-[0.99] focus:ring-emerald-500',
   };
 
   return (

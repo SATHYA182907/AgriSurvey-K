@@ -212,8 +212,8 @@ export const FinalVerificationReportsPage: React.FC = () => {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">
                     Evidence Verification Trail
                   </h4>
-                  <div className="border border-slate-200 rounded-lg overflow-hidden text-xs">
-                    <table className="w-full text-left">
+                  <div className="border border-slate-200 rounded-lg overflow-x-auto text-xs">
+                    <table className="w-full text-left min-w-[280px]">
                       <thead className="bg-slate-50 border-b border-slate-200 text-[10px] text-slate-500 uppercase font-bold">
                         <tr>
                           <th className="py-2 px-3">Evidence Source</th>

@@ -14,6 +14,7 @@ import {
   AuditLog,
   StaffRegion,
   UserRole,
+  SmsMessage,
 } from '@/types';
 
 // Key for LocalStorage Persistence
@@ -67,6 +68,7 @@ const INITIAL_PROFILES: Profile[] = [
     role: 'farmer',
     account_status: 'active',
     preferred_language: 'en',
+    password: 'FarmerPass123!',
     created_at: '2026-02-10T09:30:00Z',
     updated_at: '2026-02-10T09:30:00Z',
   },
@@ -78,6 +80,7 @@ const INITIAL_PROFILES: Profile[] = [
     role: 'farmer',
     account_status: 'active',
     preferred_language: 'mr',
+    password: 'FarmerPass123!',
     created_at: '2026-03-01T10:15:00Z',
     updated_at: '2026-03-01T10:15:00Z',
   },
@@ -89,6 +92,7 @@ const INITIAL_PROFILES: Profile[] = [
     role: 'tahsildar',
     account_status: 'active',
     preferred_language: 'en',
+    password: 'TahsildarPass123!',
     created_at: '2025-11-01T08:00:00Z',
     updated_at: '2025-11-01T08:00:00Z',
   },
@@ -100,6 +104,7 @@ const INITIAL_PROFILES: Profile[] = [
     role: 'field_worker',
     account_status: 'active',
     preferred_language: 'en',
+    password: 'WorkerPass123!',
     created_at: '2025-12-15T11:20:00Z',
     updated_at: '2025-12-15T11:20:00Z',
   },
@@ -111,10 +116,13 @@ const INITIAL_PROFILES: Profile[] = [
     role: 'admin',
     account_status: 'active',
     preferred_language: 'en',
+    password: 'AdminPass123!',
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
   },
 ];
+
+const INITIAL_SMS_MESSAGES: SmsMessage[] = [];
 
 const INITIAL_FARMER_PROFILES: FarmerProfile[] = [
   {
@@ -631,6 +639,7 @@ export class MockDatabase {
   public reports: VerificationReport[];
   public notifications: Notification[];
   public auditLogs: AuditLog[];
+  public smsMessages: SmsMessage[];
 
   // Active simulated user session
   public currentUser: Profile;
@@ -649,6 +658,7 @@ export class MockDatabase {
     this.reports = getStorage('reports', INITIAL_REPORTS);
     this.notifications = getStorage('notifications', INITIAL_NOTIFICATIONS);
     this.auditLogs = getStorage('auditLogs', INITIAL_AUDIT_LOGS);
+    this.smsMessages = getStorage('smsMessages', INITIAL_SMS_MESSAGES);
 
     const savedUserId = isLocalStorageAvailable() ? localStorage.getItem('agrisurvey_current_user_id') : null;
     const userMatch = this.profiles.find((p) => p.id === savedUserId);
@@ -676,6 +686,43 @@ export class MockDatabase {
     setStorage('reports', this.reports);
     setStorage('notifications', this.notifications);
     setStorage('auditLogs', this.auditLogs);
+    setStorage('smsMessages', this.smsMessages);
+  }
+
+  public addSmsMessage(sms: SmsMessage): void {
+    this.smsMessages.unshift(sms);
+    this.persistAll();
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('agrisurvey_sms_received', { detail: sms }));
+      } catch (e) {
+        console.warn('Could not dispatch sms event', e);
+      }
+    }
+  }
+
+  public findProfileByLogin(identifier: string): Profile | null {
+    if (!identifier) return null;
+    const cleanId = identifier.trim();
+    const idLower = cleanId.toLowerCase();
+    const cleanPhone = cleanId.replace(/\D/g, '');
+
+    return (
+      this.profiles.find((p) => {
+        // Match email
+        if (p.email && p.email.toLowerCase() === idLower) return true;
+        // Match phone (raw or normalized)
+        if (p.phone_number) {
+          const pClean = p.phone_number.replace(/\D/g, '');
+          if (pClean === cleanPhone || p.phone_number === cleanId) return true;
+        }
+        // Match user ID
+        if (p.id === cleanId) return true;
+        // Match generated username
+        if (p.generated_credentials?.username === cleanId) return true;
+        return false;
+      }) || null
+    );
   }
 
   public setCurrentUser(userId: string): Profile | null {
@@ -731,6 +778,7 @@ export class MockDatabase {
     this.reports = INITIAL_REPORTS;
     this.notifications = INITIAL_NOTIFICATIONS;
     this.auditLogs = INITIAL_AUDIT_LOGS;
+    this.smsMessages = INITIAL_SMS_MESSAGES;
     this.currentUser = INITIAL_PROFILES[0];
     this.persistAll();
   }

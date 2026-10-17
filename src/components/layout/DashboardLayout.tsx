@@ -29,6 +29,8 @@ import { notificationService } from '@/services/notification.service';
 import { mockDb } from '@/services/mock-db';
 import { Notification, UserRole } from '@/types';
 import { ROLE_LABELS, ROLE_DEFAULT_ROUTES } from '@/lib/permissions';
+import { useLanguage } from '@/context/LanguageContext';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,6 +39,7 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, subtitle }) => {
+  const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -75,39 +78,38 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
     switch (currentUser.role) {
       case 'farmer':
         return [
-          { name: 'Overview', href: '/farmer/dashboard', icon: LayoutDashboard },
-          { name: 'Register Land', href: '/farmer/register', icon: FileText },
-          { name: 'My Properties', href: '/farmer/properties', icon: MapPin },
-          { name: 'Upload Land Images', href: '/farmer/upload-images', icon: UploadCloud },
-          { name: 'Drone Inspection Status', href: '/farmer/inspection-status', icon: Layers },
-          { name: 'Verification Reports', href: '/farmer/reports', icon: CheckCircle2 },
-          { name: 'Notifications', href: '/farmer/notifications', icon: Bell },
+          { name: t('dashboard.overview', 'Overview'), href: '/farmer/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.myProperties', 'My Properties'), href: '/farmer/properties', icon: MapPin },
+          { name: t('dashboard.uploadImages', 'Upload Land Images'), href: '/farmer/upload-images', icon: UploadCloud },
+          { name: t('dashboard.droneStatus', 'Drone Inspection Status'), href: '/farmer/inspection-status', icon: Layers },
+          { name: t('dashboard.verificationReports', 'Verification Reports'), href: '/farmer/reports', icon: CheckCircle2 },
+          { name: t('dashboard.notifications', 'Notifications'), href: '/farmer/notifications', icon: Bell },
         ];
       case 'tahsildar':
         return [
-          { name: 'Overview', href: '/tahsildar/dashboard', icon: LayoutDashboard },
-          { name: 'Registration Review Queue', href: '/tahsildar/registrations', icon: FileText },
-          { name: 'Assign Inspections', href: '/tahsildar/assign-inspections', icon: Calendar },
-          { name: 'Image Comparison Workspace', href: '/tahsildar/image-comparison', icon: Eye },
-          { name: 'Crop Verification', href: '/tahsildar/crop-verification', icon: Sprout },
-          { name: 'Verification Reports', href: '/tahsildar/reports', icon: CheckCircle2 },
-          { name: 'Audit History', href: '/tahsildar/audit-logs', icon: History },
+          { name: t('dashboard.overview', 'Overview'), href: '/tahsildar/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.registrationQueue', 'Registration Review Queue'), href: '/tahsildar/registrations', icon: FileText },
+          { name: t('dashboard.assignInspections', 'Assign Inspections'), href: '/tahsildar/assign-inspections', icon: Calendar },
+          { name: t('dashboard.imageComparison', 'Image Comparison Workspace'), href: '/tahsildar/image-comparison', icon: Eye },
+          { name: t('dashboard.cropVerification', 'Crop Verification'), href: '/tahsildar/crop-verification', icon: Sprout },
+          { name: t('dashboard.verificationReports', 'Verification Reports'), href: '/tahsildar/reports', icon: CheckCircle2 },
+          { name: t('dashboard.auditLogs', 'Audit History'), href: '/tahsildar/audit-logs', icon: History },
         ];
       case 'field_worker':
         return [
-          { name: 'Overview', href: '/field-worker/dashboard', icon: LayoutDashboard },
-          { name: 'Assigned Inspections', href: '/field-worker/inspections', icon: Calendar },
-          { name: 'Upload Drone Imagery', href: '/field-worker/drone-upload', icon: Camera },
-          { name: 'Completed Surveys', href: '/field-worker/completed', icon: CheckCircle2 },
+          { name: t('dashboard.overview', 'Overview'), href: '/field-worker/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.assignedInspections', 'Assigned Inspections'), href: '/field-worker/inspections', icon: Calendar },
+          { name: t('dashboard.uploadDrone', 'Upload Drone Imagery'), href: '/field-worker/drone-upload', icon: Camera },
+          { name: t('dashboard.completedSurveys', 'Completed Surveys'), href: '/field-worker/completed', icon: CheckCircle2 },
         ];
       case 'admin':
         return [
-          { name: 'System Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-          { name: 'User Management', href: '/admin/users', icon: Users },
-          { name: 'Geographic Regions', href: '/admin/regions', icon: MapPin },
-          { name: 'Analytics & Trends', href: '/admin/analytics', icon: BarChart3 },
-          { name: 'Audit Logs', href: '/admin/audit-logs', icon: History },
-          { name: 'System Settings', href: '/admin/settings', icon: Settings },
+          { name: t('dashboard.overview', 'System Overview'), href: '/admin/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.userManagement', 'User Management'), href: '/admin/users', icon: Users },
+          { name: t('dashboard.geoRegions', 'Geographic Regions'), href: '/admin/regions', icon: MapPin },
+          { name: t('dashboard.analyticsTrends', 'Analytics & Trends'), href: '/admin/analytics', icon: BarChart3 },
+          { name: t('dashboard.auditLogs', 'Audit Logs'), href: '/admin/audit-logs', icon: History },
+          { name: t('dashboard.systemSettings', 'System Settings'), href: '/admin/settings', icon: Settings },
         ];
       default:
         return [];
@@ -161,7 +163,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
           {/* Quick Persona Bar */}
           <div className="p-3 mx-4 my-3 bg-emerald-50/60 rounded-xl border border-emerald-100/80">
             <div className="text-[10px] uppercase tracking-wider font-semibold text-emerald-800 mb-1.5 flex items-center justify-between">
-              <span>Switch Active Persona</span>
+              <span>{t('dashboard.switchPersona', 'Switch Active Persona')}</span>
               <span className="text-emerald-600">Dev Demo</span>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
@@ -175,7 +177,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
                       : 'bg-white text-slate-600 hover:bg-emerald-100 border border-slate-200/60'
                   }`}
                 >
-                  {r === 'field_worker' ? 'Field Worker' : r.charAt(0).toUpperCase() + r.slice(1)}
+                  {r === 'farmer' && t('auth.farmerRole', 'Farmer')}
+                  {r === 'tahsildar' && t('auth.tahsildarRole', 'Tahsildar')}
+                  {r === 'field_worker' && t('auth.fieldWorkerRole', 'Field Worker')}
+                  {r === 'admin' && t('auth.adminRole', 'Admin')}
                 </button>
               ))}
             </div>
@@ -232,7 +237,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
             className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200 bg-white"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
+            <span>{t('dashboard.signOut', 'Sign Out')}</span>
           </button>
         </div>
       </aside>
@@ -240,30 +245,37 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-16 sm:h-20 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="h-16 sm:h-20 bg-white border-b border-slate-200 px-3.5 sm:px-8 flex items-center justify-between sticky top-0 z-30 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg shrink-0"
               aria-label="Open sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm sm:text-lg md:text-xl font-bold text-slate-900 leading-tight truncate">
                 {title}
               </h1>
-              {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+              {subtitle && (
+                <p className="text-[11px] sm:text-xs text-slate-500 truncate hidden sm:block">
+                  {subtitle}
+                </p>
+              )}
             </div>
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="nav" size="sm" />
+
             {/* Live Notifications Bell */}
             <div className="relative">
               <button
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="relative p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                className="relative p-2 sm:p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
                 aria-label="View notifications"
               >
                 <Bell className="w-4 h-4" />
@@ -276,10 +288,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
 
               {/* Notifications Dropdown Drawer */}
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95">
                   <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                      System Notifications
+                      {t('dashboard.systemNotifications', 'System Notifications')}
                     </span>
                     <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">
                       {unreadCount} New

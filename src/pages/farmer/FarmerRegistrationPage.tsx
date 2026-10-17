@@ -19,6 +19,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PropertyMap } from '@/components/maps/PropertyMap';
+import { SUPPORTED_LANGUAGES } from '@/types/language';
 import {
   MAHARASHTRA_DISTRICTS,
   PUNE_TALUKS,
@@ -325,9 +326,11 @@ export const FarmerRegistrationPage: React.FC = () => {
                       }
                       className="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 bg-white"
                     >
-                      <option value="en">English</option>
-                      <option value="mr">Marathi (मराठी)</option>
-                      <option value="hi">Hindi (हिंदी)</option>
+                      {SUPPORTED_LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code}>
+                          {lang.nativeName} ({lang.name} - {lang.region})
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

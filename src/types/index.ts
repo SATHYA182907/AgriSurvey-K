@@ -81,8 +81,27 @@ export interface Profile {
   role: UserRole;
   account_status: AccountStatus;
   preferred_language: string;
+  password?: string;
+  generated_credentials?: {
+    username: string;
+    password: string;
+    dispatched_at: string;
+  };
   created_at: string;
   updated_at: string;
+}
+
+export interface SmsMessage {
+  id: string;
+  recipient_phone: string;
+  recipient_name: string;
+  message: string;
+  credentials?: {
+    username: string;
+    password: string;
+  };
+  sent_at: string;
+  status: 'delivered' | 'sent';
 }
 
 export interface FarmerProfile {

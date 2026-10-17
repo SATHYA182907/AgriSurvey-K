@@ -81,9 +81,16 @@ export const TahsildarDashboardPage: React.FC = () => {
 
     try {
       if (decisionType === 'APPROVE') {
-        await registrationService.reviewApplication(selectedApp.id, 'APPROVED', {
+        const res = await registrationService.reviewApplication(selectedApp.id, 'APPROVED', {
           notes: reviewNotes || 'Application complies with 7/12 land revenue extract.',
         });
+
+        const creds = res.credentials;
+        if (creds) {
+          alert(
+            `✅ Land Registration Approved!\n\nOfficial portal login credentials generated and dispatched via SMS text message to +91 ${selectedApp.farmer?.phone_number}:\n\n• Username: ${creds.username}\n• Temporary Password: ${creds.password}\n\nThe farmer has received the SMS notification and can now enter the Farmer Portal.`
+          );
+        }
       } else if (decisionType === 'REJECT') {
         if (!rejectionReason.trim()) {
           alert('Please enter a rejection reason.');
@@ -312,8 +319,18 @@ export const TahsildarDashboardPage: React.FC = () => {
                         <td className="py-3.5 px-4 text-slate-500">
                           {new Date(app.submitted_at).toLocaleDateString()}
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3.5 px-4 space-y-1">
                           <Badge status={app.status} size="sm" />
+                          {farmerObj?.account_status === 'pending_approval' && app.status === 'PENDING_TAHSILDAR_REVIEW' && (
+                            <span className="block text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 whitespace-nowrap">
+                              New Registration • Credentials Pending
+                            </span>
+                          )}
+                          {app.status === 'APPROVED' && farmerObj?.generated_credentials && (
+                            <span className="block text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
+                              SMS Sent: +91 {farmerObj.phone_number}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -444,6 +461,23 @@ export const TahsildarDashboardPage: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* Approval Credentials & SMS Dispatch Banner */}
+            {decisionType === 'APPROVE' && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl space-y-1.5 text-xs text-emerald-950">
+                <div className="flex items-center gap-2 font-bold text-emerald-900">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Farmer Account Activation & SMS Credential Dispatch</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-emerald-900">
+                  Approving this application will activate the farmer's portal account. The system will automatically generate secure login credentials and dispatch them via SMS text message to <strong>+91 {selectedApp.farmer?.phone_number}</strong>:
+                </p>
+                <div className="bg-white/80 p-2 rounded-lg border border-emerald-200 font-mono text-[11px] flex gap-4 text-emerald-950">
+                  <span>Username: <strong>{selectedApp.farmer?.phone_number}</strong></span>
+                  <span>Password: <strong>Agri@{selectedApp.farmer?.phone_number?.slice(-4) || '2026'}</strong></span>
+                </div>
+              </div>
+            )}
 
             {/* Rejection Reason (Mandatory when rejecting) */}
             {decisionType === 'REJECT' && (

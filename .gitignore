@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Backup files
+*.bak
+
+# Root level video files (assets reside in public/)
+/*.mp4
