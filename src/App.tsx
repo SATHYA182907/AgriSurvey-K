@@ -3,8 +3,15 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
+import { AccountActivationPage } from '@/pages/auth/AccountActivationPage';
+import { FarmerApplicationStatusPage } from '@/pages/farmer/FarmerApplicationStatusPage';
 import { FarmerDashboardPage } from '@/pages/farmer/FarmerDashboardPage';
+import { FarmerRegistrationPage } from '@/pages/farmer/FarmerRegistrationPage';
+import { FarmerPropertiesPage } from '@/pages/farmer/FarmerPropertiesPage';
 import { LandImageUploadPage } from '@/pages/farmer/LandImageUploadPage';
+import { FarmerInspectionStatusPage } from '@/pages/farmer/FarmerInspectionStatusPage';
+import { FarmerReportsPage } from '@/pages/farmer/FarmerReportsPage';
+import { FarmerNotificationsPage } from '@/pages/farmer/FarmerNotificationsPage';
 import { TahsildarDashboardPage } from '@/pages/tahsildar/TahsildarDashboardPage';
 import { ImageComparisonWorkspacePage } from '@/pages/tahsildar/ImageComparisonWorkspacePage';
 import { CropVerificationPage } from '@/pages/tahsildar/CropVerificationPage';
@@ -21,15 +28,17 @@ export function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth/login" element={<AuthPage />} />
         <Route path="/auth/register" element={<AuthPage />} />
+        <Route path="/auth/activate" element={<AccountActivationPage />} />
 
         {/* Farmer Portal */}
         <Route path="/farmer/dashboard" element={<FarmerDashboardPage />} />
-        <Route path="/farmer/register" element={<Navigate to="/farmer/dashboard" replace />} />
+        <Route path="/farmer/register" element={<FarmerRegistrationPage />} />
+        <Route path="/farmer/application-status" element={<FarmerApplicationStatusPage />} />
         <Route path="/farmer/upload-images" element={<LandImageUploadPage />} />
-        <Route path="/farmer/properties" element={<FarmerDashboardPage />} />
-        <Route path="/farmer/inspection-status" element={<FarmerDashboardPage />} />
-        <Route path="/farmer/reports" element={<FarmerDashboardPage />} />
-        <Route path="/farmer/notifications" element={<FarmerDashboardPage />} />
+        <Route path="/farmer/properties" element={<FarmerPropertiesPage />} />
+        <Route path="/farmer/inspection-status" element={<FarmerInspectionStatusPage />} />
+        <Route path="/farmer/reports" element={<FarmerReportsPage />} />
+        <Route path="/farmer/notifications" element={<FarmerNotificationsPage />} />
 
         {/* Tahsildar Portal */}
         <Route path="/tahsildar/dashboard" element={<TahsildarDashboardPage />} />

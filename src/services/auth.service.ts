@@ -63,16 +63,37 @@ export class AuthService {
       );
     }
 
+    if (user.account_status === 'pending_activation') {
+      const pendingApp = mockDb.applications.find((a) => a.farmer_id === user.id);
+      const appRef = pendingApp?.application_reference || 'your application';
+      const tokenRecord = mockDb.activationTokens.find((t) => t.user_id === user.id && !t.used_at);
+      const actUrl = tokenRecord ? `/auth/activate?token=${tokenRecord.token}` : '/auth/activate';
+      throw new Error(
+        `PENDING_ACTIVATION:${appRef}:${actUrl}:Your land registration (${appRef}) has been approved by the Tahsildar! Please activate your account and establish your secure password using the activation link sent via SMS.`
+      );
+    }
+
+    const rejectedApp = mockDb.applications.find((a) => a.farmer_id === user.id && a.status === 'REJECTED');
+    if (rejectedApp && user.account_status !== 'active') {
+      throw new Error(
+        `APPLICATION_REJECTED:${rejectedApp.application_reference}:Your registration application was rejected by the Tahsildar. Reason: ${rejectedApp.rejection_reason || 'Incomplete land documentation'}.`
+      );
+    }
+
     if (user.account_status === 'suspended' || user.account_status === 'deactivated') {
       throw new Error('Your account is currently inactive. Please contact the Tehsil revenue office.');
     }
 
     // Check password if provided
-    const expectedPassword = user.generated_credentials?.password || user.password;
-    if (password && expectedPassword && password.trim() !== expectedPassword.trim()) {
+    const expectedPassword = user.password || user.generated_credentials?.password;
+    if (!expectedPassword) {
+      throw new Error('No password has been established for this account yet. Please activate your account via the link sent in your approval SMS.');
+    }
+
+    if (password && password.trim() !== expectedPassword.trim()) {
       // In dev mode allow universal demo override 'AgriPass123!' or 'TestPass123!'
       if (password !== 'AgriPass123!' && password !== 'TestPass123!') {
-        throw new Error('Incorrect password. Please enter the official password sent to your mobile number via SMS.');
+        throw new Error('Incorrect password. Please enter your valid password or use the forgot password option.');
       }
     }
 

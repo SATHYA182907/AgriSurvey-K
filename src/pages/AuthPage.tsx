@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Compass,
-  Mail,
   Lock,
   User,
   Phone,
@@ -13,14 +12,13 @@ import {
   ShieldCheck,
   CheckCircle2,
   Sparkles,
-  Info,
   MapPin,
   UploadCloud,
   FileText,
   AlertCircle,
   Clock,
-  KeyRound,
-  ExternalLink,
+  Search,
+  XCircle,
 } from 'lucide-react';
 import { authService } from '@/services/auth.service';
 import { registrationService } from '@/services/registration.service';
@@ -28,7 +26,6 @@ import { Button } from '@/components/ui/Button';
 import { PropertyMap } from '@/components/maps/PropertyMap';
 import { ROLE_DEFAULT_ROUTES } from '@/lib/permissions';
 import { UserRole } from '@/types';
-import { mockDb } from '@/services/mock-db';
 import { useLanguage } from '@/context/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { SUPPORTED_LANGUAGES, LanguageCode } from '@/types/language';
@@ -69,6 +66,8 @@ export const AuthPage: React.FC = () => {
   const [pendingApprovalNotice, setPendingApprovalNotice] = useState<{
     appRef: string;
     message: string;
+    actUrl?: string;
+    type: 'approval' | 'activation' | 'rejected';
   } | null>(null);
 
   // Multi-step Land Registration Wizard State (Signup)
@@ -159,6 +158,22 @@ export const AuthPage: React.FC = () => {
         setPendingApprovalNotice({
           appRef: parts[1] || 'AGRI-APP',
           message: parts.slice(2).join(':'),
+          type: 'approval',
+        });
+      } else if (msg.startsWith('PENDING_ACTIVATION:')) {
+        const parts = msg.split(':');
+        setPendingApprovalNotice({
+          appRef: parts[1] || 'AGRI-APP',
+          actUrl: parts[2] || '/auth/activate',
+          message: parts.slice(3).join(':'),
+          type: 'activation',
+        });
+      } else if (msg.startsWith('APPLICATION_REJECTED:')) {
+        const parts = msg.split(':');
+        setPendingApprovalNotice({
+          appRef: parts[1] || 'AGRI-APP',
+          message: parts.slice(2).join(':'),
+          type: 'rejected',
         });
       } else {
         setSignInError(msg || 'Invalid login details. Please check your username and password.');
@@ -277,15 +292,28 @@ export const AuthPage: React.FC = () => {
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center py-2.5 sm:py-6 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
-      {/* Top Header Bar with Back Button & Language Switcher */}
-      <div className="w-full max-w-md sm:max-w-2xl mx-auto flex items-center justify-between z-20 mb-2 sm:mb-4 px-0.5 sm:px-0">
+    <div className="relative min-h-screen flex flex-col justify-center py-2 sm:py-4 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
+      {/* Top Header Bar with Back Button, Centered Brand Logo & Language Switcher */}
+      <div className="w-full max-w-md sm:max-w-2xl mx-auto flex items-center justify-between z-20 mb-2 sm:mb-3 px-0.5 sm:px-0">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-black/35 hover:bg-black/55 text-white/90 hover:text-white backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-semibold shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 group shrink-0"
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-black/35 hover:bg-black/55 text-white/90 hover:text-white backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-semibold shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 group shrink-0"
         >
           <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform text-emerald-400 shrink-0" />
-          <span className="truncate max-w-[120px] sm:max-w-none">{t('auth.backToHome', 'Back to Home')}</span>
+          <span className="truncate max-w-[100px] sm:max-w-none">{t('auth.backToHome', 'Back to Home')}</span>
+        </Link>
+
+        {/* Center Brand Identity */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 group px-2.5 sm:px-3 py-1 rounded-xl bg-black/30 backdrop-blur-md border border-white/25 hover:border-emerald-400/50 shadow-xl transition-all duration-300"
+        >
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30">
+            <Compass className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-sm sm:text-base font-bold tracking-tight text-white drop-shadow-md">
+            Agri<span className="text-emerald-400">Survey</span>
+          </span>
         </Link>
 
         <div className="shrink-0">
@@ -308,24 +336,6 @@ export const AuthPage: React.FC = () => {
         </video>
         {/* Subtle cinematic gradient overlay allowing the vibrant farm video to shine through */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-black/50 pointer-events-none" />
-      </div>
-
-      {/* Top Brand Link with Compact Frosted Glass Badge */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center mb-2 sm:mb-3.5 z-10">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 group px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-black/30 backdrop-blur-md border border-white/25 hover:border-emerald-400/50 shadow-xl transition-all duration-300"
-        >
-          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-            <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </div>
-          <span className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-md">
-            Agri<span className="text-emerald-400">Survey</span>
-          </span>
-        </Link>
-        <p className="text-[10px] sm:text-[11px] text-white/80 font-medium tracking-wide mt-1 drop-shadow-md hidden xs:block">
-          {t('auth.gatewayTitle', 'Maharashtra Agricultural Land Administration & Verification Gateway')}
-        </p>
       </div>
 
       {/* Main Transparent Glassmorphism Container */}
@@ -385,28 +395,64 @@ export const AuthPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Pending Approval Notice Banner */}
+              {/* Approval / Activation / Rejection Notice Banner */}
               {pendingApprovalNotice && (
-                <div className="p-2.5 sm:p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-200 text-xs space-y-1.5 sm:space-y-2 backdrop-blur-md animate-fadeIn">
+                <div
+                  className={`p-3 rounded-xl border text-xs space-y-2 backdrop-blur-md animate-fadeIn ${
+                    pendingApprovalNotice.type === 'activation'
+                      ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-100'
+                      : pendingApprovalNotice.type === 'rejected'
+                      ? 'bg-rose-950/60 border-rose-500/50 text-rose-100'
+                      : 'bg-amber-950/50 border-amber-500/40 text-amber-200'
+                  }`}
+                >
                   <div className="flex items-start gap-2">
-                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    {pendingApprovalNotice.type === 'activation' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    ) : pendingApprovalNotice.type === 'rejected' ? (
+                      <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    )}
                     <div>
-                      <span className="font-bold text-amber-100 block mb-0.5 text-[11px] sm:text-xs">
-                        Application Pending Approval ({pendingApprovalNotice.appRef})
+                      <span className="font-bold block mb-0.5 text-xs text-white">
+                        {pendingApprovalNotice.type === 'activation'
+                          ? `Application Approved (${pendingApprovalNotice.appRef})`
+                          : pendingApprovalNotice.type === 'rejected'
+                          ? `Application Rejected (${pendingApprovalNotice.appRef})`
+                          : `Application Pending Approval (${pendingApprovalNotice.appRef})`}
                       </span>
-                      <p className="leading-relaxed text-[10.5px] sm:text-[11px] text-amber-200/90">
+                      <p className="leading-relaxed text-[11px] opacity-90">
                         {pendingApprovalNotice.message}
                       </p>
                     </div>
                   </div>
-                  <div className="pt-1.5 border-t border-amber-500/20 flex items-center justify-between">
-                    <span className="text-[9.5px] text-amber-300/80">Evaluation mode?</span>
+
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                    {pendingApprovalNotice.type === 'activation' && pendingApprovalNotice.actUrl ? (
+                      <Link
+                        to={pendingApprovalNotice.actUrl}
+                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition-colors"
+                      >
+                        <span>Activate Account & Set Password</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    ) : (
+                      <Link
+                        to={`/farmer/application-status?ref=${pendingApprovalNotice.appRef}`}
+                        className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <span>View Status & Timeline</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => handleQuickDemoLogin('tahsildar')}
-                      className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[9.5px] shadow-xs flex items-center gap-1 transition-colors"
+                      className="px-2 py-0.5 rounded-lg bg-teal-600/80 hover:bg-teal-500 text-white font-semibold text-[10px] shadow-xs flex items-center gap-1 transition-colors"
                     >
-                      <span>Switch to Tahsildar</span>
+                      <span>Tahsildar Desk</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
@@ -470,7 +516,18 @@ export const AuthPage: React.FC = () => {
                 </Button>
               </form>
 
-              <div className="text-center pt-0.5">
+              <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-300 pt-2 border-t border-white/10 mt-2">
+                <Link to="/farmer/application-status" className="text-emerald-400 hover:underline flex items-center gap-1 font-medium">
+                  <span>Track Application Status</span>
+                  <span>→</span>
+                </Link>
+                <Link to="/auth/activate" className="text-teal-300 hover:underline flex items-center gap-1 font-medium">
+                  <span>Activate Approved Account</span>
+                  <span>→</span>
+                </Link>
+              </div>
+
+              <div className="text-center pt-2">
                 <span className="text-[10px] sm:text-[11px] text-slate-300">{t('auth.newFarmer', 'New farmer?')} </span>
                 <button
                   type="button"
@@ -587,27 +644,35 @@ export const AuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* SMS Credentials Dispatch Notice */}
-                  <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-left text-xs text-emerald-200 space-y-1.5 backdrop-blur-md">
+                  {/* Mandated Submission Confirmation Notice */}
+                  <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-left text-xs text-emerald-100 space-y-2 backdrop-blur-md">
                     <div className="font-bold text-emerald-300 flex items-center gap-1.5 text-xs">
-                      <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>Next Step: SMS Credentials Delivery</span>
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Application Successfully Submitted</span>
                     </div>
-                    <p className="leading-relaxed text-emerald-100/80 text-[10.5px]">
-                      Your application has been routed to the Tahsildar revenue portal. Once the Tahsildar verifies your 7/12 extract and clicks <strong>Approve</strong>, your official <strong>Username</strong> and <strong>secure Password</strong> will be automatically dispatched to your mobile number (<strong>+91 {submittedApp.mobile_number}</strong>) as an SMS text message.
+                    <p className="leading-relaxed text-emerald-100 text-[11px] font-medium bg-black/30 p-2.5 rounded-lg border border-emerald-500/20">
+                      “Your registration has been submitted successfully. Your application is awaiting Tahsildar verification. Your login credentials will be provided after approval.”
                     </p>
                   </div>
 
                   {/* Interactive Action Buttons */}
                   <div className="space-y-2 pt-1">
+                    <Link
+                      to={`/farmer/application-status?ref=${submittedApp.application_reference}&phone=${submittedApp.mobile_number}`}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-950/40 transition-all"
+                    >
+                      <Search className="w-3.5 h-3.5" />
+                      <span>Track Application Status Online</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+
                     <button
                       type="button"
                       onClick={() => handleQuickDemoLogin('tahsildar')}
-                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-semibold shadow-md shadow-emerald-950/40 hover:opacity-95 transition-all"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 text-xs font-semibold transition-all"
                     >
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Switch to Tahsildar Portal to Review & Approve Now</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Switch to Tahsildar Portal to Review & Approve</span>
                     </button>
 
                     <button

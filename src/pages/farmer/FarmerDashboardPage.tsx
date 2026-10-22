@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -13,78 +13,191 @@ import {
   AlertCircle,
   FileCheck2,
   Sparkles,
+  Activity,
+  RefreshCw,
+  PlusCircle,
+  TrendingUp,
+  ShieldCheck,
+  ShieldAlert,
+  Info,
+  Droplets,
+  Thermometer,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { mockDb } from '@/services/mock-db';
 import { registrationService } from '@/services/registration.service';
+import { plantIntelligenceService } from '@/services/plant-intelligence.service';
 import { reportService } from '@/services/report.service';
-import { RegistrationApplication, Property, VerificationReport } from '@/types';
+import {
+  RegistrationApplication,
+  Property,
+  VerificationReport,
+  MonitoringUnit,
+  SensorReading,
+  PlantObservation,
+  PlantHealthAssessment,
+  PlantHealthAlert,
+  SensorDevice,
+} from '@/types';
+import { PlantObservationModal } from '@/components/plant-intelligence/PlantObservationModal';
+import { CreateMonitoringUnitModal } from '@/components/plant-intelligence/CreateMonitoringUnitModal';
+import { PlantUnitDetailModal } from '@/components/plant-intelligence/PlantUnitDetailModal';
+
+const HEALTH_COLORS = {
+  Healthy: '#10b981',
+  'Needs Attention': '#f59e0b',
+  'At Risk': '#f97316',
+  Critical: '#ef4444',
+  'Insufficient Data': '#94a3b8',
+};
 
 export const FarmerDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const farmer = mockDb.currentUser;
+
+  // Applications & Properties State
   const [applications, setApplications] = useState<RegistrationApplication[]>([]);
   const [selectedApp, setSelectedApp] = useState<RegistrationApplication | null>(null);
   const [report, setReport] = useState<VerificationReport | null>(null);
 
-  useEffect(() => {
-    loadFarmerData();
+  // Plant Intelligence State
+  const [monitoringUnits, setMonitoringUnits] = useState<MonitoringUnit[]>([]);
+  const [alerts, setAlerts] = useState<PlantHealthAlert[]>([]);
+  const [sensorReadings, setSensorReadings] = useState<SensorReading[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
+
+  // Modals State
+  const [selectedUnitForDetail, setSelectedUnitForDetail] = useState<MonitoringUnit | null>(null);
+  const [unitDetailData, setUnitDetailData] = useState<{
+    readings: SensorReading[];
+    observations: PlantObservation[];
+    assessment: PlantHealthAssessment | null;
+    device: SensorDevice | null;
+    alerts: PlantHealthAlert[];
+  }>({ readings: [], observations: [], assessment: null, device: null, alerts: [] });
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  const [observationModalOpen, setObservationModalOpen] = useState(false);
+  const [selectedUnitForObservation, setSelectedUnitForObservation] = useState<MonitoringUnit | null>(null);
+
+  const [createUnitModalOpen, setCreateUnitModalOpen] = useState(false);
+
+  const loadAllDashboardData = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      // 1. Applications & Properties
+      const apps = await registrationService.getMyApplications(farmer.id);
+      setApplications(apps);
+      if (apps.length > 0) {
+        setSelectedApp(apps[0]);
+        const rep = await reportService.getReportByApplicationId(apps[0].id);
+        setReport(rep);
+      }
+
+      // 2. Monitoring Units
+      const units = await plantIntelligenceService.getMonitoringUnits({ farmerId: farmer.id });
+      setMonitoringUnits(units);
+
+      // 3. Alerts
+      const activeAlerts = await plantIntelligenceService.getAlerts({ farmerId: farmer.id });
+      setAlerts(activeAlerts);
+
+      // 4. Sensor Readings for Trends
+      setSensorReadings([...mockDb.sensorReadings]);
+      setLastRefreshedAt(new Date());
+    } finally {
+      setIsRefreshing(false);
+    }
   }, [farmer.id]);
 
-  const loadFarmerData = async () => {
-    const apps = await registrationService.getMyApplications(farmer.id);
-    setApplications(apps);
-    if (apps.length > 0) {
-      setSelectedApp(apps[0]);
-      const rep = await reportService.getReportByApplicationId(apps[0].id);
-      setReport(rep);
-    }
+  useEffect(() => {
+    loadAllDashboardData();
+  }, [loadAllDashboardData]);
+
+  const handleOpenUnitDetail = async (unit: MonitoringUnit) => {
+    setSelectedUnitForDetail(unit);
+    const details = await plantIntelligenceService.getMonitoringUnitById(unit.id);
+    setUnitDetailData({
+      readings: details.readings,
+      observations: details.observations,
+      assessment: details.assessment,
+      device: details.device,
+      alerts: details.alerts,
+    });
+    setDetailModalOpen(true);
   };
 
-  const handleSelectApp = async (app: RegistrationApplication) => {
-    setSelectedApp(app);
-    const rep = await reportService.getReportByApplicationId(app.id);
-    setReport(rep);
+  const handleOpenObservation = (unit: MonitoringUnit) => {
+    setSelectedUnitForObservation(unit);
+    setObservationModalOpen(true);
   };
 
-  // Timeline Step States
-  const getTimelineSteps = (app: RegistrationApplication) => {
-    const isSubmitted = Boolean(app.submitted_at);
-    const isApproved = app.status === 'APPROVED';
-    const isRejected = app.status === 'REJECTED';
-    const hasImages = mockDb.landImages.some((img) => img.application_id === app.id);
-    const inspection = mockDb.inspections.find((i) => i.application_id === app.id);
-    const hasDroneImages = mockDb.droneImagery.some((img) => img.application_id === app.id);
-    const hasCropVerif = mockDb.cropVerifications.some((c) => c.application_id === app.id);
-    const hasReport = mockDb.reports.some((r) => r.application_id === app.id);
-
-    return [
-      { id: 1, title: 'Registration Submitted', completed: isSubmitted, date: app.submitted_at },
-      { id: 2, title: 'Tahsildar Review', completed: isApproved || isRejected, current: app.status === 'PENDING_TAHSILDAR_REVIEW', date: app.reviewed_at },
-      { id: 3, title: 'Registration Approved', completed: isApproved, date: isApproved ? app.reviewed_at : null },
-      { id: 4, title: 'Land Images Uploaded', completed: hasImages, current: isApproved && !hasImages },
-      { id: 5, title: 'Field Drone Inspection', completed: inspection?.inspection_status === 'EVIDENCE_UPLOADED' || inspection?.inspection_status === 'COMPLETED' },
-      { id: 6, title: 'Drone Evidence Reviewed', completed: hasDroneImages },
-      { id: 7, title: 'Crop Verification', completed: hasCropVerif },
-      { id: 8, title: 'Final Verification Report', completed: hasReport },
-    ];
+  const handleAcknowledgeAlert = async (alertId: string) => {
+    await plantIntelligenceService.acknowledgeAlert(alertId, farmer.id);
+    loadAllDashboardData();
   };
 
-  const totalProps = applications.length;
-  const pendingApps = applications.filter((a) => a.status === 'PENDING_TAHSILDAR_REVIEW').length;
-  const approvedApps = applications.filter((a) => a.status === 'APPROVED').length;
-  const verifiedReports = mockDb.reports.filter((r) => applications.some((a) => a.id === r.application_id)).length;
+  const handleResolveAlert = async (alertId: string) => {
+    await plantIntelligenceService.resolveAlert(alertId, farmer.id);
+    loadAllDashboardData();
+  };
+
+  // Calculations from actual database records
+  const totalFarms = applications.length;
+  const verifiedFarms = applications.filter((a) => a.status === 'APPROVED').length;
+  const totalUnits = monitoringUnits.length;
+  const healthyUnits = monitoringUnits.filter((u) => u.current_health_status === 'Healthy').length;
+  const attentionUnits = monitoringUnits.filter(
+    (u) => u.current_health_status === 'Needs Attention' || u.current_health_status === 'At Risk'
+  ).length;
+  const criticalUnits = monitoringUnits.filter((u) => u.current_health_status === 'Critical').length;
+  const activeAlertsCount = alerts.filter((a) => a.status === 'active').length;
+
+  // Chart Data: Health Distribution
+  const healthDistributionData = [
+    { name: 'Healthy', value: healthyUnits, color: HEALTH_COLORS.Healthy },
+    { name: 'Needs Attention', value: monitoringUnits.filter((u) => u.current_health_status === 'Needs Attention').length, color: HEALTH_COLORS['Needs Attention'] },
+    { name: 'At Risk', value: monitoringUnits.filter((u) => u.current_health_status === 'At Risk').length, color: HEALTH_COLORS['At Risk'] },
+    { name: 'Critical', value: criticalUnits, color: HEALTH_COLORS.Critical },
+    { name: 'Insufficient Data', value: monitoringUnits.filter((u) => u.current_health_status === 'Insufficient Data').length, color: HEALTH_COLORS['Insufficient Data'] },
+  ].filter((d) => d.value > 0);
+
+  // Chart Data: Overall Moisture Readings Trend
+  const moistureTrendData = sensorReadings
+    .filter((r) => r.parameter === 'soil_moisture')
+    .slice(0, 10)
+    .reverse()
+    .map((r) => ({
+      time: new Date(r.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      value: r.value,
+      source: r.source_device,
+    }));
+
+  const hasVerifiedFarm = applications.some((a) => a.status === 'APPROVED');
 
   return (
     <DashboardLayout
-      title="Farmer Portal Overview"
-      subtitle={`Welcome back, ${farmer.full_name} • Central Agricultural Land Registry`}
+      title="Farmer Intelligence Portal"
+      subtitle={`Welcome back, ${farmer.full_name} • Central Agricultural Land & Crop Intelligence`}
     >
       <div className="space-y-6">
-        {/* Welcome Section & Action Banner */}
+        {/* Welcome Section & Dual Action Bar */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-xs font-semibold">
@@ -95,262 +208,458 @@ export const FarmerDashboardPage: React.FC = () => {
               Welcome back, {farmer.full_name}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              {selectedApp?.status === 'APPROVED'
-                ? 'Your land registration is approved. Please ensure your 5–6 ground photographs are uploaded so our field drone team can schedule the boundary survey.'
-                : selectedApp?.status === 'PENDING_TAHSILDAR_REVIEW'
-                ? 'Your registration application is currently under official review by the responsible Tahsildar.'
-                : 'Manage your agricultural landholdings, review inspection stages, and download official verification reports.'}
+              {hasVerifiedFarm
+                ? 'Your land registration is verified by the Tahsildar. Live telemetry, plant observations, and crop health assessments are active.'
+                : 'Your land registration application is awaiting Tahsildar approval. Once verified, plant intelligence monitoring will unlock.'}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-            {selectedApp?.status === 'APPROVED' ? (
-              <Link to="/farmer/upload-images">
-                <Button icon={<UploadCloud className="w-4 h-4" />}>
-                  Upload Land Images
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/farmer/properties">
-                <Button variant="secondary" icon={<MapPin className="w-4 h-4" />}>
-                  View My Properties
-                </Button>
-              </Link>
-            )}
+          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
+              onClick={loadAllDashboardData}
+            >
+              Live Refresh
+            </Button>
+
+            <Button
+              size="sm"
+              icon={<Camera className="w-3.5 h-3.5" />}
+              disabled={monitoringUnits.length === 0}
+              onClick={() => {
+                if (monitoringUnits.length > 0) {
+                  handleOpenObservation(monitoringUnits[0]);
+                }
+              }}
+            >
+              Record Plant Observation
+            </Button>
           </div>
         </div>
 
-        {/* 4 Summary Stat Cards (Section 8 Requirement) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">My Properties</span>
-              <MapPin className="w-4 h-4 text-emerald-600" />
+        {/* 6 Real Database Overview Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <Card className="p-4">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+              <span>My Farms</span>
+              <MapPin className="w-3.5 h-3.5 text-emerald-600" />
             </div>
-            <div className="text-2xl font-bold text-slate-900 mt-2">{totalProps}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Agricultural plots registered</div>
+            <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalFarms}</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{verifiedFarms} Approved</div>
           </Card>
 
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Pending Review</span>
-              <Clock className="w-4 h-4 text-amber-500" />
+          <Card className="p-4">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+              <span>Monitored Units</span>
+              <Sprout className="w-3.5 h-3.5 text-emerald-600" />
             </div>
-            <div className="text-2xl font-bold text-slate-900 mt-2">{pendingApps}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Awaiting Tahsildar decision</div>
+            <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalUnits}</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">Plots & Zones</div>
           </Card>
 
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Approved Registrations</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <Card className="p-4 bg-emerald-50/50 border-emerald-200">
+            <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+              <span>Healthy Units</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             </div>
-            <div className="text-2xl font-bold text-slate-900 mt-2">{approvedApps}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Ready for field inspection</div>
+            <div className="text-2xl font-extrabold text-emerald-950 mt-1">{healthyUnits}</div>
+            <div className="text-[10px] text-emerald-700 mt-0.5">Optimal conditions</div>
           </Card>
 
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Verified Reports</span>
-              <FileCheck2 className="w-4 h-4 text-teal-600" />
+          <Card className="p-4 bg-amber-50/50 border-amber-200">
+            <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
+              <span>Attention Needed</span>
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
             </div>
-            <div className="text-2xl font-bold text-slate-900 mt-2">{verifiedReports}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Certified PDF available</div>
+            <div className="text-2xl font-extrabold text-amber-950 mt-1">{attentionUnits}</div>
+            <div className="text-[10px] text-amber-700 mt-0.5">Moisture/pH stress</div>
+          </Card>
+
+          <Card className="p-4 bg-red-50/50 border-red-200">
+            <div className="flex items-center justify-between text-xs font-semibold text-red-800">
+              <span>Critical Alerts</span>
+              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-red-950 mt-1">{activeAlertsCount}</div>
+            <div className="text-[10px] text-red-700 mt-0.5">Urgent attention</div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+              <span>Data Freshness</span>
+              <Activity className="w-3.5 h-3.5 text-teal-600" />
+            </div>
+            <div className="text-xs font-bold text-slate-900 mt-2 truncate">
+              Updated just now
+            </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
           </Card>
         </div>
 
-        {/* Main Grid: My Properties & Selected Application Timeline */}
+        {/* Plant Health Overview: Charts & Telemetry Trends */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Properties List (7 Cols) */}
-          <div className="lg:col-span-7 space-y-4">
+          {/* Historical Soil Moisture Chart (7 cols) */}
+          <Card className="lg:col-span-7 p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                My Agricultural Properties
-              </h3>
-              <span className="text-xs text-slate-500">{applications.length} applications</span>
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  Soil Moisture Telemetry Trend (%)
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Continuous root-zone readings compared with Sugarcane optimal threshold [60% - 80%]
+                </p>
+              </div>
+              <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                Live Sensor Feed
+              </span>
             </div>
 
-            {applications.map((app) => {
-              const isSelected = selectedApp?.id === app.id;
-              const prop = app.property;
+            {moistureTrendData.length > 0 ? (
+              <div className="h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={moistureTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="time" tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#059669"
+                      fill="#10b981"
+                      fillOpacity={0.2}
+                      name="Soil Moisture (%)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-48 flex items-center justify-center text-xs text-slate-400">
+                No sensor readings recorded yet.
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                Optimal Threshold: 60% – 80%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                Permanent Wilting Threshold: &lt; 45%
+              </span>
+            </div>
+          </Card>
+
+          {/* Plant Health Distribution Donut (5 cols) */}
+          <Card className="lg:col-span-5 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Health Status Distribution
+              </h3>
+              <span className="text-[11px] text-slate-500">{totalUnits} units</span>
+            </div>
+
+            {healthDistributionData.length > 0 ? (
+              <div className="flex items-center justify-between gap-4">
+                <div className="w-36 h-36 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={healthDistributionData}
+                        dataKey="value"
+                        innerRadius={36}
+                        outerRadius={56}
+                        paddingAngle={3}
+                      >
+                        {healthDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="flex-1 space-y-2 text-xs">
+                  {healthDistributionData.map((d) => (
+                    <div key={d.name} className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-slate-700">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                        <span className="truncate">{d.name}</span>
+                      </span>
+                      <span className="font-bold text-slate-900">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="h-36 flex items-center justify-center text-xs text-slate-400">
+                No active monitoring units.
+              </div>
+            )}
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
+              <strong>Agronomic Separation Rule:</strong> Plant health is evaluated from crop telemetry and observations. Land verification is strictly determined by Tahsildar revenue examination.
+            </div>
+          </Card>
+        </div>
+
+        {/* Monitored Units & Farms Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Crop & Plant Monitoring Units
+              </h3>
+              <p className="text-xs text-slate-500">
+                Select any plot to view continuous telemetry, uploaded images, and agronomic recommendations.
+              </p>
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              icon={<PlusCircle className="w-3.5 h-3.5 text-emerald-600" />}
+              disabled={!hasVerifiedFarm}
+              onClick={() => setCreateUnitModalOpen(true)}
+            >
+              Add Monitoring Unit
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {monitoringUnits.map((unit) => {
+              const assessment = mockDb.plantHealthAssessments.find(
+                (a) => a.monitoring_unit_id === unit.id
+              );
+              const isCritical = unit.current_health_status === 'Critical';
+              const isAttention = unit.current_health_status === 'Needs Attention';
+
               return (
                 <div
-                  key={app.id}
-                  onClick={() => handleSelectApp(app)}
-                  className={`bg-white rounded-xl border p-5 transition-all cursor-pointer ${
-                    isSelected
-                      ? 'border-emerald-500 ring-2 ring-emerald-500/10 shadow-md'
-                      : 'border-slate-200 hover:border-slate-300'
+                  key={unit.id}
+                  onClick={() => handleOpenUnitDetail(unit)}
+                  className={`bg-white rounded-2xl border p-4 transition-all cursor-pointer hover:shadow-md ${
+                    isCritical
+                      ? 'border-red-300 ring-2 ring-red-500/10'
+                      : isAttention
+                      ? 'border-amber-300 ring-2 ring-amber-500/10'
+                      : 'border-slate-200 hover:border-emerald-300'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-slate-900">
-                          {prop?.property_name || `Survey No. ${prop?.survey_number}`}
-                        </h4>
-                        <Badge status={app.status} size="sm" />
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5 font-mono">
-                        Ref: {app.application_reference}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-xs font-bold text-emerald-800">
-                        {prop?.land_area} {prop?.land_area_unit}
-                      </div>
-                      <div className="text-[10px] text-slate-400">{prop?.farm_type}</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg mb-4">
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Survey Number</span>
-                      <span className="font-semibold font-mono">{prop?.survey_number}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Location</span>
-                      <span className="truncate">{prop?.village}, {prop?.taluk}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Land Category</span>
-                      <span>{prop?.land_type}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions for current status */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                    <span className="text-slate-400 text-[11px]">
-                      Submitted on: {new Date(app.submitted_at).toLocaleDateString()}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        unit.current_health_status === 'Healthy'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : isCritical
+                          ? 'bg-red-50 text-red-800 border-red-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      {unit.current_health_status}
                     </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {unit.zone_identifier}
+                    </span>
+                  </div>
 
-                    <div className="flex items-center gap-2">
-                      {app.status === 'APPROVED' && (
-                        <Link
-                          to="/farmer/upload-images"
-                          className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
-                        >
-                          <UploadCloud className="w-3.5 h-3.5" />
-                          <span>Upload Photos</span>
-                        </Link>
-                      )}
-                      {report && app.id === report.application_id && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            reportService.generatePdfReport(report);
-                          }}
-                          className="text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center gap-1"
-                        >
-                          <FileCheck2 className="w-3.5 h-3.5" />
-                          <span>Download PDF</span>
-                        </button>
-                      )}
+                  <h4 className="text-sm font-bold text-slate-900 truncate">
+                    {unit.unit_name}
+                  </h4>
+                  <div className="text-xs text-emerald-800 font-semibold mb-3">
+                    {unit.crop_variety}
+                  </div>
+
+                  {/* Quick telemetry readings preview */}
+                  <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50 rounded-lg text-[11px] mb-3">
+                    <div>
+                      <span className="text-slate-400 block text-[9px]">Moisture</span>
+                      <span className="font-bold text-slate-800 font-mono">
+                        {assessment?.supporting_measurements.soil_moisture?.value !== undefined
+                          ? `${assessment.supporting_measurements.soil_moisture.value}%`
+                          : 'No Data'}
+                      </span>
                     </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9px]">Soil pH</span>
+                      <span className="font-bold text-slate-800 font-mono">
+                        {assessment?.supporting_measurements.soil_ph?.value !== undefined
+                          ? assessment.supporting_measurements.soil_ph.value.toFixed(1)
+                          : 'No Data'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px]">
+                    <span className="text-slate-400 truncate">
+                      {assessment?.data_freshness || 'Updated just now'}
+                    </span>
+                    <span className="text-emerald-700 font-bold flex items-center gap-0.5">
+                      Inspect <ArrowRight className="w-3 h-3" />
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
+        </div>
 
-          {/* Selected Application Timeline & Evidence Status (5 Cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            <Card className="p-6 space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                    Application Timeline
-                  </h3>
-                  <p className="text-[11px] text-slate-400 font-mono">
-                    {selectedApp?.application_reference}
-                  </p>
-                </div>
-                {selectedApp && <Badge status={selectedApp.status} size="sm" />}
-              </div>
+        {/* Active Alerts Section */}
+        {alerts.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                Active Agronomic Alerts ({alerts.filter((a) => a.status === 'active').length})
+              </h3>
+              <span className="text-xs text-slate-500">
+                Rule-based thresholds exceeded
+              </span>
+            </div>
 
-              {selectedApp && (
-                <div className="space-y-4">
-                  {getTimelineSteps(selectedApp).map((step, idx) => (
-                    <div key={step.id} className="flex items-start gap-3 relative">
-                      {/* Vertical line connecting steps */}
-                      {idx < 7 && (
-                        <div
-                          className={`absolute left-3.5 top-7 w-0.5 h-7 ${
-                            step.completed ? 'bg-emerald-500' : 'bg-slate-200'
-                          }`}
-                        />
-                      )}
-
-                      <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 text-xs font-bold ${
-                          step.completed
-                            ? 'bg-emerald-600 text-white'
-                            : step.current
-                            ? 'bg-amber-100 text-amber-800 ring-4 ring-amber-50'
-                            : 'bg-slate-100 text-slate-400'
-                        }`}
-                      >
-                        {step.completed ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
-                      </div>
-
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p
-                            className={`text-xs font-semibold ${
-                              step.completed
-                                ? 'text-slate-900'
-                                : step.current
-                                ? 'text-amber-800 font-bold'
-                                : 'text-slate-400'
-                            }`}
-                          >
-                            {step.title}
-                          </p>
-                          {step.date && (
-                            <span className="text-[10px] text-slate-400">
-                              {new Date(step.date).toLocaleDateString([], {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Quick Report Download Banner if report is ready */}
-            {report && (
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-800 to-teal-900 text-white shadow-md space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                    Official Verification Report Ready
-                  </div>
-                  <FileCheck2 className="w-5 h-5 text-emerald-400" />
-                </div>
-                <h4 className="text-base font-bold">
-                  {report.report_reference}
-                </h4>
-                <p className="text-xs text-emerald-100 leading-relaxed">
-                  Field drone photogrammetry and crop verification have been signed by the Tahsildar.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => reportService.generatePdfReport(report)}
-                  className="w-full bg-white text-slate-900 hover:bg-emerald-50 border-0 font-bold"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {alerts.map((al) => (
+                <div
+                  key={al.id}
+                  className={`p-4 rounded-xl border space-y-2 ${
+                    al.severity === 'critical'
+                      ? 'bg-red-50/70 border-red-200'
+                      : 'bg-amber-50/70 border-amber-200'
+                  }`}
                 >
-                  Download Certified PDF Report
-                </Button>
+                  <div className="flex items-start justify-between gap-3 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-900 block">{al.reason}</span>
+                      <span className="text-[10px] font-semibold text-slate-600">
+                        Target: {al.unit_name} ({al.crop_name})
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 shrink-0 font-mono">
+                      {new Date(al.detected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-700">
+                    <strong>Recommended Next Step:</strong> {al.recommended_action}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs">
+                    <span className="text-[10px] text-slate-500 italic">
+                      Acknowledging alert does not resolve root stress.
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {al.status === 'active' && (
+                        <button
+                          onClick={() => handleAcknowledgeAlert(al.id)}
+                          className="px-2.5 py-1 bg-white text-slate-700 font-semibold rounded border border-slate-300 hover:bg-slate-50 text-xs"
+                        >
+                          Acknowledge
+                        </button>
+                      )}
+                      {al.status !== 'resolved' && (
+                        <button
+                          onClick={() => handleResolveAlert(al.id)}
+                          className="px-2.5 py-1 bg-emerald-700 text-white font-semibold rounded hover:bg-emerald-800 text-xs"
+                        >
+                          Resolve
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Agricultural Land Properties Table & Cadastral Verification Overview */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Registered Landholdings & Verification Status
+              </h3>
+              <p className="text-xs text-slate-500">
+                Tahsildar verification certifies legal parcel boundaries under Maharashtra Land Revenue Code.
+              </p>
+            </div>
+            <Link to="/farmer/properties" className="text-xs font-bold text-emerald-700 hover:text-emerald-900">
+              Manage All Properties →
+            </Link>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {applications.map((app) => (
+              <div key={app.id} className="py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900 text-sm">
+                      {app.property?.property_name || `Survey ${app.property?.survey_number}`}
+                    </span>
+                    <Badge status={app.status} size="sm" />
+                  </div>
+                  <span className="text-slate-500">
+                    Survey {app.property?.survey_number} • {app.property?.village}, {app.property?.taluk} ({app.property?.land_area} {app.property?.land_area_unit})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-slate-400 font-mono text-[11px]">
+                    {app.application_reference}
+                  </span>
+                  <Link
+                    to="/farmer/properties"
+                    className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-bold text-xs"
+                  >
+                    View Status
+                  </Link>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Observation Modal */}
+      <PlantObservationModal
+        isOpen={observationModalOpen}
+        onClose={() => setObservationModalOpen(false)}
+        unit={selectedUnitForObservation}
+        onSuccess={loadAllDashboardData}
+      />
+
+      {/* Create Monitoring Unit Modal */}
+      <CreateMonitoringUnitModal
+        isOpen={createUnitModalOpen}
+        onClose={() => setCreateUnitModalOpen(false)}
+        properties={applications.map((a) => a.property!).filter(Boolean)}
+        applications={applications}
+        onSuccess={loadAllDashboardData}
+      />
+
+      {/* Unit Detail Modal */}
+      <PlantUnitDetailModal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        unit={selectedUnitForDetail}
+        readings={unitDetailData.readings}
+        observations={unitDetailData.observations}
+        assessment={unitDetailData.assessment}
+        device={unitDetailData.device}
+        alerts={unitDetailData.alerts}
+        onOpenObservationModal={() => {
+          if (selectedUnitForDetail) {
+            handleOpenObservation(selectedUnitForDetail);
+          }
+        }}
+        onAlertUpdated={loadAllDashboardData}
+      />
     </DashboardLayout>
   );
 };

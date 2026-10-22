@@ -31,7 +31,7 @@ export const Navbar: React.FC = () => {
         />
       )}
 
-      <header className="fixed top-3 sm:top-5 inset-x-0 z-50 flex justify-center px-3 sm:px-6 pointer-events-none">
+      <header className="fixed top-2 sm:top-3.5 inset-x-0 z-50 flex justify-center px-3 sm:px-6 pointer-events-none">
         <nav
           aria-label="Main Navigation"
           className={`pointer-events-auto w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[1400px] border border-slate-200/90 shadow-xl shadow-slate-900/10 transition-all duration-300 relative ${

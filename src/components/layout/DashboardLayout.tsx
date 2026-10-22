@@ -27,8 +27,8 @@ import {
 import { authService } from '@/services/auth.service';
 import { notificationService } from '@/services/notification.service';
 import { mockDb } from '@/services/mock-db';
-import { Notification, UserRole } from '@/types';
-import { ROLE_LABELS, ROLE_DEFAULT_ROUTES } from '@/lib/permissions';
+import { Notification } from '@/types';
+import { ROLE_LABELS } from '@/lib/permissions';
 import { useLanguage } from '@/context/LanguageContext';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
@@ -60,12 +60,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
   const handleMarkAsRead = async (notifId: string) => {
     await notificationService.markAsRead(notifId);
     loadNotifications();
-  };
-
-  const handleRoleSwitch = (role: UserRole) => {
-    const updated = authService.switchRole(role);
-    setCurrentUser(updated);
-    navigate(ROLE_DEFAULT_ROUTES[role]);
   };
 
   const handleLogout = async () => {
@@ -120,7 +114,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
   const unreadCount = notifications.filter((n) => !n.read_at).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -129,91 +123,63 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
         />
       )}
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation - Fixed to Viewport on Desktop & Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col justify-between transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div>
-          {/* Brand header */}
-          <div className="h-16 sm:h-20 flex items-center justify-between px-6 border-b border-slate-100">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-agri-gradient flex items-center justify-center text-white shadow-xs">
-                <Compass className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-lg font-bold tracking-tight text-slate-900">
-                  Agri<span className="text-emerald-700">Survey</span>
-                </span>
-                <span className="block text-[10px] uppercase font-semibold text-slate-400">
-                  {ROLE_LABELS[currentUser.role]}
-                </span>
-              </div>
-            </Link>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
-              aria-label="Close sidebar"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Quick Persona Bar */}
-          <div className="p-3 mx-4 my-3 bg-emerald-50/60 rounded-xl border border-emerald-100/80">
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-emerald-800 mb-1.5 flex items-center justify-between">
-              <span>{t('dashboard.switchPersona', 'Switch Active Persona')}</span>
-              <span className="text-emerald-600">Dev Demo</span>
+        {/* Brand header */}
+        <div className="h-16 sm:h-20 flex items-center justify-between px-6 border-b border-slate-100 shrink-0">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-agri-gradient flex items-center justify-center text-white shadow-xs">
+              <Compass className="w-5 h-5" />
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {(['farmer', 'tahsildar', 'field_worker', 'admin'] as UserRole[]).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => handleRoleSwitch(r)}
-                  className={`text-[11px] py-1 px-2 rounded-md font-medium text-left truncate transition-colors ${
-                    currentUser.role === r
-                      ? 'bg-emerald-600 text-white shadow-2xs'
-                      : 'bg-white text-slate-600 hover:bg-emerald-100 border border-slate-200/60'
-                  }`}
-                >
-                  {r === 'farmer' && t('auth.farmerRole', 'Farmer')}
-                  {r === 'tahsildar' && t('auth.tahsildarRole', 'Tahsildar')}
-                  {r === 'field_worker' && t('auth.fieldWorkerRole', 'Field Worker')}
-                  {r === 'admin' && t('auth.adminRole', 'Admin')}
-                </button>
-              ))}
+            <div>
+              <span className="text-lg font-bold tracking-tight text-slate-900">
+                Agri<span className="text-emerald-700">Survey</span>
+              </span>
+              <span className="block text-[10px] uppercase font-semibold text-slate-400">
+                {ROLE_LABELS[currentUser.role]}
+              </span>
             </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="px-3 space-y-1">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-emerald-50 text-emerald-800 font-semibold shadow-2xs border border-emerald-100'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <Icon
-                    className={`w-4 h-4 ${isActive ? 'text-emerald-700' : 'text-slate-400'}`}
-                  />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          </Link>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+            aria-label="Close sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* User Card & Logout Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+        {/* Navigation Links - Scrollable if viewport height is small */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-emerald-50 text-emerald-800 font-semibold shadow-2xs border border-emerald-100'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 ${isActive ? 'text-emerald-700' : 'text-slate-400'}`}
+                />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Card & Logout Footer - Permanently Fixed at Bottom of Sidebar */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0 mt-auto">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-200">
               {currentUser.full_name
@@ -243,7 +209,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
         {/* Top Header */}
         <header className="h-16 sm:h-20 bg-white border-b border-slate-200 px-3.5 sm:px-8 flex items-center justify-between sticky top-0 z-30 gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">

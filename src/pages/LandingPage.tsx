@@ -135,7 +135,7 @@ export const LandingPage: React.FC = () => {
       <Navbar />
 
       {/* Hero Section with Full-Screen Background Video */}
-      <section className="relative overflow-hidden bg-slate-900 text-white min-h-screen min-h-[100dvh] flex flex-col justify-between pt-28 sm:pt-32 pb-8 sm:pb-10">
+      <section className="relative overflow-hidden bg-slate-900 text-white min-h-screen min-h-[100dvh] flex flex-col justify-between pt-20 sm:pt-24 pb-6 sm:pb-8">
         {/* Background Video Layer */}
         <div className="absolute inset-0 -bottom-1 w-full h-[calc(100%+4px)] overflow-hidden pointer-events-none">
           <video

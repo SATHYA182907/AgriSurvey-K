@@ -15,6 +15,9 @@ import {
   Search,
   Bell,
   Smartphone,
+  Sprout,
+  Edit2,
+  Sliders,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -37,12 +40,13 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { analyticsService, DashboardStats } from '@/services/analytics.service';
 import { notificationService } from '@/services/notification.service';
+import { plantIntelligenceService } from '@/services/plant-intelligence.service';
 import { mockDb } from '@/services/mock-db';
-import { Profile, AuditLog, StaffRegion, NotificationJob } from '@/types';
+import { Profile, AuditLog, StaffRegion, NotificationJob, CropHealthThreshold } from '@/types';
 import { PUNE_TALUKS, MAHARASHTRA_DISTRICTS } from '@/lib/constants';
 
 export const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'regions' | 'audit' | 'sms'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'regions' | 'audit' | 'sms' | 'thresholds'>('overview');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timelineData, setTimelineData] = useState<any[]>([]);
   const [districtData, setDistrictData] = useState<any[]>([]);
@@ -50,6 +54,12 @@ export const AdminDashboardPage: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [staffRegions, setStaffRegions] = useState<StaffRegion[]>([]);
   const [smsJobs, setSmsJobs] = useState<NotificationJob[]>([]);
+
+  // Crop Health Thresholds State
+  const [cropThresholds, setCropThresholds] = useState<CropHealthThreshold[]>([]);
+  const [selectedCropFilter, setSelectedCropFilter] = useState('ALL');
+  const [editingThreshold, setEditingThreshold] = useState<CropHealthThreshold | null>(null);
+  const [thresholdEditModal, setThresholdEditModal] = useState(false);
 
   // User Management Modal State
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -80,6 +90,9 @@ export const AdminDashboardPage: React.FC = () => {
     setAuditLogs(a);
     setStaffRegions(sr);
     setSmsJobs(jobs);
+
+    const ths = await plantIntelligenceService.getCropThresholds();
+    setCropThresholds(ths);
   };
 
   const handleCreateStaff = () => {
@@ -137,6 +150,7 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="flex border-b border-slate-200 bg-white rounded-xl px-4 shadow-xs">
           {[
             { id: 'overview', label: 'Overview & Recharts Analytics', icon: BarChart3 },
+            { id: 'thresholds', label: 'Crop Health Thresholds & Policies', icon: Sprout },
             { id: 'users', label: 'User & Staff Provisioning', icon: Users },
             { id: 'regions', label: 'Geographic Allocations', icon: MapPin },
             { id: 'sms', label: 'SMS & Delivery Queue', icon: Smartphone },
@@ -457,7 +471,248 @@ export const AdminDashboardPage: React.FC = () => {
             </Card>
           </div>
         )}
+
+        {/* TAB 6: CROP HEALTH THRESHOLDS & POLICIES */}
+        {activeTab === 'thresholds' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Sprout className="w-5 h-5 text-emerald-600" />
+                  <span>Crop-Specific Health Thresholds & Agronomic Engine Settings</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Configure physiological reference limits for soil moisture, soil pH, and temperature. The health analysis engine compares field telemetry against these limits.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-semibold text-slate-600">Filter Crop:</span>
+                <select
+                  value={selectedCropFilter}
+                  onChange={(e) => setSelectedCropFilter(e.target.value)}
+                  className="p-2 border border-slate-300 rounded-lg bg-white text-xs font-semibold"
+                >
+                  <option value="ALL">All Crops ({cropThresholds.length})</option>
+                  <option value="Sugarcane">Sugarcane</option>
+                  <option value="Cotton">Cotton</option>
+                  <option value="Soybean">Soybean</option>
+                  <option value="Onion">Onion</option>
+                  <option value="Wheat">Wheat</option>
+                  <option value="Tomato">Tomato</option>
+                  <option value="Grapes">Grapes</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Thresholds Table */}
+            <Card className="p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4">Crop Name</th>
+                      <th className="py-3 px-4">Parameter</th>
+                      <th className="py-3 px-4">Optimal Range</th>
+                      <th className="py-3 px-4">Tolerable Bounds</th>
+                      <th className="py-3 px-4">Scientific Description</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {cropThresholds
+                      .filter((th) => selectedCropFilter === 'ALL' || th.crop_name.toLowerCase() === selectedCropFilter.toLowerCase())
+                      .map((th) => (
+                        <tr key={th.id} className="hover:bg-slate-50">
+                          <td className="py-3 px-4 font-bold text-slate-900">
+                            {th.crop_name}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-emerald-800">
+                            {th.parameter.replace('_', ' ')} ({th.unit})
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-700">
+                            <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded font-mono">
+                              {th.min_optimal} – {th.max_optimal} {th.unit}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-500">
+                            <span className="bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-mono">
+                              {th.min_tolerable} – {th.max_tolerable} {th.unit}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-600 max-w-xs truncate">
+                            {th.description}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                setEditingThreshold(th);
+                                setThresholdEditModal(true);
+                              }}
+                              className="px-2.5 py-1 text-xs font-semibold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 ml-auto"
+                            >
+                              <Edit2 className="w-3 h-3 text-slate-500" />
+                              <span>Configure</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            {/* Sensor Telemetry Integration Health Status */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1">
+                <span className="font-bold text-slate-800 block text-sm">IoT Gateways Ingestion</span>
+                <span className="text-emerald-700 font-bold">● Active Telemetry Bridge</span>
+                <p className="text-slate-500 text-[11px]">
+                  LoRaWAN Gateway Node 0192 operating with 99.8% uptime across Wagholi rural sector.
+                </p>
+              </div>
+
+              <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1">
+                <span className="font-bold text-slate-800 block text-sm">Vision AI Model Service</span>
+                <span className="text-emerald-700 font-bold">● Online (v1.2.4-agrivision)</span>
+                <p className="text-slate-500 text-[11px]">
+                  Foliar disease and chlorosis estimation model processing in under 450ms.
+                </p>
+              </div>
+
+              <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1">
+                <span className="font-bold text-slate-800 block text-sm">SMS Gateway Interface</span>
+                <span className="text-teal-700 font-bold">● Multi-Channel Dispatched</span>
+                <p className="text-slate-500 text-[11px]">
+                  Authentication credentials and high-priority critical alerts dispatched via transactional SMS.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Threshold Editing Modal */}
+      {editingThreshold && (
+        <Modal
+          isOpen={thresholdEditModal}
+          onClose={() => setThresholdEditModal(false)}
+          title={`Configure Threshold: ${editingThreshold.crop_name} (${editingThreshold.parameter})`}
+          size="md"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Min Optimal ({editingThreshold.unit})
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editingThreshold.min_optimal}
+                  onChange={(e) =>
+                    setEditingThreshold({
+                      ...editingThreshold,
+                      min_optimal: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full p-2.5 rounded-lg border border-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Max Optimal ({editingThreshold.unit})
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editingThreshold.max_optimal}
+                  onChange={(e) =>
+                    setEditingThreshold({
+                      ...editingThreshold,
+                      max_optimal: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full p-2.5 rounded-lg border border-slate-300"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Min Tolerable ({editingThreshold.unit})
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editingThreshold.min_tolerable}
+                  onChange={(e) =>
+                    setEditingThreshold({
+                      ...editingThreshold,
+                      min_tolerable: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full p-2.5 rounded-lg border border-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Max Tolerable ({editingThreshold.unit})
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editingThreshold.max_tolerable}
+                  onChange={(e) =>
+                    setEditingThreshold({
+                      ...editingThreshold,
+                      max_tolerable: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full p-2.5 rounded-lg border border-slate-300"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Agronomic Context & Description
+              </label>
+              <textarea
+                rows={2}
+                value={editingThreshold.description || ''}
+                onChange={(e) =>
+                  setEditingThreshold({
+                    ...editingThreshold,
+                    description: e.target.value,
+                  })
+                }
+                className="w-full p-2.5 rounded-lg border border-slate-300"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button variant="outline" onClick={() => setThresholdEditModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  await plantIntelligenceService.updateCropThreshold(editingThreshold);
+                  const ths = await plantIntelligenceService.getCropThresholds();
+                  setCropThresholds(ths);
+                  setThresholdEditModal(false);
+                  alert('Crop threshold updated successfully.');
+                }}
+              >
+                Save Threshold Changes
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Staff Provisioning Modal */}
       <Modal

@@ -15,6 +15,19 @@ export class InspectionService {
       }));
   }
 
+  async getInspectionsForFarmer(farmerId: string): Promise<FieldInspection[]> {
+    const apps = mockDb.applications.filter((a) => a.farmer_id === farmerId);
+    const appIds = new Set(apps.map((a) => a.id));
+    return mockDb.inspections
+      .filter((i) => appIds.has(i.application_id))
+      .map((i) => ({
+        ...i,
+        property: mockDb.properties.find((p) => p.id === i.property_id),
+        application: mockDb.applications.find((a) => a.id === i.application_id),
+        assigned_worker: mockDb.profiles.find((p) => p.id === i.assigned_worker_id),
+      }));
+  }
+
   async getInspectionById(id: string): Promise<FieldInspection | null> {
     const insp = mockDb.inspections.find((i) => i.id === id);
     if (!insp) return null;

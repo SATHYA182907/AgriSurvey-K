@@ -80,12 +80,113 @@ serve(async (req) => {
       new_state: { status: decision, notes: notes || rejection_reason || additional_info_request },
     });
 
+    let generatedUsername: string | undefined;
+    let activationTokenStr: string | undefined;
+    let activationUrl: string | undefined;
+    let smsJobRecord: any = null;
+
+    if (decision === "APPROVED") {
+      // 1. Generate unique government-formatted username
+      const talukCode = (app.properties?.taluk || "PUN").slice(0, 3).toUpperCase();
+      const randomSeq = Math.floor(10000 + Math.random() * 90000);
+      generatedUsername = `MH-PUN-${talukCode}-${randomSeq}`;
+
+      // 2. Generate secure 48h activation token
+      activationTokenStr = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+      // Store in activation_tokens
+      await supabaseClient.from("activation_tokens").insert({
+        user_id: app.farmer_id,
+        application_id: app.id,
+        token: activationTokenStr,
+        expires_at: expiresAt,
+      });
+
+      // Update farmer profile
+      await supabaseClient.from("profiles").update({
+        username: generatedUsername,
+        account_status: "pending_activation",
+        activation_token: activationTokenStr,
+        activation_expires_at: expiresAt,
+      }).eq("id", app.farmer_id);
+
+      const baseUrl = Deno.env.get("APP_LOGIN_URL") || "http://localhost:5173";
+      activationUrl = `${baseUrl.replace(/\/auth\/login.*$/, "")}/auth/activate?token=${activationTokenStr}`;
+
+      // 3. MSG91 SMS Notification Dispatch
+      const msg91AuthKey = Deno.env.get("MSG91_AUTH_KEY");
+      const senderId = Deno.env.get("MSG91_SENDER_ID") || "AGRSRV";
+      const templateId = Deno.env.get("MSG91_APPROVAL_TEMPLATE_ID");
+
+      // Fetch farmer phone
+      const { data: farmerUser } = await supabaseClient.from("profiles").select("phone_number, full_name").eq("id", app.farmer_id).single();
+      const farmerPhone = farmerUser?.phone_number;
+
+      let smsStatus = "PROVIDER_UNAVAILABLE";
+      let smsError: string | null = null;
+      let providerRef: string | null = null;
+
+      if (farmerPhone && msg91AuthKey && templateId) {
+        try {
+          const smsPayload = {
+            template_id: templateId,
+            short_url: "0",
+            recipients: [
+              {
+                mobiles: `91${farmerPhone.replace(/\D/g, "").slice(-10)}`,
+                farmer_name: farmerUser.full_name || "Farmer",
+                application_ref: app.application_reference,
+                username: generatedUsername,
+                activation_link: activationUrl,
+              },
+            ],
+          };
+
+          const msg91Res = await fetch("https://control.msg91.com/api/v5/flow/", {
+            method: "POST",
+            headers: {
+              "authkey": msg91AuthKey,
+              "content-type": "application/json",
+            },
+            body: JSON.stringify(smsPayload),
+          });
+
+          const msg91Data = await msg91Res.json();
+          if (msg91Res.ok && msg91Data.type === "success") {
+            smsStatus = "SENT";
+            providerRef = msg91Data.message || "MSG91-OK";
+          } else {
+            smsStatus = "FAILED";
+            smsError = msg91Data.message || `MSG91 HTTP ${msg91Res.status}`;
+          }
+        } catch (e: any) {
+          smsStatus = "FAILED";
+          smsError = e.message || "Network error dispatching MSG91 SMS";
+        }
+      }
+
+      // Record in notification_jobs
+      const { data: insertedJob } = await supabaseClient.from("notification_jobs").insert({
+        provider: "MSG91",
+        application_id: app.id,
+        recipient_phone: farmerPhone,
+        template_id: templateId || "APPROVAL_FLOW",
+        delivery_status: smsStatus,
+        provider_message_reference: providerRef,
+        error_details: smsError,
+        idempotency_key: `msg91-approval-${app.id}`,
+      }).select().single();
+
+      smsJobRecord = insertedJob;
+    }
+
     // In-app Notification to farmer
     let notifTitle = "";
     let notifMsg = "";
     if (decision === "APPROVED") {
       notifTitle = "Land Registration Approved";
-      notifMsg = `Your AgriSurvey land registration application ${app.application_reference} has been approved. You may now upload 5-6 photographs of your land.`;
+      notifMsg = `Your AgriSurvey land registration application ${app.application_reference} has been approved. Your username is ${generatedUsername}. Please activate your account to set your password.`;
     } else if (decision === "REJECTED") {
       notifTitle = "Registration Application Rejected";
       notifMsg = `Your application ${app.application_reference} was rejected. Reason: ${rejection_reason}`;
@@ -104,7 +205,15 @@ serve(async (req) => {
       delivery_status: "pending",
     });
 
-    return new Response(JSON.stringify({ success: true, decision, application_id }), {
+    return new Response(JSON.stringify({
+      success: true,
+      decision,
+      application_id,
+      username: generatedUsername,
+      activationToken: activationTokenStr,
+      activationUrl,
+      smsJob: smsJobRecord,
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

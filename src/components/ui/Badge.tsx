@@ -1,22 +1,33 @@
 import React from 'react';
 
 export interface BadgeProps {
-  status: string;
+  status?: string;
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'default' | string;
+  children?: React.ReactNode;
   className?: string;
   size?: 'sm' | 'md';
 }
 
-export const Badge: React.FC<BadgeProps> = ({ status, className = '', size = 'md' }) => {
+export const Badge: React.FC<BadgeProps> = ({
+  status,
+  variant,
+  children,
+  className = '',
+  size = 'md',
+}) => {
   const getBadgeStyle = (st: string) => {
     switch (st) {
+      case 'success':
       case 'APPROVED':
       case 'VERIFIED':
       case 'COMPLETED':
       case 'MATCHES':
       case 'delivered':
       case 'active':
+      case 'SENT':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/10';
 
+      case 'warning':
       case 'PENDING_TAHSILDAR_REVIEW':
       case 'PENDING_REVIEW':
       case 'ASSIGNED':
@@ -25,8 +36,11 @@ export const Badge: React.FC<BadgeProps> = ({ status, className = '', size = 'md
       case 'pending':
       case 'queued':
       case 'pending_approval':
+      case 'pending_activation':
+      case 'PROVIDER_UNAVAILABLE':
         return 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/10';
 
+      case 'info':
       case 'EVIDENCE_UPLOADED':
       case 'SUBMITTED_FOR_REVIEW':
       case 'SUBMITTED_FOR_INSPECTION':
@@ -39,11 +53,13 @@ export const Badge: React.FC<BadgeProps> = ({ status, className = '', size = 'md
       case 'REINSPECTION_REQUIRED':
         return 'bg-cyan-50 text-cyan-800 border-cyan-200 ring-cyan-500/10';
 
+      case 'error':
       case 'REJECTED':
       case 'CANCELLED':
       case 'DOES_NOT_MATCH':
       case 'INCONSISTENT':
       case 'failed':
+      case 'FAILED':
       case 'suspended':
         return 'bg-rose-50 text-rose-700 border-rose-200 ring-rose-500/10';
 
@@ -60,15 +76,16 @@ export const Badge: React.FC<BadgeProps> = ({ status, className = '', size = 'md
   };
 
   const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs';
+  const resolvedKey = variant || status || 'default';
 
   return (
     <span
       className={`inline-flex items-center font-medium rounded-full border ring-1 ring-inset ${sizeClass} ${getBadgeStyle(
-        status
+        resolvedKey
       )} ${className}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-75 shrink-0" />
-      <span className="capitalize">{formatText(status)}</span>
+      <span className="capitalize">{children !== undefined ? children : formatText(status || '')}</span>
     </span>
   );
 };

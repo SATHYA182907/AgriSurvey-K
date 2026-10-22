@@ -15,7 +15,18 @@ import {
   StaffRegion,
   UserRole,
   SmsMessage,
+  Crop,
+  CropHealthThreshold,
+  MonitoringUnit,
+  PlantObservation,
+  SensorDevice,
+  SensorReading,
+  PlantHealthAssessment,
+  PlantHealthAlert,
+  NotificationJob,
+  AccountActivationToken,
 } from '@/types';
+import { DEFAULT_CROP_THRESHOLDS } from './plant-health.service';
 
 // Key for LocalStorage Persistence
 const STORAGE_PREFIX = 'agrisurvey_db_';
@@ -296,6 +307,34 @@ const INITIAL_APPLICATIONS: RegistrationApplication[] = [
     additional_information_request: null,
     created_at: '2026-03-10T15:00:00Z',
     updated_at: '2026-03-10T15:00:00Z',
+  },
+  {
+    id: 'app-04',
+    application_reference: 'AGRI-APP-2026-441829',
+    farmer_id: 'usr-farmer-01',
+    property_id: 'prop-01',
+    status: 'ADDITIONAL_INFORMATION_REQUIRED',
+    assigned_tahsildar_id: 'usr-tahsildar-01',
+    submitted_at: '2026-03-15T09:00:00Z',
+    reviewed_at: '2026-03-16T14:30:00Z',
+    rejection_reason: null,
+    additional_information_request: 'Please upload certified boundary sketch from Taluka Inspector of Land Records (TILR) to verify eastern easement boundary.',
+    created_at: '2026-03-15T09:00:00Z',
+    updated_at: '2026-03-16T14:30:00Z',
+  },
+  {
+    id: 'app-05',
+    application_reference: 'AGRI-APP-2026-218940',
+    farmer_id: 'usr-farmer-02',
+    property_id: 'prop-02',
+    status: 'REJECTED',
+    assigned_tahsildar_id: 'usr-tahsildar-01',
+    submitted_at: '2026-02-01T10:00:00Z',
+    reviewed_at: '2026-02-03T11:20:00Z',
+    rejection_reason: 'Discrepancy in recorded survey area: Submitted 7/12 shows 4.0 Acres whereas application requested 5.2 Acres without joint-holder consent deed.',
+    additional_information_request: null,
+    created_at: '2026-02-01T10:00:00Z',
+    updated_at: '2026-02-03T11:20:00Z',
   },
 ];
 
@@ -621,6 +660,360 @@ const INITIAL_AUDIT_LOGS: AuditLog[] = [
 ];
 
 // -----------------------------------------------------------------------------
+// Plant Intelligence & Health Initial Seed Data
+// -----------------------------------------------------------------------------
+const INITIAL_CROPS: Crop[] = [
+  { id: 'crop-sugarcane', name: 'Sugarcane', scientific_name: 'Saccharum officinarum', category: 'Cash Crop', default_season: 'Perennial', description: 'Primary cash crop of Western Maharashtra irrigated tracts.' },
+  { id: 'crop-cotton', name: 'Cotton', scientific_name: 'Gossypium hirsutum', category: 'Cash Crop', default_season: 'Kharif', description: 'Deep-rooted fiber crop sensitive to moisture stress.' },
+  { id: 'crop-soybean', name: 'Soybean', scientific_name: 'Glycine max', category: 'Pulse', default_season: 'Kharif', description: 'Major pulse and oilseed crop of Deccan plateau.' },
+  { id: 'crop-onion', name: 'Onion', scientific_name: 'Allium cepa', category: 'Vegetable', default_season: 'Rabi', description: 'High value bulb crop cultivated extensively in Pune/Nashik.' },
+  { id: 'crop-wheat', name: 'Wheat', scientific_name: 'Triticum aestivum', category: 'Cereal', default_season: 'Rabi', description: 'Standard staple cereal irrigated during winter season.' },
+  { id: 'crop-tomato', name: 'Tomato', scientific_name: 'Solanum lycopersicum', category: 'Horticulture', default_season: 'Kharif', description: 'Intensively managed vegetable crop requiring balanced moisture.' },
+  { id: 'crop-grapes', name: 'Grapes', scientific_name: 'Vitis vinifera', category: 'Horticulture', default_season: 'Perennial', description: 'Commercial export fruit grown under precision drip systems.' },
+];
+
+const INITIAL_CROP_THRESHOLDS: CropHealthThreshold[] = DEFAULT_CROP_THRESHOLDS;
+
+const INITIAL_MONITORING_UNITS: MonitoringUnit[] = [
+  {
+    id: 'unit-01',
+    property_id: 'prop-01', // Patil Agro Sugarcane Field (Approved Land)
+    unit_name: 'Plot A - Sugarcane (Co 86032)',
+    unit_type: 'plot',
+    crop_id: 'crop-sugarcane',
+    crop_variety: 'Sugarcane (Co 86032)',
+    planting_date: '2025-11-10',
+    zone_identifier: 'ZONE-NORTH-A1',
+    latitude: 18.5794,
+    longitude: 73.9825,
+    area_covered: 1.5,
+    area_unit: 'Acres',
+    current_health_status: 'Healthy',
+    last_assessed_at: '2026-10-22T09:20:00Z',
+    created_at: '2026-02-15T10:00:00Z',
+    updated_at: '2026-10-22T09:20:00Z',
+  },
+  {
+    id: 'unit-02',
+    property_id: 'prop-01',
+    unit_name: 'Plot B - Sugarcane (CoM 0265)',
+    unit_type: 'plot',
+    crop_id: 'crop-sugarcane',
+    crop_variety: 'Sugarcane (CoM 0265)',
+    planting_date: '2025-12-01',
+    zone_identifier: 'ZONE-SOUTH-B2',
+    latitude: 18.5791,
+    longitude: 73.9822,
+    area_covered: 1.0,
+    area_unit: 'Acres',
+    current_health_status: 'Needs Attention',
+    last_assessed_at: '2026-10-22T09:10:00Z',
+    created_at: '2026-02-15T10:00:00Z',
+    updated_at: '2026-10-22T09:10:00Z',
+  },
+  {
+    id: 'unit-03',
+    property_id: 'prop-01',
+    unit_name: 'Plot C - Sugarcane Drip Lateral 4',
+    unit_type: 'crop_zone',
+    crop_id: 'crop-sugarcane',
+    crop_variety: 'Sugarcane (Co 86032)',
+    planting_date: '2025-11-15',
+    zone_identifier: 'ZONE-EAST-C4',
+    latitude: 18.5796,
+    longitude: 73.9828,
+    area_covered: 0.5,
+    area_unit: 'Acres',
+    current_health_status: 'Critical',
+    last_assessed_at: '2026-10-22T09:05:00Z',
+    created_at: '2026-02-15T10:00:00Z',
+    updated_at: '2026-10-22T09:05:00Z',
+  },
+  {
+    id: 'unit-04',
+    property_id: 'prop-01',
+    unit_name: 'Plot D - Onion Intercrop Zone',
+    unit_type: 'plot',
+    crop_id: 'crop-onion',
+    crop_variety: 'Onion (Bhima Super)',
+    planting_date: '2026-01-10',
+    zone_identifier: 'ZONE-WEST-D1',
+    latitude: 18.5790,
+    longitude: 73.9829,
+    area_covered: 0.5,
+    area_unit: 'Acres',
+    current_health_status: 'Insufficient Data',
+    last_assessed_at: '2026-10-18T08:00:00Z',
+    created_at: '2026-02-15T10:00:00Z',
+    updated_at: '2026-10-18T08:00:00Z',
+  },
+];
+
+const INITIAL_SENSOR_DEVICES: SensorDevice[] = [
+  {
+    id: 'dev-01',
+    property_id: 'prop-01',
+    monitoring_unit_id: 'unit-01',
+    device_serial: 'LORA-SN-PUN-0192',
+    device_name: 'LoRaWAN Soil Probe #1 (Plot A)',
+    device_type: 'Multi-Depth Soil Profile Station',
+    model_number: 'AgriSens Pro-400',
+    status: 'active',
+    last_heartbeat: '2026-10-22T09:20:00Z',
+    battery_level: 95,
+    created_at: '2026-02-20T10:00:00Z',
+  },
+  {
+    id: 'dev-02',
+    property_id: 'prop-01',
+    monitoring_unit_id: 'unit-02',
+    device_serial: 'LORA-SN-PUN-0193',
+    device_name: 'LoRaWAN Soil Probe #2 (Plot B)',
+    device_type: 'Capacitive Soil Moisture Probe',
+    model_number: 'AgriSens Lite-200',
+    status: 'active',
+    last_heartbeat: '2026-10-22T09:10:00Z',
+    battery_level: 88,
+    created_at: '2026-02-20T10:00:00Z',
+  },
+  {
+    id: 'dev-03',
+    property_id: 'prop-01',
+    monitoring_unit_id: 'unit-03',
+    device_serial: 'LORA-SN-PUN-0194',
+    device_name: 'Telemetry Node #3 (Plot C)',
+    device_type: 'Tensiometer & Salinity Node',
+    model_number: 'EcoSoil-EC3',
+    status: 'active',
+    last_heartbeat: '2026-10-22T09:05:00Z',
+    battery_level: 72,
+    created_at: '2026-02-20T10:00:00Z',
+  },
+  {
+    id: 'dev-04',
+    property_id: 'prop-01',
+    monitoring_unit_id: 'unit-04',
+    device_serial: 'LORA-SN-PUN-0199',
+    device_name: 'Nursery Weather Node (Plot D)',
+    device_type: 'Micro-Climate Station',
+    model_number: 'AgriMet-M10',
+    status: 'disconnected',
+    last_heartbeat: '2026-10-18T08:00:00Z',
+    battery_level: 12,
+    created_at: '2026-02-20T10:00:00Z',
+  },
+];
+
+const INITIAL_SENSOR_READINGS: SensorReading[] = [
+  // Readings for Unit 01 (Healthy Plot A)
+  { id: 'rd-01', device_id: 'dev-01', property_id: 'prop-01', monitoring_unit_id: 'unit-01', parameter: 'soil_moisture', value: 68.4, unit: '%', recorded_at: '2026-10-22T09:20:00Z', source_device: 'LORA-SN-PUN-0192', data_quality: 'validated', created_at: '2026-10-22T09:20:00Z' },
+  { id: 'rd-02', device_id: 'dev-01', property_id: 'prop-01', monitoring_unit_id: 'unit-01', parameter: 'soil_ph', value: 6.9, unit: 'pH', recorded_at: '2026-10-22T09:20:00Z', source_device: 'LORA-SN-PUN-0192', data_quality: 'validated', created_at: '2026-10-22T09:20:00Z' },
+  { id: 'rd-03', device_id: 'dev-01', property_id: 'prop-01', monitoring_unit_id: 'unit-01', parameter: 'soil_temperature', value: 24.5, unit: '°C', recorded_at: '2026-10-22T09:20:00Z', source_device: 'LORA-SN-PUN-0192', data_quality: 'validated', created_at: '2026-10-22T09:20:00Z' },
+  { id: 'rd-04', device_id: 'dev-01', property_id: 'prop-01', monitoring_unit_id: 'unit-01', parameter: 'ambient_temperature', value: 28.2, unit: '°C', recorded_at: '2026-10-22T09:20:00Z', source_device: 'LORA-SN-PUN-0192', data_quality: 'validated', created_at: '2026-10-22T09:20:00Z' },
+  { id: 'rd-05', device_id: 'dev-01', property_id: 'prop-01', monitoring_unit_id: 'unit-01', parameter: 'relative_humidity', value: 64.0, unit: '%', recorded_at: '2026-10-22T09:20:00Z', source_device: 'LORA-SN-PUN-0192', data_quality: 'validated', created_at: '2026-10-22T09:20:00Z' },
+  { id: 'rd-06', device_id: 'dev-01', property_id: 'prop-01', monitoring_unit_id: 'unit-01', parameter: 'soil_ec', value: 0.95, unit: 'dS/m', recorded_at: '2026-10-22T09:20:00Z', source_device: 'LORA-SN-PUN-0192', data_quality: 'validated', created_at: '2026-10-22T09:20:00Z' },
+
+  // Readings for Unit 02 (Needs Attention Plot B: slight moisture dip)
+  { id: 'rd-07', device_id: 'dev-02', property_id: 'prop-01', monitoring_unit_id: 'unit-02', parameter: 'soil_moisture', value: 54.2, unit: '%', recorded_at: '2026-10-22T09:10:00Z', source_device: 'LORA-SN-PUN-0193', data_quality: 'validated', created_at: '2026-10-22T09:10:00Z' },
+  { id: 'rd-08', device_id: 'dev-02', property_id: 'prop-01', monitoring_unit_id: 'unit-02', parameter: 'soil_ph', value: 6.6, unit: 'pH', recorded_at: '2026-10-22T09:10:00Z', source_device: 'LORA-SN-PUN-0193', data_quality: 'validated', created_at: '2026-10-22T09:10:00Z' },
+  { id: 'rd-09', device_id: 'dev-02', property_id: 'prop-01', monitoring_unit_id: 'unit-02', parameter: 'soil_temperature', value: 26.8, unit: '°C', recorded_at: '2026-10-22T09:10:00Z', source_device: 'LORA-SN-PUN-0193', data_quality: 'validated', created_at: '2026-10-22T09:10:00Z' },
+
+  // Readings for Unit 03 (Critical Plot C: acute drought stress)
+  { id: 'rd-10', device_id: 'dev-03', property_id: 'prop-01', monitoring_unit_id: 'unit-03', parameter: 'soil_moisture', value: 27.4, unit: '%', recorded_at: '2026-10-22T09:05:00Z', source_device: 'LORA-SN-PUN-0194', data_quality: 'validated', created_at: '2026-10-22T09:05:00Z' },
+  { id: 'rd-11', device_id: 'dev-03', property_id: 'prop-01', monitoring_unit_id: 'unit-03', parameter: 'soil_temperature', value: 33.5, unit: '°C', recorded_at: '2026-10-22T09:05:00Z', source_device: 'LORA-SN-PUN-0194', data_quality: 'validated', created_at: '2026-10-22T09:05:00Z' },
+  { id: 'rd-12', device_id: 'dev-03', property_id: 'prop-01', monitoring_unit_id: 'unit-03', parameter: 'soil_ph', value: 7.2, unit: 'pH', recorded_at: '2026-10-22T09:05:00Z', source_device: 'LORA-SN-PUN-0194', data_quality: 'validated', created_at: '2026-10-22T09:05:00Z' },
+];
+
+const INITIAL_PLANT_OBSERVATIONS: PlantObservation[] = [
+  {
+    id: 'obs-01',
+    monitoring_unit_id: 'unit-01',
+    property_id: 'prop-01',
+    recorded_by: 'usr-farmer-01',
+    recorded_by_name: 'Ramesh Balasaheb Patil',
+    observation_type: 'image',
+    collection_method: 'Ground High-Resolution Mobile Photography',
+    data_source: 'farmer_mobile',
+    timestamp: '2026-10-21T15:30:00Z',
+    growth_stage: 'Vegetative',
+    irrigation_condition: 'Optimal',
+    wilting_observed: false,
+    leaf_discoloration: 'None',
+    pest_observed: false,
+    general_notes: 'Cane crop stands vigorous. Good tillering observed across rows 1 to 24.',
+    photographs: [
+      {
+        id: 'photo-01',
+        url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
+        category: 'leaf',
+        caption: 'Healthy cane foliage: dark green lamina with active stomatal transpiration.',
+        uploaded_at: '2026-10-21T15:30:00Z',
+      },
+      {
+        id: 'photo-02',
+        url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+        category: 'overview',
+        caption: 'Broad canopy overview: uniform height and good row spacing.',
+        uploaded_at: '2026-10-21T15:30:00Z',
+      },
+    ],
+    ai_prediction: {
+      condition: 'Normal Vigorous Growth',
+      confidence: 94,
+      potential_diseases: [],
+      nutrient_deficiencies: [],
+      pest_damage_detected: false,
+      symptoms_detected: ['Healthy chlorophyll absorbance', 'No foliar lesions'],
+      disclaimer: 'AI prediction based on visible foliar symptoms. This is an estimated indicator and not a definitive laboratory diagnosis.',
+    },
+    created_at: '2026-10-21T15:30:00Z',
+  },
+  {
+    id: 'obs-02',
+    monitoring_unit_id: 'unit-03',
+    property_id: 'prop-01',
+    recorded_by: 'usr-worker-01',
+    recorded_by_name: 'Prakash Mahadev Jadhav (Field Worker)',
+    observation_type: 'field_inspection',
+    collection_method: 'Field Worker In-Situ Agronomic Survey',
+    data_source: 'field_worker_tablet',
+    timestamp: '2026-10-22T08:45:00Z',
+    growth_stage: 'Vegetative',
+    irrigation_condition: 'Severe Drought',
+    wilting_observed: true,
+    leaf_discoloration: 'Chlorosis (Yellowing)',
+    pest_observed: false,
+    general_notes: 'Drip lateral 4 blocked by sediment; plants showing prominent afternoon leaf rolling and tip chlorosis.',
+    photographs: [
+      {
+        id: 'photo-03',
+        url: 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=800&q=80',
+        category: 'stem',
+        caption: 'Cane stem and dry soil surface along clogged drip lateral line.',
+        uploaded_at: '2026-10-22T08:45:00Z',
+      },
+    ],
+    ai_prediction: {
+      condition: 'Acute Abiotic Water Stress',
+      confidence: 89,
+      potential_diseases: [{ name: 'Foliar Dehydration Shock', probability: 0.88 }],
+      nutrient_deficiencies: [{ nutrient: 'Nitrogen (drought-induced immobility)', likelihood: 'Moderate' }],
+      pest_damage_detected: false,
+      symptoms_detected: ['Inward leaf rolling', 'Basal leaf yellowing'],
+      disclaimer: 'AI prediction based on visible foliar symptoms. This is an estimated indicator and not a definitive laboratory diagnosis.',
+    },
+    created_at: '2026-10-22T08:45:00Z',
+  },
+];
+
+const INITIAL_PLANT_ASSESSMENTS: PlantHealthAssessment[] = [
+  {
+    id: 'pha-01',
+    monitoring_unit_id: 'unit-01',
+    property_id: 'prop-01',
+    overall_status: 'Healthy',
+    assessment_timestamp: '2026-10-22T09:20:00Z',
+    supporting_measurements: {
+      soil_moisture: { value: 68.4, unit: '%', status: 'optimal' },
+      soil_ph: { value: 6.9, unit: 'pH', status: 'optimal' },
+      soil_temperature: { value: 24.5, unit: '°C', status: 'optimal' },
+      ambient_temperature: { value: 28.2, unit: '°C', status: 'optimal' },
+      relative_humidity: { value: 64.0, unit: '%', status: 'optimal' },
+      soil_ec: { value: 0.95, unit: 'dS/m', status: 'optimal' },
+    },
+    detected_anomalies: ['All monitored parameters within optimal ranges.'],
+    possible_concerns: ['No acute physiological concerns detected.'],
+    suggested_next_steps: ['Maintain current irrigation schedule and fertigation baseline.'],
+    data_freshness: 'Updated 29 minutes ago',
+    confidence: 94,
+    assessment_method: 'AgriSurvey Agronomic Rules Engine v2.4 + Vision AI v1.2',
+    model_version: 'v2.4.2-pune-rules',
+    is_preliminary: false,
+    created_at: '2026-10-22T09:20:00Z',
+  },
+  {
+    id: 'pha-02',
+    monitoring_unit_id: 'unit-02',
+    property_id: 'prop-01',
+    overall_status: 'Needs Attention',
+    assessment_timestamp: '2026-10-22T09:10:00Z',
+    supporting_measurements: {
+      soil_moisture: { value: 54.2, unit: '%', status: 'low' },
+      soil_ph: { value: 6.6, unit: 'pH', status: 'optimal' },
+      soil_temperature: { value: 26.8, unit: '°C', status: 'optimal' },
+    },
+    detected_anomalies: ['Soil moisture at 54.2% is below optimal range [60-80%] for Sugarcane.'],
+    possible_concerns: ['Mild vegetative moisture deficit beginning to limit daily stalk elongation.'],
+    suggested_next_steps: ['Increase drip cycle duration by 45 minutes over next 24 hours.'],
+    data_freshness: 'Updated 39 minutes ago',
+    confidence: 91,
+    assessment_method: 'AgriSurvey Agronomic Rules Engine v2.4',
+    model_version: 'v2.4.2-pune-rules',
+    is_preliminary: false,
+    created_at: '2026-10-22T09:10:00Z',
+  },
+  {
+    id: 'pha-03',
+    monitoring_unit_id: 'unit-03',
+    property_id: 'prop-01',
+    overall_status: 'Critical',
+    assessment_timestamp: '2026-10-22T09:05:00Z',
+    supporting_measurements: {
+      soil_moisture: { value: 27.4, unit: '%', status: 'critical' },
+      soil_temperature: { value: 33.5, unit: '°C', status: 'warning' },
+      soil_ph: { value: 7.2, unit: 'pH', status: 'optimal' },
+    },
+    detected_anomalies: [
+      'Soil moisture at 27.4% is critically below tolerable threshold (45.0%) for Sugarcane.',
+      'Visible foliage wilting observed during field worker inspection.',
+    ],
+    possible_concerns: [
+      'Risk of permanent wilting point, vascular cavitation, and irreversible yield loss.',
+    ],
+    suggested_next_steps: [
+      'Flush and unblock drip lateral 4 immediately; irrigate zone for 3.5 hours continuously.',
+    ],
+    data_freshness: 'Updated 44 minutes ago',
+    confidence: 96,
+    assessment_method: 'AgriSurvey Agronomic Rules Engine v2.4 + Vision AI v1.2',
+    model_version: 'v2.4.2-pune-rules',
+    is_preliminary: false,
+    created_at: '2026-10-22T09:05:00Z',
+  },
+];
+
+const INITIAL_PLANT_ALERTS: PlantHealthAlert[] = [
+  {
+    id: 'alert-01',
+    monitoring_unit_id: 'unit-03',
+    property_id: 'prop-01',
+    crop_name: 'Sugarcane (Co 86032)',
+    unit_name: 'Plot C - Sugarcane Drip Lateral 4',
+    property_name: 'Patil Agro Sugarcane Field',
+    severity: 'critical',
+    reason: 'Soil moisture at 27.4% is critically below tolerable threshold (45.0%) for Sugarcane.',
+    supporting_measurement: 'Severe drought stress, turgor loss, and soil moisture at 27.4%',
+    recommended_action: 'Flush and unblock drip lateral 4 immediately; irrigate zone for 3.5 hours continuously.',
+    status: 'active',
+    detected_at: '2026-10-22T09:05:00Z',
+  },
+  {
+    id: 'alert-02',
+    monitoring_unit_id: 'unit-02',
+    property_id: 'prop-01',
+    crop_name: 'Sugarcane (CoM 0265)',
+    unit_name: 'Plot B - Sugarcane (CoM 0265)',
+    property_name: 'Patil Agro Sugarcane Field',
+    severity: 'medium',
+    reason: 'Soil moisture at 54.2% is below optimal range [60-80%] for Sugarcane.',
+    supporting_measurement: 'Moisture deficit in upper 20cm soil profile',
+    recommended_action: 'Increase drip cycle duration by 45 minutes over next 24 hours.',
+    status: 'active',
+    detected_at: '2026-10-22T09:10:00Z',
+  },
+];
+
+// -----------------------------------------------------------------------------
 // Reactive Mock Database Engine
 // -----------------------------------------------------------------------------
 export class MockDatabase {
@@ -640,6 +1033,18 @@ export class MockDatabase {
   public notifications: Notification[];
   public auditLogs: AuditLog[];
   public smsMessages: SmsMessage[];
+  public notificationJobs: NotificationJob[];
+  public activationTokens: AccountActivationToken[];
+
+  // Plant Intelligence & Telemetry Collections
+  public crops: Crop[];
+  public cropThresholds: CropHealthThreshold[];
+  public monitoringUnits: MonitoringUnit[];
+  public plantObservations: PlantObservation[];
+  public sensorDevices: SensorDevice[];
+  public sensorReadings: SensorReading[];
+  public plantHealthAssessments: PlantHealthAssessment[];
+  public plantHealthAlerts: PlantHealthAlert[];
 
   // Active simulated user session
   public currentUser: Profile;
@@ -659,6 +1064,18 @@ export class MockDatabase {
     this.notifications = getStorage('notifications', INITIAL_NOTIFICATIONS);
     this.auditLogs = getStorage('auditLogs', INITIAL_AUDIT_LOGS);
     this.smsMessages = getStorage('smsMessages', INITIAL_SMS_MESSAGES);
+    this.notificationJobs = getStorage('notificationJobs', []);
+    this.activationTokens = getStorage('activationTokens', []);
+
+    // Load plant intelligence collections
+    this.crops = getStorage('crops', INITIAL_CROPS);
+    this.cropThresholds = getStorage('cropThresholds', INITIAL_CROP_THRESHOLDS);
+    this.monitoringUnits = getStorage('monitoringUnits', INITIAL_MONITORING_UNITS);
+    this.sensorDevices = getStorage('sensorDevices', INITIAL_SENSOR_DEVICES);
+    this.sensorReadings = getStorage('sensorReadings', INITIAL_SENSOR_READINGS);
+    this.plantObservations = getStorage('plantObservations', INITIAL_PLANT_OBSERVATIONS);
+    this.plantHealthAssessments = getStorage('plantHealthAssessments', INITIAL_PLANT_ASSESSMENTS);
+    this.plantHealthAlerts = getStorage('plantHealthAlerts', INITIAL_PLANT_ALERTS);
 
     const savedUserId = isLocalStorageAvailable() ? localStorage.getItem('agrisurvey_current_user_id') : null;
     const userMatch = this.profiles.find((p) => p.id === savedUserId);
@@ -687,6 +1104,71 @@ export class MockDatabase {
     setStorage('notifications', this.notifications);
     setStorage('auditLogs', this.auditLogs);
     setStorage('smsMessages', this.smsMessages);
+    setStorage('notificationJobs', this.notificationJobs);
+    setStorage('activationTokens', this.activationTokens);
+
+    // Persist plant intelligence collections
+    setStorage('crops', this.crops);
+    setStorage('cropThresholds', this.cropThresholds);
+    setStorage('monitoringUnits', this.monitoringUnits);
+    setStorage('sensorDevices', this.sensorDevices);
+    setStorage('sensorReadings', this.sensorReadings);
+    setStorage('plantObservations', this.plantObservations);
+    setStorage('plantHealthAssessments', this.plantHealthAssessments);
+    setStorage('plantHealthAlerts', this.plantHealthAlerts);
+  }
+
+  public addMonitoringUnit(unit: MonitoringUnit): void {
+    this.monitoringUnits.unshift(unit);
+    this.persistAll();
+  }
+
+  public updateMonitoringUnit(unit: MonitoringUnit): void {
+    const idx = this.monitoringUnits.findIndex((u) => u.id === unit.id);
+    if (idx >= 0) {
+      this.monitoringUnits[idx] = unit;
+      this.persistAll();
+    }
+  }
+
+  public addSensorReading(reading: SensorReading): void {
+    this.sensorReadings.unshift(reading);
+    this.persistAll();
+  }
+
+  public addPlantObservation(obs: PlantObservation): void {
+    this.plantObservations.unshift(obs);
+    this.persistAll();
+  }
+
+  public addPlantAssessment(assessment: PlantHealthAssessment): void {
+    this.plantHealthAssessments.unshift(assessment);
+    const unit = this.monitoringUnits.find((u) => u.id === assessment.monitoring_unit_id);
+    if (unit) {
+      unit.current_health_status = assessment.overall_status;
+      unit.last_assessed_at = assessment.assessment_timestamp;
+    }
+    this.persistAll();
+  }
+
+  public addPlantAlert(alert: PlantHealthAlert): void {
+    this.plantHealthAlerts.unshift(alert);
+    this.persistAll();
+  }
+
+  public updateAlertStatus(alertId: string, status: 'active' | 'acknowledged' | 'resolved', userId?: string): void {
+    const alert = this.plantHealthAlerts.find((a) => a.id === alertId);
+    if (alert) {
+      alert.status = status;
+      if (status === 'acknowledged') {
+        alert.acknowledged_at = new Date().toISOString();
+        alert.acknowledged_by = userId || this.currentUser.id;
+      } else if (status === 'resolved') {
+        alert.resolved_at = new Date().toISOString();
+        alert.resolved_by = userId || this.currentUser.id;
+      }
+      this.persistAll();
+    }
   }
 
   public addSmsMessage(sms: SmsMessage): void {
@@ -779,6 +1261,19 @@ export class MockDatabase {
     this.notifications = INITIAL_NOTIFICATIONS;
     this.auditLogs = INITIAL_AUDIT_LOGS;
     this.smsMessages = INITIAL_SMS_MESSAGES;
+    this.notificationJobs = [];
+    this.activationTokens = [];
+
+    // Reset plant intelligence collections
+    this.crops = INITIAL_CROPS;
+    this.cropThresholds = INITIAL_CROP_THRESHOLDS;
+    this.monitoringUnits = INITIAL_MONITORING_UNITS;
+    this.sensorDevices = INITIAL_SENSOR_DEVICES;
+    this.sensorReadings = INITIAL_SENSOR_READINGS;
+    this.plantObservations = INITIAL_PLANT_OBSERVATIONS;
+    this.plantHealthAssessments = INITIAL_PLANT_ASSESSMENTS;
+    this.plantHealthAlerts = INITIAL_PLANT_ALERTS;
+
     this.currentUser = INITIAL_PROFILES[0];
     this.persistAll();
   }

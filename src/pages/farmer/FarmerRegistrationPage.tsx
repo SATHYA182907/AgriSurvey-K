@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   FileText,
   User,
@@ -224,9 +224,9 @@ export const FarmerRegistrationPage: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
                 Application Submitted Successfully
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Your land registration application has been submitted successfully. It is awaiting verification by the responsible Tahsildar.
-              </p>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-semibold text-xs sm:text-sm leading-relaxed">
+                “Your registration has been submitted successfully. Your application is awaiting Tahsildar verification. Your login credentials will be provided after approval.”
+              </div>
             </div>
 
             {/* Reference Details Box */}
@@ -242,15 +242,17 @@ export const FarmerRegistrationPage: React.FC = () => {
               <div className="flex justify-between">
                 <span className="text-slate-500 font-sans">Initial Status:</span>
                 <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  PENDING TAHSILDAR REVIEW
+                  PENDING VERIFICATION
                 </span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <Button onClick={() => navigate('/farmer/dashboard')}>
-                Track in Dashboard
-              </Button>
+              <Link to={`/farmer/application-status?ref=${submittedApp.application_reference}&phone=${personalInfo.mobileNumber}`}>
+                <Button icon={<ArrowRight className="w-4 h-4" />}>
+                  Track Application Status
+                </Button>
+              </Link>
               <Button variant="outline" onClick={() => setSubmittedApp(null)}>
                 Register Another Parcel
               </Button>

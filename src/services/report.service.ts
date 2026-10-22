@@ -16,6 +16,19 @@ export class ReportService {
     };
   }
 
+  async getReportsForFarmer(farmerId: string): Promise<VerificationReport[]> {
+    const apps = mockDb.applications.filter((a) => a.farmer_id === farmerId);
+    const appIds = new Set(apps.map((a) => a.id));
+    return mockDb.reports
+      .filter((r) => appIds.has(r.application_id))
+      .map((r) => ({
+        ...r,
+        property: mockDb.properties.find((p) => p.id === r.property_id),
+        application: mockDb.applications.find((a) => a.id === r.application_id),
+        reviewer: mockDb.profiles.find((p) => p.id === r.reviewed_by),
+      }));
+  }
+
   async getReportById(reportId: string): Promise<VerificationReport | null> {
     const rep = mockDb.reports.find((r) => r.id === reportId || r.report_reference === reportId);
     if (!rep) return null;

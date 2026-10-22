@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FileText,
@@ -18,6 +18,16 @@ import {
   ChevronRight,
   AlertCircle,
   UserCheck,
+  Sprout,
+  Activity,
+  RefreshCw,
+  BarChart3,
+  Wifi,
+  WifiOff,
+  Copy,
+  Check,
+  ExternalLink,
+  Smartphone,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -25,14 +35,22 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { PropertyMap } from '@/components/maps/PropertyMap';
+import { AgriculturalJurisdictionMap } from '@/components/maps/AgriculturalJurisdictionMap';
 import { registrationService } from '@/services/registration.service';
 import { inspectionService } from '@/services/inspection.service';
+import { plantIntelligenceService } from '@/services/plant-intelligence.service';
+import { msg91Service } from '@/services/msg91.service';
 import { mockDb } from '@/services/mock-db';
-import { RegistrationApplication, Profile } from '@/types';
-import { PUNE_TALUKS, MAHARASHTRA_DISTRICTS } from '@/lib/constants';
+import { RegistrationApplication, MonitoringUnit, Property, NotificationJob } from '@/types';
+import { PUNE_TALUKS } from '@/lib/constants';
 
 export const TahsildarDashboardPage: React.FC = () => {
   const tahsildar = mockDb.currentUser;
+
+  // Active Tab: 'queue' vs 'monitoring'
+  const [activeTab, setActiveTab] = useState<'queue' | 'monitoring'>('queue');
+
+  // Queue State
   const [applications, setApplications] = useState<RegistrationApplication[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -46,33 +64,122 @@ export const TahsildarDashboardPage: React.FC = () => {
   const [additionalInfoMsg, setAdditionalInfoMsg] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [approvalResultModal, setApprovalResultModal] = useState<{
+    app: RegistrationApplication;
+    username: string;
+    activationUrl?: string;
+    smsJob?: NotificationJob;
+    smsMessage?: string;
+  } | null>(null);
+  const [isRetryingSms, setIsRetryingSms] = useState(false);
 
   // Assign Inspection Modal State
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedWorkerId, setSelectedWorkerId] = useState('usr-worker-01');
-  const [scheduledDate, setScheduledDate] = useState('2026-10-20');
+  const [scheduledDate, setScheduledDate] = useState('2026-10-25');
   const [fieldNotes, setFieldNotes] = useState('Standard drone photogrammetry and crop boundary survey.');
 
-  useEffect(() => {
-    loadApplications();
-  }, [statusFilter, talukFilter, searchTerm]);
+  // Jurisdiction Agricultural Monitoring View State
+  const [monitoringSummary, setMonitoringSummary] = useState<{
+    assignedJurisdiction: string;
+    totalMonitoredFarms: number;
+    totalMonitoredUnits: number;
+    healthDistribution: Record<string, number>;
+    criticalAlertCount: number;
+    activeSensorsCount: number;
+    disconnectedSensorsCount: number;
+    staleDataUnitsCount: number;
+    cropDistribution: Array<{ crop: string; unitCount: number; percentage: number }>;
+    unitsWithCriticalAlerts: MonitoringUnit[];
+    farmsWithStaleData: MonitoringUnit[];
+  } | null>(null);
 
-  const loadApplications = async () => {
+  const [jurisdictionProperties, setJurisdictionProperties] = useState<Property[]>([]);
+  const [jurisdictionUnits, setJurisdictionUnits] = useState<MonitoringUnit[]>([]);
+
+  const loadApplications = useCallback(async () => {
     const list = await registrationService.listApplicationsForTahsildar({
       status: statusFilter,
       taluk: talukFilter,
       search: searchTerm,
     });
     setApplications(list);
-  };
+  }, [statusFilter, talukFilter, searchTerm]);
 
-  const handleOpenReview = (app: RegistrationApplication) => {
+  const loadMonitoringSummary = useCallback(async () => {
+    const summary = await plantIntelligenceService.getTahsildarJurisdictionMonitoringSummary(
+      tahsildar.id
+    );
+    setMonitoringSummary(summary);
+
+    // Load properties & units in jurisdiction for map
+    const props = mockDb.properties.filter((p) => p.district === 'Pune');
+    setJurisdictionProperties(props);
+    const units = await plantIntelligenceService.getMonitoringUnits();
+    setJurisdictionUnits(units);
+  }, [tahsildar.id]);
+
+  useEffect(() => {
+    loadApplications();
+    loadMonitoringSummary();
+  }, [loadApplications, loadMonitoringSummary]);
+
+  const handleOpenReview = async (app: RegistrationApplication) => {
     setSelectedApp(app);
     setReviewModalOpen(true);
     setDecisionType(null);
     setRejectionReason('');
     setAdditionalInfoMsg('');
     setReviewNotes('');
+
+    // If currently PENDING, automatically start review (UNDER_REVIEW)
+    if (app.status === 'PENDING_TAHSILDAR_REVIEW' || app.status === 'PENDING_VERIFICATION') {
+      try {
+        await registrationService.startReview(app.id);
+        loadApplications();
+      } catch (e) {
+        console.warn('Could not auto-start review', e);
+      }
+    }
+  };
+
+  const handlePreConfirmDecision = () => {
+    if (!decisionType) {
+      alert('Please select an administrative decision (Approve, Request More Info, or Reject).');
+      return;
+    }
+    if (decisionType === 'REJECT' && !rejectionReason.trim()) {
+      alert('Please enter an official rejection reason.');
+      return;
+    }
+    if (decisionType === 'REQUEST_INFO' && !additionalInfoMsg.trim()) {
+      alert('Please specify the additional documentation or clarification required.');
+      return;
+    }
+    setConfirmModalOpen(true);
+  };
+
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyActivationLink = (url?: string) => {
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleRetrySms = async () => {
+    if (!approvalResultModal?.smsJob?.id) return;
+    setIsRetryingSms(true);
+    try {
+      const updatedJob = await msg91Service.retryNotificationJob(approvalResultModal.smsJob.id);
+      setApprovalResultModal((prev) => (prev ? { ...prev, smsJob: updatedJob } : null));
+    } catch (e: any) {
+      alert('Failed to retry SMS: ' + (e.message || 'Unknown error'));
+    } finally {
+      setIsRetryingSms(false);
+    }
   };
 
   const handleExecuteDecision = async () => {
@@ -85,28 +192,26 @@ export const TahsildarDashboardPage: React.FC = () => {
           notes: reviewNotes || 'Application complies with 7/12 land revenue extract.',
         });
 
-        const creds = res.credentials;
-        if (creds) {
-          alert(
-            `✅ Land Registration Approved!\n\nOfficial portal login credentials generated and dispatched via SMS text message to +91 ${selectedApp.farmer?.phone_number}:\n\n• Username: ${creds.username}\n• Temporary Password: ${creds.password}\n\nThe farmer has received the SMS notification and can now enter the Farmer Portal.`
-          );
-        }
+        setConfirmModalOpen(false);
+        setReviewModalOpen(false);
+        loadApplications();
+        loadMonitoringSummary();
+
+        setApprovalResultModal({
+          app: res.application,
+          username: res.username || res.application.farmer?.username || 'MH-PUN-0000',
+          activationUrl: res.activationUrl,
+          smsJob: res.smsJob,
+          smsMessage: res.smsMessage,
+        });
+        return;
       } else if (decisionType === 'REJECT') {
-        if (!rejectionReason.trim()) {
-          alert('Please enter a rejection reason.');
-          setIsProcessing(false);
-          return;
-        }
         await registrationService.reviewApplication(selectedApp.id, 'REJECTED', {
           rejectionReason,
           notes: reviewNotes,
         });
+        alert(`Application ${selectedApp.application_reference} rejected. Notification sent to farmer.`);
       } else if (decisionType === 'REQUEST_INFO') {
-        if (!additionalInfoMsg.trim()) {
-          alert('Please specify the required additional information.');
-          setIsProcessing(false);
-          return;
-        }
         await registrationService.reviewApplication(
           selectedApp.id,
           'ADDITIONAL_INFORMATION_REQUIRED',
@@ -115,14 +220,17 @@ export const TahsildarDashboardPage: React.FC = () => {
             notes: reviewNotes,
           }
         );
+        alert(`Clarification requested from farmer. Application marked "Additional Information Required".`);
       }
 
-      setIsProcessing(false);
+      setConfirmModalOpen(false);
       setReviewModalOpen(false);
       loadApplications();
+      loadMonitoringSummary();
     } catch (err: any) {
-      setIsProcessing(false);
       alert(err.message || 'Error recording decision');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -132,278 +240,452 @@ export const TahsildarDashboardPage: React.FC = () => {
 
     try {
       await inspectionService.assignInspection({
-        propertyId: selectedApp.property_id,
         applicationId: selectedApp.id,
+        propertyId: selectedApp.property_id,
         workerId: selectedWorkerId,
-        scheduledAt: new Date(scheduledDate).toISOString(),
+        scheduledAt: scheduledDate,
         fieldNotes,
       });
 
-      setIsProcessing(false);
+      alert(`✅ Field inspection assigned to field worker. Scheduled for ${scheduledDate}.`);
       setAssignModalOpen(false);
-      alert('Field inspection successfully assigned to drone operator.');
       loadApplications();
     } catch (err: any) {
-      setIsProcessing(false);
       alert(err.message || 'Error assigning inspection');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const totalRegistered = mockDb.applications.length;
-  const pendingCount = mockDb.applications.filter((a) => a.status === 'PENDING_TAHSILDAR_REVIEW').length;
-  const approvedCount = mockDb.applications.filter((a) => a.status === 'APPROVED').length;
-  const rejectedCount = mockDb.applications.filter((a) => a.status === 'REJECTED').length;
-  const pendingInspections = mockDb.inspections.filter((i) => i.inspection_status !== 'COMPLETED').length;
-  const droneAwaiting = mockDb.inspections.filter((i) => i.inspection_status === 'EVIDENCE_UPLOADED').length;
-  const completedReports = mockDb.reports.filter((r) => r.final_status === 'VERIFIED').length;
+  // Stats computed from applications in this jurisdiction
+  const totalApps = applications.length;
+  const pendingApps = applications.filter(
+    (a) => a.status === 'PENDING_TAHSILDAR_REVIEW' || a.status === 'PENDING_VERIFICATION' || a.status === 'SUBMITTED'
+  ).length;
+  const underReviewApps = applications.filter((a) => a.status === 'UNDER_REVIEW').length;
+  const actionRequiredApps = applications.filter((a) => a.status === 'ADDITIONAL_INFORMATION_REQUIRED').length;
+  const approvedApps = applications.filter((a) => a.status === 'APPROVED').length;
+  const rejectedApps = applications.filter((a) => a.status === 'REJECTED').length;
 
   return (
     <DashboardLayout
-      title="Revenue Administration Portal"
-      subtitle={`Tahsildar Anand S. Kulkarni • Assigned Jurisdiction: Pune District (Haveli & Baramati Taluks)`}
+      title="Tahsildar Administrative Desk"
+      subtitle={`Revenue Office • ${tahsildar.full_name} • Pune Division Jurisdiction`}
     >
       <div className="space-y-6">
-        {/* Jurisdiction Notice Banner (Section 10 Requirement) */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-700">
-            <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
-            <span>
-              Authorized Geographic Scope: <span className="font-bold text-slate-900">Pune District / Haveli & Baramati Taluks</span> (Staff Region ID: SR-01)
-            </span>
+        {/* Top View Selector: Verification Queue vs Agricultural Monitoring */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+            <button
+              onClick={() => setActiveTab('queue')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'queue'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileText className="w-4 h-4 text-emerald-600" />
+              <span>Land Verification Queue ({pendingApps + underReviewApps})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('monitoring')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'monitoring'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sprout className="w-4 h-4 text-emerald-600" />
+              <span>Agricultural Monitoring View</span>
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/tahsildar/image-comparison">
-              <Button size="sm" variant="outline" icon={<Eye className="w-3.5 h-3.5" />}>
-                Comparison Workspace
-              </Button>
-            </Link>
-            <Link to="/tahsildar/crop-verification">
-              <Button size="sm" variant="outline">
-                Crop Verification
-              </Button>
-            </Link>
+
+          <div className="text-xs text-slate-500 font-semibold flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-slate-400" />
+            <span>Assigned Jurisdiction: <strong>Haveli Taluk (Pune)</strong></span>
           </div>
         </div>
 
-        {/* 7 Statistics Cards (Section 10 Requirement) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          <Card className="p-3.5 text-center">
-            <div className="text-[10px] uppercase font-semibold text-slate-400">Total Apps</div>
-            <div className="text-xl font-bold text-slate-900 mt-1">{totalRegistered}</div>
-          </Card>
-          <Card className="p-3.5 text-center border-amber-200 bg-amber-50/30">
-            <div className="text-[10px] uppercase font-semibold text-amber-700">Pending Review</div>
-            <div className="text-xl font-bold text-amber-800 mt-1">{pendingCount}</div>
-          </Card>
-          <Card className="p-3.5 text-center border-emerald-200 bg-emerald-50/30">
-            <div className="text-[10px] uppercase font-semibold text-emerald-700">Approved</div>
-            <div className="text-xl font-bold text-emerald-800 mt-1">{approvedCount}</div>
-          </Card>
-          <Card className="p-3.5 text-center border-rose-200 bg-rose-50/30">
-            <div className="text-[10px] uppercase font-semibold text-rose-700">Rejected</div>
-            <div className="text-xl font-bold text-rose-800 mt-1">{rejectedCount}</div>
-          </Card>
-          <Card className="p-3.5 text-center">
-            <div className="text-[10px] uppercase font-semibold text-slate-400">Inspections</div>
-            <div className="text-xl font-bold text-slate-900 mt-1">{pendingInspections}</div>
-          </Card>
-          <Card className="p-3.5 text-center border-teal-200 bg-teal-50/30">
-            <div className="text-[10px] uppercase font-semibold text-teal-700">Drone Evidence</div>
-            <div className="text-xl font-bold text-teal-800 mt-1">{droneAwaiting}</div>
-          </Card>
-          <Card className="p-3.5 text-center border-emerald-200 bg-emerald-50/30">
-            <div className="text-[10px] uppercase font-semibold text-emerald-700">Verified</div>
-            <div className="text-xl font-bold text-emerald-800 mt-1">{completedReports}</div>
-          </Card>
-        </div>
+        {/* =========================================================================
+            TAB 1: LAND REVENUE VERIFICATION QUEUE
+        ========================================================================== */}
+        {activeTab === 'queue' && (
+          <div className="space-y-6">
+            {/* 6 Administrative Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                  <span>Total In Queue</span>
+                  <FileText className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+                <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalApps}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Assigned taluk</div>
+              </Card>
 
-        {/* Filter and Search Bar */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
-          <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search reference, farmer, survey..."
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 bg-white"
-            />
-          </div>
+              <Card className="p-4 bg-amber-50/50 border-amber-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
+                  <span>Pending Review</span>
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-amber-950 mt-1">{pendingApps}</div>
+                <div className="text-[10px] text-amber-700 mt-0.5">Awaiting review</div>
+              </Card>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <span>Filter:</span>
+              <Card className="p-4 bg-blue-50/50 border-blue-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-blue-800">
+                  <span>Under Review</span>
+                  <Eye className="w-3.5 h-3.5 text-blue-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-blue-950 mt-1">{underReviewApps}</div>
+                <div className="text-[10px] text-blue-700 mt-0.5">Active inspection</div>
+              </Card>
+
+              <Card className="p-4 bg-purple-50/50 border-purple-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-purple-800">
+                  <span>Info Requested</span>
+                  <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-purple-950 mt-1">{actionRequiredApps}</div>
+                <div className="text-[10px] text-purple-700 mt-0.5">Farmer response awaited</div>
+              </Card>
+
+              <Card className="p-4 bg-emerald-50/50 border-emerald-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+                  <span>Approved</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-emerald-950 mt-1">{approvedApps}</div>
+                <div className="text-[10px] text-emerald-700 mt-0.5">Verified landholders</div>
+              </Card>
+
+              <Card className="p-4 bg-red-50/50 border-red-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-red-800">
+                  <span>Rejected</span>
+                  <XCircle className="w-3.5 h-3.5 text-red-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-red-950 mt-1">{rejectedApps}</div>
+                <div className="text-[10px] text-red-700 mt-0.5">With recorded reason</div>
+              </Card>
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="PENDING_TAHSILDAR_REVIEW">Pending Review</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="ADDITIONAL_INFORMATION_REQUIRED">Info Required</option>
-            </select>
+            {/* Filter and Search Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search farmer, survey no, or ref..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 focus:outline-emerald-600"
+                />
+              </div>
 
-            <select
-              value={talukFilter}
-              onChange={(e) => setTalukFilter(e.target.value)}
-              className="text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium"
-            >
-              <option value="ALL">All Taluks (Jurisdiction)</option>
-              <option value="Haveli">Haveli Taluk</option>
-              <option value="Baramati">Baramati Taluk</option>
-            </select>
-          </div>
-        </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 rounded-lg border border-slate-300 bg-white"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="PENDING_TAHSILDAR_REVIEW">Pending Review</option>
+                  <option value="UNDER_REVIEW">Under Review</option>
+                  <option value="ADDITIONAL_INFORMATION_REQUIRED">Info Requested</option>
+                  <option value="RESUBMITTED">Resubmitted</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
 
-        {/* Applications Data Table */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="py-3 px-4">Application Ref</th>
-                  <th className="py-3 px-4">Farmer Name</th>
-                  <th className="py-3 px-4">Masked Mobile</th>
-                  <th className="py-3 px-4">Location</th>
-                  <th className="py-3 px-4">Survey / Gat</th>
-                  <th className="py-3 px-4">Area</th>
-                  <th className="py-3 px-4">Farm Type</th>
-                  <th className="py-3 px-4">Submitted</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {applications.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-8 text-center text-slate-400">
-                      No applications found matching current geographic or status filters.
-                    </td>
-                  </tr>
-                ) : (
-                  applications.map((app) => {
-                    const prop = app.property;
-                    const farmerObj = app.farmer;
-                    const maskedPhone = farmerObj?.phone_number
-                      ? farmerObj.phone_number.replace(/(\d{2})\d{4}(\d{4})/, '$1****$2')
-                      : '98****2345';
+                <select
+                  value={talukFilter}
+                  onChange={(e) => setTalukFilter(e.target.value)}
+                  className="px-3 py-2 rounded-lg border border-slate-300 bg-white"
+                >
+                  <option value="ALL">All Taluks</option>
+                  {PUNE_TALUKS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-                    return (
-                      <tr key={app.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                          {app.application_reference}
-                        </td>
-                        <td className="py-3.5 px-4 font-medium text-slate-800">
-                          {farmerObj?.full_name}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-500">
-                          {maskedPhone}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-600">
-                          {prop?.village}, {prop?.taluk}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-semibold text-slate-800">
-                          {prop?.survey_number}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-700">
-                          {prop?.land_area} {prop?.land_area_unit}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-500">
-                          {prop?.farm_type}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-500">
-                          {new Date(app.submitted_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-3.5 px-4 space-y-1">
-                          <Badge status={app.status} size="sm" />
-                          {farmerObj?.account_status === 'pending_approval' && app.status === 'PENDING_TAHSILDAR_REVIEW' && (
-                            <span className="block text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 whitespace-nowrap">
-                              New Registration • Credentials Pending
-                            </span>
-                          )}
-                          {app.status === 'APPROVED' && farmerObj?.generated_credentials && (
-                            <span className="block text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
-                              SMS Sent: +91 {farmerObj.phone_number}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenReview(app)}
-                            >
-                              Review Application
-                            </Button>
-                            {app.status === 'APPROVED' && (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => {
-                                  setSelectedApp(app);
-                                  setAssignModalOpen(true);
-                                }}
-                              >
-                                Assign Drone
-                              </Button>
-                            )}
-                          </div>
+            {/* Verification Queue Table */}
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4">Application Ref</th>
+                      <th className="py-3 px-4">Farmer Name</th>
+                      <th className="py-3 px-4">Survey & Village</th>
+                      <th className="py-3 px-4">Area</th>
+                      <th className="py-3 px-4">Submitted</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {applications.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-slate-400">
+                          No applications match the current filter criteria.
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ) : (
+                      applications.map((app) => (
+                        <tr key={app.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-800">
+                            {app.application_reference}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-slate-900">{app.farmer?.full_name}</div>
+                            <div className="text-[10px] text-slate-400">{app.farmer?.phone_number}</div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-mono font-bold text-emerald-800">
+                              Survey {app.property?.survey_number}
+                            </div>
+                            <div className="text-[10px] text-slate-500">
+                              {app.property?.village}, {app.property?.taluk}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-700">
+                            {app.property?.land_area} {app.property?.land_area_unit}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-500">
+                            {new Date(app.submitted_at).toLocaleDateString()}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <Badge status={app.status} size="sm" />
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenReview(app)}
+                              >
+                                Review File
+                              </Button>
+                              {app.status === 'APPROVED' && (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => {
+                                    setSelectedApp(app);
+                                    setAssignModalOpen(true);
+                                  }}
+                                >
+                                  Assign Drone
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* =========================================================================
+            TAB 2: AGRICULTURAL MONITORING VIEW (JURISDICTION-WIDE)
+        ========================================================================== */}
+        {activeTab === 'monitoring' && monitoringSummary && (
+          <div className="space-y-6">
+            {/* Mandatory Administrative Notice */}
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-950 space-y-1">
+              <div className="flex items-center gap-2 font-bold text-emerald-900 text-sm">
+                <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>Agricultural Situational Awareness & Crop Telemetry View</span>
+              </div>
+              <p className="leading-relaxed text-emerald-900">
+                <strong>Administrative Separation Principle:</strong> Plant health data, sensor readings, and foliar disease alerts are collected for agricultural monitoring and farmer advisory. Crop condition or plant health alerts do <strong>NOT</strong> alter official land revenue title or property verification status.
+              </p>
+            </div>
+
+            {/* Jurisdiction Monitoring KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                  <span>Monitored Farms</span>
+                  <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-slate-900 mt-1">
+                  {monitoringSummary.totalMonitoredFarms}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Approved parcels</div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                  <span>Monitored Units</span>
+                  <Sprout className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-slate-900 mt-1">
+                  {monitoringSummary.totalMonitoredUnits}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Active crop plots</div>
+              </Card>
+
+              <Card className="p-4 bg-red-50/50 border-red-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-red-800">
+                  <span>Critical Plant Alerts</span>
+                  <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-red-950 mt-1">
+                  {monitoringSummary.criticalAlertCount}
+                </div>
+                <div className="text-[10px] text-red-700 mt-0.5">Moisture/drought crisis</div>
+              </Card>
+
+              <Card className="p-4 bg-emerald-50/50 border-emerald-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+                  <span>Active Sensor Nodes</span>
+                  <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <div className="text-2xl font-extrabold text-emerald-950 mt-1">
+                  {monitoringSummary.activeSensorsCount}
+                </div>
+                <div className="text-[10px] text-emerald-700 mt-0.5">IoT gateways transmitting</div>
+              </Card>
+
+              <Card className="p-4 bg-slate-50 border-slate-200">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                  <span>Stale Telemetry Units</span>
+                  <WifiOff className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+                <div className="text-2xl font-extrabold text-slate-900 mt-1">
+                  {monitoringSummary.staleDataUnitsCount}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">&gt;72h or disconnected</div>
+              </Card>
+            </div>
+
+            {/* Jurisdiction Map & Crop Distribution */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Geospatial Health Map (7 cols) */}
+              <div className="lg:col-span-7 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                    Jurisdiction Farmland Health Map
+                  </h3>
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    {monitoringSummary.assignedJurisdiction}
+                  </span>
+                </div>
+                <AgriculturalJurisdictionMap
+                  properties={jurisdictionProperties}
+                  monitoringUnits={jurisdictionUnits}
+                  height="360px"
+                />
+              </div>
+
+              {/* Crop Distribution in Jurisdiction (5 cols) */}
+              <Card className="lg:col-span-5 p-5 space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-emerald-600" />
+                  Crop Varieties Under Monitoring
+                </h3>
+
+                <div className="space-y-3">
+                  {monitoringSummary.cropDistribution.map((c) => (
+                    <div key={c.crop} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-800">{c.crop}</span>
+                        <span className="text-slate-500 font-mono">
+                          {c.unitCount} plots ({c.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-emerald-600 h-2 rounded-full"
+                          style={{ width: `${c.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+                  Data coverage across Haveli Taluk: <strong>92% verified parcel coverage</strong>. Sensor heartbeats refreshed every 15 minutes.
+                </div>
+              </Card>
+            </div>
+
+            {/* Units with Critical Alerts in Jurisdiction */}
+            {monitoringSummary.unitsWithCriticalAlerts.length > 0 && (
+              <div className="bg-white rounded-2xl border border-red-200 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-red-900 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                    Parcels Requiring Agronomic Attention in Jurisdiction
+                  </h3>
+                  <span className="text-[10px] text-red-700 bg-red-50 px-2 py-0.5 rounded font-bold">
+                    Direct Farmer Notification Active
+                  </span>
+                </div>
+
+                <div className="divide-y divide-slate-100 text-xs">
+                  {monitoringSummary.unitsWithCriticalAlerts.map((u) => (
+                    <div key={u.id} className="py-3 flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-slate-900">{u.unit_name}</span>
+                        <div className="text-slate-500">
+                          {u.property?.property_name} • Survey {u.property?.survey_number} ({u.property?.village})
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="px-2 py-0.5 bg-red-100 text-red-800 font-bold rounded text-[10px]">
+                          CRITICAL MOISTURE STRESS
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Detailed Application Review Modal (Section 11 Requirement) */}
-      <Modal
-        isOpen={reviewModalOpen}
-        onClose={() => setReviewModalOpen(false)}
-        title={`Application Review: ${selectedApp?.application_reference}`}
-        description="Verify farmer declaration against revenue records and issue official administrative decision"
-        maxWidth="2xl"
-      >
-        {selectedApp && (
+      {/* Review Modal */}
+      {selectedApp && (
+        <Modal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          title={`Land Record Review: ${selectedApp.application_reference}`}
+          size="lg"
+        >
           <div className="space-y-5 text-xs max-h-[75vh] overflow-y-auto pr-1">
             {/* Farmer & Property Summary Cards */}
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Landholder</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Farmer Khatedar</span>
                 <div className="font-bold text-slate-900">{selectedApp.farmer?.full_name}</div>
-                <div className="text-slate-500">
-                  Phone: {selectedApp.farmer?.phone_number?.replace(/(\d{2})\d{4}(\d{4})/, '$1****$2')}
-                </div>
-                <div className="text-emerald-700 font-medium">Identity: Verified Document Attached</div>
+                <div className="text-slate-500">Phone: +91 {selectedApp.farmer?.phone_number}</div>
+                <div className="text-emerald-700 font-semibold">Identity: Verified Document Attached ✓</div>
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Land Parcel</span>
-                <div className="font-bold text-slate-900">
-                  Survey No. {selectedApp.property?.survey_number}
-                </div>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Land Revenue Record</span>
+                <div className="font-bold text-slate-900">Survey No. {selectedApp.property?.survey_number}</div>
                 <div className="text-slate-500">
                   {selectedApp.property?.village}, {selectedApp.property?.taluk}, {selectedApp.property?.district}
                 </div>
-                <div className="font-mono text-slate-700">
-                  7/12 Doc Ref: {selectedApp.property?.land_document_reference}
-                </div>
+                <div className="font-mono text-slate-700">Doc: {selectedApp.property?.land_document_reference}</div>
               </div>
             </div>
 
             {/* Map Preview of Parcel */}
             <div>
               <span className="block font-bold text-slate-700 mb-1.5">
-                Geospatial Land Parcel Demarcation
+                Cadastral Survey Demarcation Map
               </span>
               <PropertyMap
                 latitude={selectedApp.property?.latitude || 18.5793}
@@ -423,11 +705,12 @@ export const TahsildarDashboardPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
+                  disabled={selectedApp.status === 'APPROVED'}
                   onClick={() => setDecisionType('APPROVE')}
                   className={`p-3 rounded-xl border text-center font-semibold transition-all ${
                     decisionType === 'APPROVE'
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-emerald-50 hover:border-emerald-200'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-emerald-50'
                   }`}
                 >
                   <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-current" />
@@ -440,11 +723,11 @@ export const TahsildarDashboardPage: React.FC = () => {
                   className={`p-3 rounded-xl border text-center font-semibold transition-all ${
                     decisionType === 'REQUEST_INFO'
                       ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-200'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50'
                   }`}
                 >
                   <HelpCircle className="w-4 h-4 mx-auto mb-1 text-current" />
-                  <span>Request More Info</span>
+                  <span>Request Clarification</span>
                 </button>
 
                 <button
@@ -452,8 +735,8 @@ export const TahsildarDashboardPage: React.FC = () => {
                   onClick={() => setDecisionType('REJECT')}
                   className={`p-3 rounded-xl border text-center font-semibold transition-all ${
                     decisionType === 'REJECT'
-                      ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-rose-50 hover:border-rose-200'
+                      ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-red-50'
                   }`}
                 >
                   <XCircle className="w-4 h-4 mx-auto mb-1 text-current" />
@@ -462,150 +745,344 @@ export const TahsildarDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Approval Credentials & SMS Dispatch Banner */}
+            {/* Context Inputs based on Decision */}
             {decisionType === 'APPROVE' && (
-              <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl space-y-1.5 text-xs text-emerald-950">
-                <div className="flex items-center gap-2 font-bold text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Farmer Account Activation & SMS Credential Dispatch</span>
-                </div>
-                <p className="text-[11px] leading-relaxed text-emerald-900">
-                  Approving this application will activate the farmer's portal account. The system will automatically generate secure login credentials and dispatch them via SMS text message to <strong>+91 {selectedApp.farmer?.phone_number}</strong>:
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2 text-emerald-900">
+                <span className="font-bold block">Approval Confirmation & Credentials Dispatch</span>
+                <p className="leading-relaxed">
+                  Approving this record will mark the land parcel verified, unlock plant intelligence monitoring, and dispatch official login credentials via SMS to +91 {selectedApp.farmer?.phone_number}.
                 </p>
-                <div className="bg-white/80 p-2 rounded-lg border border-emerald-200 font-mono text-[11px] flex gap-4 text-emerald-950">
-                  <span>Username: <strong>{selectedApp.farmer?.phone_number}</strong></span>
-                  <span>Password: <strong>Agri@{selectedApp.farmer?.phone_number?.slice(-4) || '2026'}</strong></span>
-                </div>
-              </div>
-            )}
-
-            {/* Rejection Reason (Mandatory when rejecting) */}
-            {decisionType === 'REJECT' && (
-              <div className="space-y-1 p-3 bg-rose-50 border border-rose-200 rounded-lg">
-                <label className="block font-bold text-rose-900">
-                  Mandatory Rejection Justification <span className="text-rose-600">*</span>
-                </label>
                 <textarea
-                  rows={3}
-                  required
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Specify legal or land record discrepancies justifying rejection..."
-                  className="w-full p-2.5 rounded-md border border-rose-300 text-xs bg-white text-slate-900 focus:ring-2 focus:ring-rose-500"
+                  rows={2}
+                  placeholder="Official approval remarks (recorded in revenue audit log)..."
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  className="w-full text-xs p-2 rounded-lg border border-emerald-300 bg-white"
                 />
               </div>
             )}
 
-            {/* Additional Information Request (Mandatory when requesting info) */}
             {decisionType === 'REQUEST_INFO' && (
-              <div className="space-y-1 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <label className="block font-bold text-amber-900">
-                  Information Required from Farmer <span className="text-amber-600">*</span>
+              <div className="space-y-2">
+                <label className="block font-bold text-amber-800">
+                  Required Additional Information / Documents *
                 </label>
                 <textarea
                   rows={3}
-                  required
+                  placeholder="Specify survey clarification, TILR sketch, mutation extract..."
                   value={additionalInfoMsg}
                   onChange={(e) => setAdditionalInfoMsg(e.target.value)}
-                  placeholder="State clearly what documents or boundary clarification is needed..."
-                  className="w-full p-2.5 rounded-md border border-amber-300 text-xs bg-white text-slate-900 focus:ring-2 focus:ring-amber-500"
+                  className="w-full text-xs p-2.5 rounded-lg border border-amber-300 bg-amber-50/40"
+                  required
                 />
               </div>
             )}
 
-            {/* General Review Notes */}
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Internal Review Notes / Audit Memo
-              </label>
-              <textarea
-                rows={2}
-                value={reviewNotes}
-                onChange={(e) => setReviewNotes(e.target.value)}
-                placeholder="Optional notes recorded to audit log..."
-                className="w-full p-2 rounded-md border border-slate-300 text-xs bg-white text-slate-900"
-              />
-            </div>
+            {decisionType === 'REJECT' && (
+              <div className="space-y-2">
+                <label className="block font-bold text-red-800">
+                  Official Rejection Reason (Mandatory) *
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Record formal statutory reason for refusal under Maharashtra Land Revenue Code..."
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-lg border border-red-300 bg-red-50/40"
+                  required
+                />
+              </div>
+            )}
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-              <Button variant="ghost" onClick={() => setReviewModalOpen(false)}>
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <Button variant="outline" onClick={() => setReviewModalOpen(false)}>
                 Cancel
               </Button>
               <Button
                 disabled={!decisionType}
-                isLoading={isProcessing}
-                onClick={handleExecuteDecision}
+                onClick={handlePreConfirmDecision}
               >
-                Confirm & Record Decision
+                Continue to Confirm Decision
               </Button>
             </div>
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
 
-      {/* Assign Inspection Modal (Section 12 Requirement) */}
+      {/* Confirmation Dialog to Prevent Conflicting / Accidental Actions */}
       <Modal
-        isOpen={assignModalOpen}
-        onClose={() => setAssignModalOpen(false)}
-        title="Assign Field Drone Inspection"
-        description="Dispatch certified drone pilot to capture RTK aerial imagery"
-        maxWidth="md"
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="Confirm Administrative Decision"
+        size="sm"
       >
-        <div className="space-y-4 text-xs">
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Select Field Verification Worker
-            </label>
-            <select
-              value={selectedWorkerId}
-              onChange={(e) => setSelectedWorkerId(e.target.value)}
-              className="w-full p-2 rounded-lg border border-slate-300 bg-white"
-            >
-              {mockDb.profiles
-                .filter((p) => p.role === 'field_worker')
-                .map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.full_name} (Drone Operator • Haveli)
-                  </option>
-                ))}
-            </select>
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-700 leading-relaxed">
+            Are you sure you want to execute the decision <strong>{decisionType}</strong> on application <strong>{selectedApp?.application_reference}</strong>?
+          </p>
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600">
+            This action will be stamped with your officer ID, timestamped, and recorded in the immutable administrative audit ledger.
           </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Scheduled Inspection Date
-            </label>
-            <input
-              type="date"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              className="w-full p-2 rounded-lg border border-slate-300 bg-white"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Mission Instructions & Flight Notes
-            </label>
-            <textarea
-              rows={3}
-              value={fieldNotes}
-              onChange={(e) => setFieldNotes(e.target.value)}
-              className="w-full p-2 rounded-lg border border-slate-300 bg-white"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-            <Button variant="ghost" onClick={() => setAssignModalOpen(false)}>
-              Cancel
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setConfirmModalOpen(false)}>
+              Back
             </Button>
-            <Button onClick={handleAssignInspection} isLoading={isProcessing}>
-              Dispatch Inspection
+            <Button onClick={handleExecuteDecision} isLoading={isProcessing}>
+              Confirm & Execute
             </Button>
           </div>
         </div>
       </Modal>
+
+      {/* Assign Field Worker Modal */}
+      {selectedApp && (
+        <Modal
+          isOpen={assignModalOpen}
+          onClose={() => setAssignModalOpen(false)}
+          title={`Assign Drone Photogrammetry: Survey ${selectedApp.property?.survey_number}`}
+          size="md"
+        >
+          <div className="space-y-4 text-xs">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Field Worker
+              </label>
+              <select
+                value={selectedWorkerId}
+                onChange={(e) => setSelectedWorkerId(e.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
+              >
+                <option value="usr-worker-01">Prakash Mahadev Jadhav (Certified Drone Pilot)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Inspection Scheduled Date
+              </label>
+              <input
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-300"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Flight Mission Instructions
+              </label>
+              <textarea
+                rows={2}
+                value={fieldNotes}
+                onChange={(e) => setFieldNotes(e.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-300"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button variant="outline" onClick={() => setAssignModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAssignInspection} isLoading={isProcessing}>
+                Dispatch Inspection
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Administrative Approval & MSG91 SMS Provisioning Result Modal */}
+      {approvalResultModal && (
+        <Modal
+          isOpen={!!approvalResultModal}
+          onClose={() => setApprovalResultModal(null)}
+          title="Registration Approved & Account Provisioned"
+          size="lg"
+        >
+          <div className="space-y-5 text-xs">
+            {/* Success Header Banner */}
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+              <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm text-emerald-950">
+                  Land Registration Formally Approved
+                </h4>
+                <p className="text-emerald-800">
+                  Application <strong>{approvalResultModal.app.application_reference}</strong> for{' '}
+                  <strong>{approvalResultModal.app.farmer?.full_name}</strong> has been marked as{' '}
+                  <span className="font-semibold uppercase text-emerald-900">Approved</span>. The farmer's land records and AI plant monitoring services are provisioned.
+                </p>
+                <div className="flex items-center gap-3 pt-1 text-[11px] text-emerald-700">
+                  <span>Taluk: <strong>{approvalResultModal.app.property?.taluk}</strong></span>
+                  <span>•</span>
+                  <span>Survey #{approvalResultModal.app.property?.survey_number}</span>
+                  <span>•</span>
+                  <span>Phone: <strong>+91 {approvalResultModal.app.farmer?.phone_number}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Credentials & Activation Link */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  Generated Account Credentials
+                </span>
+                <Badge variant="warning">Pending Password Activation</Badge>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                    Assigned Portal Username
+                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-sm text-slate-900">
+                      {approvalResultModal.username}
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(approvalResultModal.username);
+                        alert('Username copied to clipboard!');
+                      }}
+                      className="p-1 text-slate-400 hover:text-slate-600"
+                      title="Copy Username"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                    Security Token Validity
+                  </span>
+                  <span className="font-medium text-slate-700 flex items-center gap-1.5 text-xs">
+                    <Clock className="w-3.5 h-3.5 text-amber-500" />
+                    Single-use, expires in 48 hours
+                  </span>
+                </div>
+              </div>
+
+              {approvalResultModal.activationUrl && (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-700 block">
+                    Secure Account Activation URL (Farmer Password Setup)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={approvalResultModal.activationUrl}
+                      className="flex-1 bg-white font-mono text-[11px] text-slate-700 px-3 py-2 rounded-lg border border-slate-300 select-all"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyActivationLink(approvalResultModal.activationUrl)}
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600 mr-1" /> Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 mr-1" /> Copy
+                        </>
+                      )}
+                    </Button>
+                    <a
+                      href={approvalResultModal.activationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Test Link
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-slate-500 italic">
+                    Security policy: The farmer does not have a default password. They must follow this link to establish their private password before logging into the portal.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* MSG91 SMS Notification Dispatch */}
+            <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-800 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-sky-600" />
+                  MSG91 SMS Notification Dispatch
+                </span>
+                {approvalResultModal.smsJob?.status === 'SENT' || approvalResultModal.smsJob?.status === 'DELIVERED' ? (
+                  <Badge variant="success">SMS Dispatched (MSG91)</Badge>
+                ) : approvalResultModal.smsJob?.status === 'PROVIDER_UNAVAILABLE' ? (
+                  <Badge variant="warning">SMS Gateway Unavailable</Badge>
+                ) : (
+                  <Badge variant="error">{approvalResultModal.smsJob?.status || 'Failed'}</Badge>
+                )}
+              </div>
+
+              {approvalResultModal.smsJob?.status === 'PROVIDER_UNAVAILABLE' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px] space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    MSG91 Credentials not active or gateway unreachable.
+                  </p>
+                  <p className="text-amber-800">
+                    The approval has been executed and the activation token is securely generated. You can copy the activation link above and communicate it to the farmer, or retry sending once MSG91 configuration is verified.
+                  </p>
+                </div>
+              )}
+
+              {approvalResultModal.smsJob?.error_details && approvalResultModal.smsJob.status !== 'PROVIDER_UNAVAILABLE' && (
+                <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-[11px]">
+                  <strong>SMS Error:</strong> {approvalResultModal.smsJob.error_details}
+                </div>
+              )}
+
+              {approvalResultModal.smsMessage && (
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                    SMS Message Body (Sent to +91 {approvalResultModal.app.farmer?.phone_number})
+                  </span>
+                  <div className="p-3 bg-slate-900 text-slate-100 font-mono text-[11px] rounded-lg border border-slate-800 whitespace-pre-wrap leading-relaxed">
+                    {approvalResultModal.smsMessage}
+                  </div>
+                </div>
+              )}
+
+              {approvalResultModal.smsJob && (approvalResultModal.smsJob.status === 'PROVIDER_UNAVAILABLE' || approvalResultModal.smsJob.status === 'FAILED') && (
+                <div className="flex justify-end pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetrySms}
+                    isLoading={isRetryingSms}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1" /> Retry SMS Dispatch
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Action Footer */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span className="text-[11px] text-slate-500">
+                Administrative desk updated • Status marked Approved
+              </span>
+              <Button onClick={() => setApprovalResultModal(null)}>
+                Done & Close
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </DashboardLayout>
   );
 };

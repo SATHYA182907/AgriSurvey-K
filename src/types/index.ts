@@ -2,12 +2,16 @@
 
 export type UserRole = 'farmer' | 'tahsildar' | 'field_worker' | 'admin';
 
-export type AccountStatus = 'active' | 'pending_approval' | 'suspended' | 'deactivated';
+export type AccountStatus = 'active' | 'pending_approval' | 'pending_activation' | 'suspended' | 'deactivated';
 
 export type RegistrationStatus =
   | 'DRAFT'
+  | 'SUBMITTED'
+  | 'PENDING_VERIFICATION'
   | 'PENDING_TAHSILDAR_REVIEW'
+  | 'UNDER_REVIEW'
   | 'ADDITIONAL_INFORMATION_REQUIRED'
+  | 'RESUBMITTED'
   | 'APPROVED'
   | 'REJECTED';
 
@@ -81,12 +85,15 @@ export interface Profile {
   role: UserRole;
   account_status: AccountStatus;
   preferred_language: string;
+  username?: string;
   password?: string;
   generated_credentials?: {
     username: string;
     password: string;
     dispatched_at: string;
   };
+  activation_token?: string;
+  activation_expires_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -296,16 +303,42 @@ export interface Notification {
   created_at: string;
 }
 
+export type NotificationJobStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'SENT'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'PROVIDER_UNAVAILABLE';
+
+export interface AccountActivationToken {
+  id: string;
+  user_id: string;
+  application_id: string;
+  token: string;
+  username: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+}
+
 export interface NotificationJob {
   id: string;
   notification_id: string;
-  provider: string;
-  delivery_status: DeliveryStatusType;
+  application_id?: string | null;
+  provider: string; // 'MSG91' | 'SIMULATED'
+  recipient_phone?: string;
+  template_id?: string;
+  idempotency_key?: string;
+  delivery_status: DeliveryStatusType | NotificationJobStatus;
+  status?: NotificationJobStatus;
+  body?: string;
   attempt_count: number;
   last_attempt_at: string | null;
   delivered_at: string | null;
   provider_message_reference: string | null;
   error_code: string | null;
+  error_details?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -330,4 +363,194 @@ export interface StaffRegion {
   taluk: string;
   village: string | null;
   created_at: string;
+}
+
+// =============================================================================
+// Plant Intelligence & Health Analysis System Types
+// =============================================================================
+
+export type PlantHealthStatus =
+  | 'Healthy'
+  | 'Needs Attention'
+  | 'At Risk'
+  | 'Critical'
+  | 'Insufficient Data';
+
+export type MonitoringUnitType =
+  | 'individual_plant'
+  | 'plant_group'
+  | 'plot'
+  | 'crop_zone';
+
+export type SensorParameter =
+  | 'soil_moisture'
+  | 'soil_temperature'
+  | 'ambient_temperature'
+  | 'relative_humidity'
+  | 'soil_ph'
+  | 'soil_ec'
+  | 'light_intensity'
+  | 'leaf_wetness'
+  | 'rainfall'
+  | 'water_level';
+
+export interface Crop {
+  id: string;
+  name: string;
+  scientific_name?: string;
+  category: 'Cereal' | 'Cash Crop' | 'Horticulture' | 'Pulse' | 'Oilseed' | 'Vegetable' | 'Other';
+  default_season: 'Kharif' | 'Rabi' | 'Zaid' | 'Perennial';
+  description?: string;
+}
+
+export interface CropHealthThreshold {
+  id: string;
+  crop_name: string;
+  parameter: SensorParameter;
+  min_optimal: number;
+  max_optimal: number;
+  min_tolerable: number;
+  max_tolerable: number;
+  unit: string;
+  description?: string;
+}
+
+export interface MonitoringUnit {
+  id: string;
+  property_id: string;
+  unit_name: string;
+  unit_type: MonitoringUnitType;
+  crop_id?: string;
+  crop_variety: string;
+  planting_date?: string;
+  zone_identifier: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  area_covered?: number;
+  area_unit?: string;
+  current_health_status: PlantHealthStatus;
+  last_assessed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined / computed fields
+  property?: Property;
+  crop?: Crop;
+  latest_assessment?: PlantHealthAssessment;
+  active_alerts_count?: number;
+}
+
+export interface PlantPhoto {
+  id?: string;
+  url: string;
+  category: 'leaf' | 'stem' | 'fruit' | 'pest_disease' | 'overview';
+  caption?: string;
+  uploaded_at?: string;
+}
+
+export interface AIPrediction {
+  condition: string;
+  confidence: number; // 0 - 100 percentage
+  potential_diseases: Array<{ name: string; probability: number }>;
+  nutrient_deficiencies: Array<{ nutrient: string; likelihood: 'Low' | 'Moderate' | 'High' }>;
+  pest_damage_detected: boolean;
+  symptoms_detected: string[];
+  disclaimer: string;
+}
+
+export interface PlantObservation {
+  id: string;
+  monitoring_unit_id: string;
+  property_id: string;
+  recorded_by: string;
+  recorded_by_name?: string;
+  observation_type: 'image' | 'manual' | 'sensor' | 'field_inspection';
+  collection_method: string;
+  data_source: 'farmer_mobile' | 'field_worker_tablet' | 'iot_gateway' | 'agronomist';
+  timestamp: string;
+  photographs?: PlantPhoto[];
+  // Method C manual field observations:
+  growth_stage?: 'Germination' | 'Vegetative' | 'Flowering' | 'Fruiting' | 'Maturity' | 'Harvesting';
+  irrigation_condition?: 'Optimal' | 'Over-irrigated' | 'Moisture Deficit' | 'Severe Drought';
+  wilting_observed?: boolean;
+  leaf_discoloration?: 'None' | 'Chlorosis (Yellowing)' | 'Necrosis (Browning)' | 'Purpling' | 'Mottled';
+  pest_observed?: boolean;
+  pest_details?: string;
+  visible_disease_symptoms?: string;
+  general_notes?: string;
+  // Method A AI prediction result:
+  ai_prediction?: AIPrediction;
+  created_at: string;
+}
+
+export interface SensorDevice {
+  id: string;
+  property_id: string;
+  monitoring_unit_id?: string;
+  device_serial: string;
+  device_name: string;
+  device_type: string;
+  model_number?: string;
+  status: 'active' | 'offline' | 'calibrating' | 'disconnected';
+  last_heartbeat?: string;
+  battery_level?: number;
+  created_at: string;
+}
+
+export interface SensorReading {
+  id: string;
+  device_id?: string;
+  property_id: string;
+  monitoring_unit_id: string;
+  parameter: SensorParameter;
+  value: number;
+  unit: string;
+  recorded_at: string;
+  source_device: string;
+  data_quality: 'validated' | 'suspect' | 'raw';
+  created_at: string;
+}
+
+export interface PlantHealthAssessment {
+  id: string;
+  monitoring_unit_id: string;
+  property_id: string;
+  overall_status: PlantHealthStatus;
+  assessment_timestamp: string;
+  supporting_measurements: {
+    soil_moisture?: { value: number; unit: string; status: 'optimal' | 'low' | 'high' | 'critical' };
+    soil_ph?: { value: number; unit: string; status: 'optimal' | 'acidic' | 'alkaline' };
+    soil_temperature?: { value: number; unit: string; status: 'optimal' | 'warning' };
+    ambient_temperature?: { value: number; unit: string; status: 'optimal' | 'warning' };
+    relative_humidity?: { value: number; unit: string; status: 'optimal' | 'warning' };
+    soil_ec?: { value: number; unit: string; status: 'optimal' | 'saline' };
+    leaf_wetness?: { value: number; unit: string; status: 'optimal' | 'high_risk' };
+  };
+  detected_anomalies: string[];
+  possible_concerns: string[];
+  suggested_next_steps: string[];
+  data_freshness: string;
+  confidence: number | null;
+  assessment_method: string;
+  model_version: string;
+  is_preliminary: boolean;
+  created_at: string;
+}
+
+export interface PlantHealthAlert {
+  id: string;
+  monitoring_unit_id: string;
+  property_id: string;
+  crop_name: string;
+  unit_name?: string;
+  property_name?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  reason: string;
+  supporting_measurement: string;
+  recommended_action: string;
+  status: 'active' | 'acknowledged' | 'resolved';
+  detected_at: string;
+  acknowledged_at?: string;
+  acknowledged_by?: string;
+  resolved_at?: string;
+  resolved_by?: string;
 }

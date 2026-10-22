@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Eye,
   Info,
+  Sprout,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -21,8 +22,10 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { inspectionService } from '@/services/inspection.service';
 import { droneService } from '@/services/drone.service';
+import { plantIntelligenceService } from '@/services/plant-intelligence.service';
 import { mockDb } from '@/services/mock-db';
-import { FieldInspection, DroneImagery, InspectionStatus } from '@/types';
+import { FieldInspection, DroneImagery, InspectionStatus, MonitoringUnit } from '@/types';
+import { PlantObservationModal } from '@/components/plant-intelligence/PlantObservationModal';
 
 // Pre-packaged high-res aerial drone imagery for demonstration
 const SAMPLE_DRONE_PHOTOS = [
@@ -66,6 +69,8 @@ export const FieldWorkerDashboardPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [droneImages, setDroneImages] = useState<DroneImagery[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [observationModalOpen, setObservationModalOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<MonitoringUnit | null>(null);
 
   useEffect(() => {
     loadInspections();
@@ -257,6 +262,19 @@ export const FieldWorkerDashboardPage: React.FC = () => {
                       icon={<Camera className="w-3.5 h-3.5" />}
                     >
                       Upload Drone Orthos
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const unit = mockDb.monitoringUnits.find((u) => u.property_id === selectedInspection.property_id) || mockDb.monitoringUnits[0];
+                        setSelectedUnit(unit);
+                        setObservationModalOpen(true);
+                      }}
+                      icon={<Sprout className="w-3.5 h-3.5 text-emerald-600" />}
+                    >
+                      Record In-Situ Plant Check
                     </Button>
 
                     {selectedInspection.inspection_status === 'EVIDENCE_UPLOADED' && (
@@ -457,6 +475,15 @@ export const FieldWorkerDashboardPage: React.FC = () => {
           </div>
         )}
       </Modal>
+      {/* Plant Observation Modal for In-Situ Field Surveys */}
+      <PlantObservationModal
+        isOpen={observationModalOpen}
+        onClose={() => setObservationModalOpen(false)}
+        unit={selectedUnit}
+        onSuccess={() => {
+          alert('✅ Field observation and telemetry recorded for officer review.');
+        }}
+      />
     </DashboardLayout>
   );
 };
