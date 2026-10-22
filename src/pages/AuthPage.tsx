@@ -292,7 +292,7 @@ export const AuthPage: React.FC = () => {
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center py-2 sm:py-4 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
+    <div className="relative min-h-screen flex flex-col justify-center py-2 sm:py-4 px-3 sm:px-6 lg:px-8 overflow-x-hidden bg-slate-950">
       {/* Top Header Bar with Back Button, Centered Brand Logo & Language Switcher */}
       <div className="w-full max-w-md sm:max-w-2xl mx-auto flex items-center justify-between z-20 mb-2 sm:mb-3 px-0.5 sm:px-0">
         <Link
@@ -321,26 +321,37 @@ export const AuthPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Background Video Layer with Subtle Vignette */}
-      <div className="fixed inset-0 w-full h-full overflow-hidden -z-10 pointer-events-none select-none">
+      {/* Background Layer: 0ms Rich Agricultural Gradient + Fast Poster + Low-Overhead Streaming Video */}
+      <div className="fixed inset-0 w-full h-full overflow-hidden -z-10 pointer-events-none select-none bg-gradient-to-br from-[#022c22] via-[#064e3b] to-[#022c22]">
+        {/* Instant High-Resolution Poster (eliminates gray loading canvas) */}
+        <img
+          src="/videos/auth-bg-poster.jpg"
+          alt="Agricultural background"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+
+        {/* Fast-start optimized video */}
         <video
           autoPlay
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           poster="/videos/auth-bg-poster.jpg"
-          className="w-full h-full object-cover object-center scale-105 transform will-change-transform"
+          className="absolute inset-0 w-full h-full object-cover object-center"
         >
           <source src="/videos/auth-bg.mp4" type="video/mp4" />
         </video>
-        {/* Subtle cinematic gradient overlay allowing the vibrant farm video to shine through */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-black/50 pointer-events-none" />
+
+        {/* Cinematic Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-black/60 pointer-events-none" />
       </div>
 
       {/* Main Transparent Glassmorphism Container */}
       <div
-        className={`mx-auto w-full backdrop-blur-xl bg-slate-950/30 sm:bg-slate-900/30 rounded-2xl sm:rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.45)] border border-white/25 overflow-hidden transition-all duration-300 z-10 ${
+        className={`mx-auto w-full backdrop-blur-md bg-slate-950/70 sm:bg-slate-900/70 rounded-2xl sm:rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.45)] border border-white/25 overflow-hidden transition-all duration-300 z-10 ${
           activeTab === 'signup' && !submittedApp
             ? 'max-w-[340px] xs:max-w-[370px] sm:max-w-xl md:max-w-2xl'
             : 'max-w-[325px] xs:max-w-[350px] sm:max-w-md'

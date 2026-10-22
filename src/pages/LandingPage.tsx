@@ -136,21 +136,28 @@ export const LandingPage: React.FC = () => {
 
       {/* Hero Section with Full-Screen Background Video */}
       <section className="relative overflow-hidden bg-slate-900 text-white min-h-screen min-h-[100dvh] flex flex-col justify-between pt-20 sm:pt-24 pb-6 sm:pb-8">
-        {/* Background Video Layer */}
-        <div className="absolute inset-0 -bottom-1 w-full h-[calc(100%+4px)] overflow-hidden pointer-events-none">
+        {/* Background Video Layer with Instant High-Resolution Poster */}
+        <div className="absolute inset-0 -bottom-1 w-full h-[calc(100%+4px)] overflow-hidden pointer-events-none bg-slate-950">
+          <img
+            src="/videos/hero-bg-poster.jpg"
+            alt="Agricultural farmland aerial view"
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           <video
             autoPlay
             loop
             muted
             playsInline
-            preload="auto"
-            className="w-full h-full object-cover"
+            preload="metadata"
+            poster="/videos/hero-bg-poster.jpg"
+            className="w-full h-full object-cover relative z-0"
           >
             <source src="/videos/hero-bg.mp4" type="video/mp4" />
-            <source src="/Untitled_Scene_10-14_10_02_11_20261014153619.mp4" type="video/mp4" />
           </video>
           {/* Soft, luminous natural overlay: farmland video remains bright and vivid while maintaining crisp typography */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-black/55 z-10" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 my-auto w-full py-6">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -169,17 +169,17 @@ export const FarmerDashboardPage: React.FC = () => {
   const criticalUnits = monitoringUnits.filter((u) => u.current_health_status === 'Critical').length;
   const activeAlertsCount = alerts.filter((a) => a.status === 'active').length;
 
-  // Chart Data: Health Distribution
-  const healthDistributionData = [
+  // Chart Data: Health Distribution (Memoized for scroll performance)
+  const healthDistributionData = useMemo(() => [
     { name: 'Healthy', value: healthyUnits, color: HEALTH_COLORS.Healthy },
     { name: 'Needs Attention', value: monitoringUnits.filter((u) => u.current_health_status === 'Needs Attention').length, color: HEALTH_COLORS['Needs Attention'] },
     { name: 'At Risk', value: monitoringUnits.filter((u) => u.current_health_status === 'At Risk').length, color: HEALTH_COLORS['At Risk'] },
     { name: 'Critical', value: criticalUnits, color: HEALTH_COLORS.Critical },
     { name: 'Insufficient Data', value: monitoringUnits.filter((u) => u.current_health_status === 'Insufficient Data').length, color: HEALTH_COLORS['Insufficient Data'] },
-  ].filter((d) => d.value > 0);
+  ].filter((d) => d.value > 0), [healthyUnits, monitoringUnits, criticalUnits]);
 
-  // Chart Data: Overall Moisture Readings Trend
-  const moistureTrendData = sensorReadings
+  // Chart Data: Overall Moisture Readings Trend (Memoized for scroll performance)
+  const moistureTrendData = useMemo(() => sensorReadings
     .filter((r) => r.parameter === 'soil_moisture')
     .slice(0, 10)
     .reverse()
@@ -187,7 +187,7 @@ export const FarmerDashboardPage: React.FC = () => {
       time: new Date(r.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       value: r.value,
       source: r.source_device,
-    }));
+    })), [sensorReadings]);
 
   const hasVerifiedFarm = applications.some((a) => a.status === 'APPROVED');
 
