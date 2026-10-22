@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -34,6 +34,15 @@ export const LandingPage: React.FC = () => {
   const { t } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     analyticsService.getDashboardStats().then(setStats);
@@ -146,11 +155,12 @@ export const LandingPage: React.FC = () => {
             className="absolute inset-0 w-full h-full object-cover"
           />
           <video
+            ref={videoRef}
             autoPlay
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             poster="/videos/hero-bg-poster.jpg"
             className="w-full h-full object-cover relative z-0"
           >
