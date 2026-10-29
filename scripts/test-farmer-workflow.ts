@@ -69,11 +69,12 @@ async function runTest() {
   });
 
   console.log('Approval Result Status:', reviewResult.application.status);
-  console.log('Generated Credentials:', reviewResult.credentials);
+  console.log('Generated Username:', reviewResult.username);
+  console.log('Activation URL:', reviewResult.activationUrl);
   console.log('SMS Message Text:', reviewResult.smsMessage);
 
-  if (!reviewResult.credentials || reviewResult.credentials.username !== '9848848484') {
-    throw new Error('FAILED: Credentials not generated properly');
+  if (!reviewResult.activationToken || !reviewResult.username) {
+    throw new Error('FAILED: Secure activation token or username not generated properly');
   }
 
   // Check SMS message in DB
@@ -87,13 +88,20 @@ async function runTest() {
     throw new Error('FAILED: SMS text message not found in database');
   }
 
-  console.log('\n--- Step 5: Farmer Signing In with Generated Credentials ---');
-  const loginRes = await authService.signIn('9848848484', reviewResult.credentials.password);
+  console.log('\n--- Step 5: Farmer Activating Account with Secure Password ---');
+  const activationRes = await registrationService.activateFarmerAccount({
+    token: reviewResult.activationToken,
+    newPassword: 'FarmerSecurePass123!',
+  });
+  console.log('Account Activated Successfully with Username:', activationRes.username);
+
+  console.log('\n--- Step 6: Farmer Signing In with Activated Password ---');
+  const loginRes = await authService.signIn('9848848484', 'FarmerSecurePass123!');
   console.log('Logged In Farmer Name:', loginRes.user.full_name);
   console.log('Logged In Farmer Status:', loginRes.user.account_status);
 
   if (loginRes.user.account_status !== 'active') {
-    throw new Error('FAILED: Farmer account should be active after approval');
+    throw new Error('FAILED: Farmer account should be active after activation');
   }
 
   console.log('\n--- Step 6: Verifying Farmer Property in Portal ---');
@@ -107,6 +115,7 @@ async function runTest() {
   }
 
   console.log('\n✅ ALL WORKFLOW ACCEPTANCE CRITERIA PASSED SUCCESSFULLY!');
+  process.exit(0);
 }
 
 runTest().catch((err) => {

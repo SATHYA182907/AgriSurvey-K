@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { LanguageCode, LanguageOption, SUPPORTED_LANGUAGES } from '@/types/language';
 import { translations } from '@/lib/translations';
 
+import { mockDb } from '@/services/mock-db';
+
 interface LanguageContextType {
   language: LanguageCode;
   setLanguage: (code: LanguageCode) => void;
@@ -21,10 +23,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (saved && SUPPORTED_LANGUAGES.some((l) => l.code === saved)) {
         return saved;
       }
+      if (mockDb?.currentUser?.preferred_language && SUPPORTED_LANGUAGES.some((l) => l.code === mockDb.currentUser.preferred_language)) {
+        return mockDb.currentUser.preferred_language as LanguageCode;
+      }
     } catch {
       // localStorage may fail in private mode
     }
-    return 'en';
+    return 'mr';
   });
 
   const setLanguage = (code: LanguageCode) => {
@@ -33,6 +38,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(STORAGE_KEY, code);
       // Also update html lang attribute for accessibility & browser font rendering
       document.documentElement.lang = code;
+    } catch {
+      // Ignore
+    }
+
+    try {
+      if (mockDb && mockDb.currentUser) {
+        mockDb.currentUser.preferred_language = code;
+        const matchingProfile = mockDb.profiles.find((p) => p.id === mockDb.currentUser.id);
+        if (matchingProfile) {
+          matchingProfile.preferred_language = code;
+        }
+        mockDb.persistAll();
+      }
     } catch {
       // Ignore
     }

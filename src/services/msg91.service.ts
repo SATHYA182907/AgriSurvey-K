@@ -25,7 +25,10 @@ export class Msg91Service {
       authKey: env.MSG91_AUTH_KEY || env.VITE_MSG91_AUTH_KEY,
       senderId: env.MSG91_SENDER_ID || env.VITE_MSG91_SENDER_ID || 'AGRSUR',
       templateId: env.MSG91_APPROVAL_TEMPLATE_ID || env.VITE_MSG91_APPROVAL_TEMPLATE_ID,
-      loginUrl: env.APP_LOGIN_URL || env.VITE_APP_LOGIN_URL || `${window.location.origin}/auth/login`,
+      loginUrl:
+        env.APP_LOGIN_URL ||
+        env.VITE_APP_LOGIN_URL ||
+        (typeof window !== 'undefined' ? `${window.location.origin}/auth/login` : 'http://localhost:5173/auth/login'),
     };
   }
 
@@ -56,8 +59,9 @@ export class Msg91Service {
   }> {
     const config = this.getConfig();
     const cleanPhone = params.phoneNumber.replace(/\D/g, '');
-    const activationUrl = `${window.location.origin}/auth/activate?token=${params.activationToken}`;
-    const loginUrl = config.loginUrl || `${window.location.origin}/auth/login`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    const activationUrl = `${origin}/auth/activate?token=${params.activationToken}`;
+    const loginUrl = config.loginUrl || `${origin}/auth/login`;
 
     // Indian Regulatory Compliant Template Wording:
     const messageText = `AgriSurvey: Your farmer registration has been approved. Username: ${params.username}. Login: ${loginUrl}. Set your password securely using the official account activation process: ${activationUrl}`;

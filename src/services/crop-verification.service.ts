@@ -1,4 +1,5 @@
 import { mockDb } from './mock-db';
+import { firebaseService } from './firebase.service';
 import { CropVerification, ImageComparison, ComparisonResultType } from '@/types';
 import { CropVerificationFormData } from '@/lib/validators';
 
@@ -39,6 +40,9 @@ export class CropVerificationService {
       existing.similarity_score = params.similarityScore || existing.similarity_score;
       existing.reviewed_at = new Date().toISOString();
       mockDb.persistAll();
+      if (firebaseService.isConfigured) {
+        firebaseService.saveDocument('image_comparisons', existing.id, existing);
+      }
       return existing;
     }
 
@@ -65,6 +69,9 @@ export class CropVerificationService {
     );
 
     mockDb.persistAll();
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('image_comparisons', comparison.id, comparison);
+    }
     return comparison;
   }
 
@@ -168,6 +175,9 @@ export class CropVerificationService {
     );
 
     mockDb.persistAll();
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('crop_verifications', record.id, record);
+    }
     return record;
   }
 }

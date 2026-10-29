@@ -1,6 +1,7 @@
 import { supabase, isLiveSupabaseConfigured } from '@/lib/supabase';
 import { mockDb } from './mock-db';
 import { notificationService } from './notification.service';
+import { firebaseService } from './firebase.service';
 import { FieldInspection, InspectionStatus } from '@/types';
 
 export class InspectionService {
@@ -80,6 +81,10 @@ export class InspectionService {
       channel: 'in_app',
     });
 
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('field_inspections', newInsp.id, newInsp);
+    }
+
     mockDb.persistAll();
     return newInsp;
   }
@@ -121,6 +126,10 @@ export class InspectionService {
         related_application_id: insp.application_id,
         channel: 'in_app',
       });
+    }
+
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('field_inspections', insp.id, insp);
     }
 
     mockDb.persistAll();

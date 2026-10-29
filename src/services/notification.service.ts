@@ -1,5 +1,6 @@
 import { supabase, isLiveSupabaseConfigured } from '@/lib/supabase';
 import { mockDb } from './mock-db';
+import { firebaseService } from './firebase.service';
 import { Notification, NotificationJob, NotificationChannel, DeliveryStatusType } from '@/types';
 
 export interface CreateNotificationParams {
@@ -80,6 +81,10 @@ export class NotificationService {
       console.info(
         `[AgriSurvey SMS Dispatch] Recipient: ${params.recipient_user_id} | Status: ${deliveryStatus} | Msg: "${params.message}"`
       );
+    }
+
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('notifications', notif.id, notif);
     }
 
     mockDb.persistAll();

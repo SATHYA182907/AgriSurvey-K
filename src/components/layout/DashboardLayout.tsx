@@ -73,35 +73,43 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
       case 'farmer':
         return [
           { name: t('dashboard.overview', 'Overview'), href: '/farmer/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.gisCropSurvey', 'GIS Crop Survey'), href: '/gis/crop-survey', icon: Compass },
           { name: t('dashboard.myProperties', 'My Properties'), href: '/farmer/properties', icon: MapPin },
           { name: t('dashboard.uploadImages', 'Upload Land Images'), href: '/farmer/upload-images', icon: UploadCloud },
           { name: t('dashboard.droneStatus', 'Drone Inspection Status'), href: '/farmer/inspection-status', icon: Layers },
           { name: t('dashboard.verificationReports', 'Verification Reports'), href: '/farmer/reports', icon: CheckCircle2 },
+          { name: t('dashboard.statutoryReports', 'Statutory Reports Hub'), href: '/gis/reports', icon: FileText },
           { name: t('dashboard.notifications', 'Notifications'), href: '/farmer/notifications', icon: Bell },
         ];
       case 'tahsildar':
         return [
           { name: t('dashboard.overview', 'Overview'), href: '/tahsildar/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.gisCropSurvey', 'GIS Spatial Intelligence'), href: '/gis/crop-survey', icon: Compass },
           { name: t('dashboard.registrationQueue', 'Registration Review Queue'), href: '/tahsildar/registrations', icon: FileText },
           { name: t('dashboard.assignInspections', 'Assign Inspections'), href: '/tahsildar/assign-inspections', icon: Calendar },
           { name: t('dashboard.imageComparison', 'Image Comparison Workspace'), href: '/tahsildar/image-comparison', icon: Eye },
           { name: t('dashboard.cropVerification', 'Crop Verification'), href: '/tahsildar/crop-verification', icon: Sprout },
           { name: t('dashboard.verificationReports', 'Verification Reports'), href: '/tahsildar/reports', icon: CheckCircle2 },
+          { name: t('dashboard.statutoryReports', 'Statutory Reports Hub'), href: '/gis/reports', icon: FileText },
           { name: t('dashboard.auditLogs', 'Audit History'), href: '/tahsildar/audit-logs', icon: History },
         ];
       case 'field_worker':
         return [
           { name: t('dashboard.overview', 'Overview'), href: '/field-worker/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.gisCropSurvey', 'GIS Plot & Drone Map'), href: '/gis/crop-survey', icon: Compass },
           { name: t('dashboard.assignedInspections', 'Assigned Inspections'), href: '/field-worker/inspections', icon: Calendar },
           { name: t('dashboard.uploadDrone', 'Upload Drone Imagery'), href: '/field-worker/drone-upload', icon: Camera },
           { name: t('dashboard.completedSurveys', 'Completed Surveys'), href: '/field-worker/completed', icon: CheckCircle2 },
+          { name: t('dashboard.statutoryReports', 'Statutory Reports Hub'), href: '/gis/reports', icon: FileText },
         ];
       case 'admin':
         return [
           { name: t('dashboard.overview', 'System Overview'), href: '/admin/dashboard', icon: LayoutDashboard },
+          { name: t('dashboard.gisCropSurvey', 'GIS Spatial Intelligence'), href: '/gis/crop-survey', icon: Compass },
           { name: t('dashboard.userManagement', 'User Management'), href: '/admin/users', icon: Users },
           { name: t('dashboard.geoRegions', 'Geographic Regions'), href: '/admin/regions', icon: MapPin },
           { name: t('dashboard.analyticsTrends', 'Analytics & Trends'), href: '/admin/analytics', icon: BarChart3 },
+          { name: t('dashboard.statutoryReports', 'Statutory Reports Hub'), href: '/gis/reports', icon: FileText },
           { name: t('dashboard.auditLogs', 'Audit Logs'), href: '/admin/audit-logs', icon: History },
           { name: t('dashboard.systemSettings', 'System Settings'), href: '/admin/settings', icon: Settings },
         ];
@@ -140,7 +148,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
                 Agri<span className="text-emerald-700">Survey</span>
               </span>
               <span className="block text-[10px] uppercase font-semibold text-slate-400">
-                {ROLE_LABELS[currentUser.role]}
+                {currentUser.role === 'farmer'
+                  ? t('roles.farmerRoleBadge', 'Farmer / Landholder')
+                  : currentUser.role === 'tahsildar'
+                  ? t('roles.tahsildarRoleBadge', 'Tahsildar / Revenue Officer')
+                  : currentUser.role === 'field_worker'
+                  ? t('roles.fieldWorkerRoleBadge', 'Field Surveyor & Drone Pilot')
+                  : t('roles.adminRoleBadge', 'System Administrator')}
               </span>
             </div>
           </Link>
@@ -234,6 +248,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
 
           {/* Right Header Controls */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Firebase Live Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] font-medium shrink-0 shadow-2xs" title="Google Firebase Project: agri-survey-4f115">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span className="font-semibold">Firebase</span>
+              <span className="text-amber-600/80 text-[10px] hidden md:inline">agri-survey-4f115</span>
+            </div>
+
             {/* Language Switcher */}
             <LanguageSwitcher variant="nav" size="sm" />
 
@@ -260,14 +281,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
                       {t('dashboard.systemNotifications', 'System Notifications')}
                     </span>
                     <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">
-                      {unreadCount} New
+                      {unreadCount} {t('dashboard.newBadge', 'New')}
                     </span>
                   </div>
 
                   <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
                     {notifications.length === 0 ? (
                       <div className="py-8 text-center text-xs text-slate-400">
-                        No recent notifications.
+                        {t('dashboard.noNotifications', 'No recent notifications.')}
                       </div>
                     ) : (
                       notifications.slice(0, 6).map((notif) => (
@@ -293,14 +314,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
                           </p>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] uppercase font-semibold text-slate-400">
-                              Channel: {notif.channel}
+                              {t('dashboard.channelLabel', 'Channel')}: {notif.channel}
                             </span>
                             {!notif.read_at && (
                               <button
                                 onClick={() => handleMarkAsRead(notif.id)}
                                 className="text-[11px] text-emerald-700 font-medium hover:underline"
                               >
-                                Mark as read
+                                {t('dashboard.markAsRead', 'Mark as read')}
                               </button>
                             )}
                           </div>
@@ -317,7 +338,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
               to="/"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
             >
-              <span>Public Portal</span>
+              <span>{t('dashboard.publicPortal', 'Public Portal')}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>

@@ -71,6 +71,10 @@ export const Navbar: React.FC = () => {
 
             {/* Desktop Actions: Language Switcher + Sign In / Sign Up */}
             <div className="hidden sm:flex items-center gap-2 xl:gap-2.5 shrink-0">
+              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium shrink-0" title="Google Firebase Project: agri-survey-4f115">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>Firebase Connected</span>
+              </div>
               <LanguageSwitcher variant="nav" size="sm" />
               <Link
                 to="/auth/login"

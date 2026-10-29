@@ -13,11 +13,17 @@ import { FarmerInspectionStatusPage } from '@/pages/farmer/FarmerInspectionStatu
 import { FarmerReportsPage } from '@/pages/farmer/FarmerReportsPage';
 import { FarmerNotificationsPage } from '@/pages/farmer/FarmerNotificationsPage';
 import { TahsildarDashboardPage } from '@/pages/tahsildar/TahsildarDashboardPage';
+import { TahsildarOverviewPage } from '@/pages/tahsildar/TahsildarOverviewPage';
+import { TahsildarRegistrationsPage } from '@/pages/tahsildar/TahsildarRegistrationsPage';
+import { TahsildarAssignInspectionsPage } from '@/pages/tahsildar/TahsildarAssignInspectionsPage';
+import { TahsildarAuditLogsPage } from '@/pages/tahsildar/TahsildarAuditLogsPage';
 import { ImageComparisonWorkspacePage } from '@/pages/tahsildar/ImageComparisonWorkspacePage';
 import { CropVerificationPage } from '@/pages/tahsildar/CropVerificationPage';
 import { FinalVerificationReportsPage } from '@/pages/tahsildar/FinalVerificationReportsPage';
 import { FieldWorkerDashboardPage } from '@/pages/field-worker/FieldWorkerDashboardPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { GisCropSurveyPage } from '@/pages/gis/GisCropSurveyPage';
+import { GisReportsPage } from '@/pages/gis/GisReportsPage';
 
 export function App() {
   return (
@@ -30,6 +36,10 @@ export function App() {
         <Route path="/auth/register" element={<AuthPage />} />
         <Route path="/auth/activate" element={<AccountActivationPage />} />
 
+        {/* Unified GIS & Remote Sensing Routes */}
+        <Route path="/gis/crop-survey" element={<GisCropSurveyPage />} />
+        <Route path="/gis/reports" element={<GisReportsPage />} />
+
         {/* Farmer Portal */}
         <Route path="/farmer/dashboard" element={<FarmerDashboardPage />} />
         <Route path="/farmer/register" element={<FarmerRegistrationPage />} />
@@ -41,13 +51,13 @@ export function App() {
         <Route path="/farmer/notifications" element={<FarmerNotificationsPage />} />
 
         {/* Tahsildar Portal */}
-        <Route path="/tahsildar/dashboard" element={<TahsildarDashboardPage />} />
-        <Route path="/tahsildar/registrations" element={<TahsildarDashboardPage />} />
-        <Route path="/tahsildar/assign-inspections" element={<TahsildarDashboardPage />} />
+        <Route path="/tahsildar/dashboard" element={<TahsildarOverviewPage />} />
+        <Route path="/tahsildar/registrations" element={<TahsildarRegistrationsPage />} />
+        <Route path="/tahsildar/assign-inspections" element={<TahsildarAssignInspectionsPage />} />
         <Route path="/tahsildar/image-comparison" element={<ImageComparisonWorkspacePage />} />
         <Route path="/tahsildar/crop-verification" element={<CropVerificationPage />} />
         <Route path="/tahsildar/reports" element={<FinalVerificationReportsPage />} />
-        <Route path="/tahsildar/audit-logs" element={<TahsildarDashboardPage />} />
+        <Route path="/tahsildar/audit-logs" element={<TahsildarAuditLogsPage />} />
 
         {/* Field Worker Portal */}
         <Route path="/field-worker/dashboard" element={<FieldWorkerDashboardPage />} />

@@ -554,3 +554,351 @@ export interface PlantHealthAlert {
   resolved_at?: string;
   resolved_by?: string;
 }
+
+// =============================================================================
+// Geospatial Farm Plot & Remote Sensing Types
+// =============================================================================
+
+export interface FarmPlot {
+  id: string; // Stable unique plot UUID
+  plot_reference: string; // e.g. MH-PUN-PLOT-2026-00412
+  property_id: string;
+  farmer_id: string;
+  survey_number: string;
+  subdivision_number: string | null;
+  plot_name: string;
+  boundary_coordinates: [number, number][]; // [lat, lon][]
+  boundary_geojson?: any;
+  area_sqm: number;
+  area_hectares: number;
+  area_acres: number;
+  perimeter_meters: number;
+  village: string;
+  taluk: string;
+  district: string;
+  state: string;
+  is_cadastral_verified: boolean;
+  crop_type?: string;
+  sowing_date?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined fields for display
+  farmer_name?: string;
+  farmer_phone?: string;
+  latest_ndvi?: number;
+  latest_weather?: string;
+  verification_status?: string;
+}
+
+export interface SatelliteSceneAsset {
+  href: string;
+  title?: string;
+  type?: string;
+  roles?: string[];
+  gsd?: number;
+}
+
+export interface SatelliteScene {
+  id: string;
+  scene_id: string;
+  collection: string;
+  acquisition_datetime: string;
+  cloud_cover_percentage: number;
+  footprint_coordinates: [number, number][]; // [lat, lon][]
+  thumbnail_url?: string;
+  visual_url?: string;
+  assets: {
+    red?: SatelliteSceneAsset;
+    green?: SatelliteSceneAsset;
+    blue?: SatelliteSceneAsset;
+    nir?: SatelliteSceneAsset;
+    swir16?: SatelliteSceneAsset;
+    swir22?: SatelliteSceneAsset;
+    scl?: SatelliteSceneAsset;
+    thumbnail?: SatelliteSceneAsset;
+    visual?: SatelliteSceneAsset;
+  };
+  intersects_plot?: boolean;
+  created_at: string;
+}
+
+export interface VegetationIndexObservation {
+  id: string;
+  plot_id: string;
+  scene_id: string;
+  scene_acquisition_date: string;
+  calculation_date: string;
+  ndvi_mean: number;
+  ndvi_min: number;
+  ndvi_max: number;
+  valid_pixel_coverage_pct: number;
+  vegetation_classification:
+    | 'Very High Density'
+    | 'Moderate Density'
+    | 'Sparse / Stressed'
+    | 'Bare Soil / Tilled'
+    | 'Non-Vegetated / Water';
+  raster_bounds: [[number, number], [number, number]]; // Leaflet LatLngBoundsExpression
+  raster_data_url?: string; // Georeferenced false-color overlay
+  processing_method: string;
+  processing_status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  error_message?: string;
+  created_at: string;
+}
+
+export interface DailyWeatherItem {
+  date: string;
+  temp_max_celsius: number;
+  temp_min_celsius: number;
+  precipitation_mm: number;
+  rain_probability?: number;
+}
+
+export interface WeatherObservation {
+  id: string;
+  plot_id: string;
+  latitude: number;
+  longitude: number;
+  elevation_meters?: number;
+  observation_timestamp: string;
+  temperature_celsius: number;
+  relative_humidity_pct: number;
+  precipitation_mm: number;
+  wind_speed_kmh: number;
+  weather_condition: string;
+  weather_code: number;
+  daily_forecast: DailyWeatherItem[];
+  provider: string; // 'Open-Meteo'
+  quality_status: 'LIVE' | 'CACHED' | 'UNAVAILABLE';
+  fetched_at: string;
+}
+
+export interface GeotaggedPhoto {
+  id: string;
+  url: string;
+  filename: string;
+  latitude: number;
+  longitude: number;
+  altitude_meters?: number;
+  captured_at: string;
+}
+
+export interface DroneMissionRecord {
+  id: string;
+  mission_reference: string;
+  plot_id: string;
+  title: string;
+  pilot_name: string;
+  flight_date: string;
+  flight_altitude_meters: number;
+  camera_sensor: string;
+  photos_count: number;
+  geotagged_photos: GeotaggedPhoto[];
+  orthomosaic_url?: string;
+  orthomosaic_bounds?: [[number, number], [number, number]];
+  status: 'SCHEDULED' | 'IN_FLIGHT' | 'PROCESSED' | 'FAILED';
+  notes?: string;
+  created_at: string;
+}
+
+export interface MobileFieldSurveyRecord {
+  id: string;
+  survey_reference: string;
+  plot_id: string;
+  surveyor_id: string;
+  surveyor_name: string;
+  survey_date: string;
+  latitude: number;
+  longitude: number;
+  gps_accuracy_meters: number;
+  crop_type: string;
+  growth_stage: 'Germination' | 'Vegetative' | 'Flowering' | 'Fruiting' | 'Maturity' | 'Harvesting';
+  sowing_date?: string;
+  soil_condition: 'Dry' | 'Moist' | 'Waterlogged' | 'Cracked';
+  irrigation_type: 'Canal' | 'Borewell / Tube' | 'Drip' | 'Sprinkler' | 'Rainfed';
+  photos: string[];
+  field_notes?: string;
+  sync_status: 'DRAFT' | 'PENDING_SYNC' | 'SYNCHRONIZING' | 'SYNCHRONIZED' | 'FAILED';
+  synced_at?: string;
+  created_at: string;
+}
+
+export interface CropPredictionRecord {
+  id: string;
+  plot_id: string;
+  predicted_crop: string;
+  confidence_score: number; // 0-100
+  class_probabilities: Record<string, number>;
+  model_version: string;
+  features_analyzed: {
+    ndvi_mean: number;
+    ndwi: number;
+    b02_blue: number;
+    b03_green: number;
+    b04_red: number;
+    b08_nir: number;
+    season: string;
+  };
+  verified_crop?: string;
+  verification_status: 'AI_PREDICTION' | 'CONFIRMED' | 'DISCREPANCY_MARKED';
+  reviewer_id?: string;
+  reviewer_name?: string;
+  reviewer_notes?: string;
+  reviewed_at?: string;
+  created_at: string;
+}
+
+export interface YieldForecastRecord {
+  id: string;
+  plot_id: string;
+  crop_type: string;
+  cultivated_area_hectares: number;
+  estimated_yield_tonnes_per_ha: number;
+  estimated_total_tonnes: number;
+  historical_baseline_tonnes_per_ha: number;
+  deviation_percentage: number;
+  water_source_factor: number;
+  rainfall_anomaly_factor: number;
+  ndvi_canopy_factor: number;
+  uncertainty_range_tonnes: { min: number; max: number };
+  model_type: 'Historical Baseline + Environmental Calibration' | 'ML Regression';
+  data_sources: string[];
+  forecast_date: string;
+}
+
+export interface DisasterAssessmentRecord {
+  id: string;
+  event_reference: string;
+  event_name: string;
+  event_type: 'HEAVY_RAINFALL_FLOOD' | 'DROUGHT_STRESS' | 'HAILSTORM_DAMAGE' | 'PEST_DETERIORATION';
+  plot_id: string;
+  pre_event_date: string;
+  post_event_date: string;
+  pre_event_ndvi: number;
+  post_event_ndvi: number;
+  ndvi_change_delta: number; // post - pre
+  affected_area_sqm: number;
+  affected_area_hectares: number;
+  affected_area_acres: number;
+  affected_percentage: number;
+  damage_severity: 'NEGLIGIBLE' | 'MODERATE' | 'SEVERE' | 'CRITICAL';
+  inspection_priority: 'ROUTINE' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  verification_status: 'PRELIMINARY_AI_OBSERVATION' | 'FIELD_VERIFIED' | 'COMPENSATION_APPROVED';
+  surveyor_notes?: string;
+  assessed_at: string;
+}
+
+export type MonitoringStatus =
+  | 'ACTIVE'
+  | 'PROCESSING'
+  | 'WAITING_NEXT_PERIOD'
+  | 'OBSERVATION_AVAILABLE'
+  | 'INSUFFICIENT_IMAGERY'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED';
+
+export interface MonitoringArea {
+  id: string;
+  user_id: string;
+  farmer_id: string;
+  plot_id?: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius_km: number;
+  polygon_coordinates?: [number, number][];
+  area_hectares: number;
+  area_acres: number;
+  start_date: string;
+  end_date: string;
+  interval_days: number;
+  preferred_crop?: string;
+  preferred_season?: 'kharif' | 'rabi' | 'summer' | 'annual';
+  status: MonitoringStatus;
+  last_observation_at?: string;
+  next_scheduled_run_at?: string;
+  total_periods_count: number;
+  usable_periods_count: number;
+  warnings?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MonitoringPeriodObservation {
+  id: string;
+  monitoring_area_id: string;
+  plot_id?: string;
+  period_label: string;
+  period_index: number;
+  period_start: string;
+  period_end: string;
+  actual_acquisition_dates: string[];
+  satellite_provider: string;
+  scenes_found: number;
+  scenes_used: number;
+  scene_ids: string[];
+  cloud_cover_pct: number;
+  valid_pixel_fraction: number;
+  boa_offset_applied: number;
+  scale_factor: number;
+  has_data: boolean;
+  missing_reason?: string;
+  indices: {
+    ndvi_mean: number;
+    ndvi_median: number;
+    ndvi_min: number;
+    ndvi_max: number;
+    ndvi_std: number;
+    evi_mean: number;
+    savi_mean: number;
+    ndwi_mean: number;
+    ndmi_mean: number;
+    ndre_mean: number;
+    gcvi_mean: number;
+  };
+  growth_stage:
+    | 'Emergence'
+    | 'Vegetative'
+    | 'Peak / Reproductive'
+    | 'Maturity'
+    | 'Harvested / Senesced'
+    | 'Fallow'
+    | 'Unassessed';
+  health_status: 'Optimal' | 'Mild Stress' | 'High Stress' | 'Cloud Obscured' | 'Insufficient Data';
+  delta_ndvi_previous: number | null;
+  delta_ndmi_previous: number | null;
+  delta_direction: 'INCREASED' | 'DECREASED' | 'STABLE' | 'FIRST_PERIOD' | 'NO_DATA';
+  change_summary: string;
+  crop_prediction?: {
+    crop_name: string;
+    confidence: number;
+    ranking: Array<{ crop: string; fit: number }>;
+    needs_field_check: boolean;
+    model_version: string;
+  };
+  image_urls?: {
+    rgb?: string;
+    ndvi_map?: string;
+    nir_false_color?: string;
+  };
+  processed_at: string;
+}
+
+export interface MonitoringInspectionItem {
+  id: string;
+  monitoring_area_id: string;
+  plot_id?: string;
+  farmer_name: string;
+  district: string;
+  taluk: string;
+  village: string;
+  crop_type: string;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'ROUTINE';
+  reasons: string[];
+  confidence_score: number;
+  latest_ndvi_delta: number;
+  latest_moisture_level: number;
+  status: 'PENDING_OFFICER_REVIEW' | 'INSPECTION_ASSIGNED' | 'VERIFIED';
+  created_at: string;
+}

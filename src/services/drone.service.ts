@@ -1,5 +1,6 @@
 import { mockDb } from './mock-db';
 import { notificationService } from './notification.service';
+import { firebaseService } from './firebase.service';
 import { FarmerLandImage, DroneImagery } from '@/types';
 
 export class DroneService {
@@ -66,6 +67,20 @@ export class DroneService {
       });
     }
 
+    // Sync to Firebase Cloud Storage and Firestore
+    if (firebaseService.isConfigured) {
+      uploadedList.forEach(async (img, idx) => {
+        const fileObj = params.files[idx];
+        if (fileObj && fileObj.url && fileObj.url.startsWith('data:')) {
+          const downloadUrl = await firebaseService.uploadDataUrl(img.storage_path, fileObj.url);
+          if (downloadUrl) {
+            img.storage_path = downloadUrl;
+          }
+        }
+        firebaseService.saveDocument('farmer_land_images', img.id, img);
+      });
+    }
+
     mockDb.persistAll();
     return uploadedList;
   }
@@ -119,6 +134,20 @@ export class DroneService {
       null,
       { mission: params.missionReference, count: params.files.length }
     );
+
+    // Sync to Firebase Cloud Storage and Firestore
+    if (firebaseService.isConfigured) {
+      uploadedList.forEach(async (img, idx) => {
+        const fileObj = params.files[idx];
+        if (fileObj && fileObj.url && fileObj.url.startsWith('data:')) {
+          const downloadUrl = await firebaseService.uploadDataUrl(img.storage_path, fileObj.url);
+          if (downloadUrl) {
+            img.storage_path = downloadUrl;
+          }
+        }
+        firebaseService.saveDocument('farmer_land_images', img.id, img);
+      });
+    }
 
     mockDb.persistAll();
     return uploadedList;

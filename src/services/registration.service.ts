@@ -2,6 +2,7 @@ import { supabase, isLiveSupabaseConfigured } from '@/lib/supabase';
 import { mockDb } from './mock-db';
 import { notificationService } from './notification.service';
 import { msg91Service } from './msg91.service';
+import { firebaseService } from './firebase.service';
 import {
   RegistrationApplication,
   Property,
@@ -396,9 +397,11 @@ export class RegistrationService {
   ): Promise<{
     application: RegistrationApplication;
     username?: string;
+    activationToken?: string;
     activationUrl?: string;
     smsJob?: NotificationJob;
     smsMessage?: string;
+    [key: string]: any;
   }> {
     const officer = mockDb.currentUser;
     // 1. Role Authorization Check: Only Tahsildar or Admin
@@ -433,6 +436,7 @@ export class RegistrationService {
     }
 
     let generatedUsername: string | undefined;
+    let activationToken: string | undefined;
     let activationUrl: string | undefined;
     let smsJob: NotificationJob | undefined;
     let smsMessageText: string | undefined;
@@ -450,7 +454,7 @@ export class RegistrationService {
         generatedUsername = `MH-PUN-${talukPrefix}-${randomSuffix}`;
 
         // Cryptographically random, single-use activation token (expires in 48 hours)
-        const activationToken = `act_${Date.now()}_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 6)}`;
+        activationToken = `act_${Date.now()}_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 6)}`;
         const expiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
 
         // Record activation token in durable storage
@@ -545,8 +549,10 @@ export class RegistrationService {
 
     mockDb.persistAll();
     return {
+      ...app,
       application: app,
       username: generatedUsername,
+      activationToken,
       activationUrl,
       smsJob,
       smsMessage: smsMessageText,

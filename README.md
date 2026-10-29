@@ -186,6 +186,31 @@ npx tsx scripts/run-acceptance-tests.ts
 
 ---
 
+## 🛰️ Continuous 15-Day Satellite Remote Sensing & GM-ML-V2 Integration
+
+AgriSurvey integrates high-cadence Earth Observation data with the **GM-ML-V2 Remote Sensing & Machine Learning Engine** to provide automated, evidence-backed crop monitoring across Maharashtra:
+
+### 1. 10-Step Operational Remote Sensing Workflow
+1. **Coordinate & Parcel Ingestion**: Farmer or authorized Tahsildar inputs target location via latitude and longitude (with comma-paste parser `19.0760, 72.8777` or map click), selecting monitoring radius (0.2–3.0 km) or cadastral polygon boundary.
+2. **Spatial AOI Registration**: Area is validated against Maharashtra state boundaries (15.0°–22.5° N, 72.0°–81.0° E) and registered in the reactive spatial database.
+3. **STAC Scene Discovery**: System queries the Element 84 Earth Search STAC API (`https://earth-search.aws.element84.com/v1`) for Copernicus Sentinel-2 L2A bottom-of-atmosphere (BOA) scenes over the AOI bounding box without requiring proprietary API tokens.
+4. **Windowed COG Extraction & Calibration**: Spectral bands (B02 Blue, B03 Green, B04 Red, B05 RedEdge, B08 NIR, B11 SWIR-1, SCL) are fetched directly via Cloud-Optimized GeoTIFFs (COGs), applying Baseline 04.00+ radiometric offset (`-1000 DN`) and 10m/20m grid alignment.
+5. **Honest Monsoon Cloud Handling**: Scene Classification Layer (SCL) filters clouds, shadows, and invalid pixels. During heavy Maharashtra monsoon overcast (July/August), periods without clear acquisitions are cataloged with transparent **"Monsoon cloud outage (No observation)"** badges rather than fabricated approximations.
+6. **7 Spectral Vegetation & Moisture Indices**: Every 15-day period calculates 7 standardized indices with division-by-zero safeguards:
+   * **NDVI**: `(NIR - Red) / (NIR + Red)` — Canopy vigor & photosynthetic biomass.
+   * **EVI**: `2.5 * (NIR - Red) / (NIR + 6*Red - 7.5*Blue + 1)` — High-biomass sensitivity.
+   * **SAVI**: `((NIR - Red) / (NIR + Red + 0.5)) * 1.5` — Soil background attenuation for early sowing.
+   * **NDWI**: `(Green - NIR) / (Green + NIR)` — Surface water & irrigation ponding.
+   * **NDMI**: `(NIR - SWIR1) / (NIR + SWIR1)` — Root-zone & canopy internal moisture stress.
+   * **NDRE**: `(NIR - RedEdge) / (NIR + RedEdge)` — Nitrogen vigor & mid-to-late chlorophyll activity.
+   * **GCVI**: `(NIR / Green) - 1` — Leaf greenness index for dense row crops.
+7. **GM-ML-V2 Phenology Engine Execution**: 158 phenology features are classified using the trained LightGBM model with Isotonic probability calibration (Expected Calibration Error: 0.0046) across 12 crop classes.
+8. **Selective Prediction & Anomaly Flagging**: If the model confidence falls below 90% (e.g. Cotton vs Tur spectral confusion) or margin < 5%, or if 15-day NDVI drops abruptly (<-0.15), the parcel is flagged for field inspection rather than auto-verified.
+9. **Prioritized Tahsildar Inspection Queue**: Flagged parcels are sorted by priority (`CRITICAL`, `HIGH`, `MEDIUM`) with Taluka/District jurisdiction restrictions, allowing Tahsildars to assign Talathi field ground surveys.
+10. **Interactive Timeline & Analytics UI**: Farmers and officers inspect the complete chronological 15-day observation gallery, real satellite acquisition dates, phenology stage progression, and spectral curves in real-time.
+
+---
+
 ## 👤 Quick Evaluation Personas
 
 For streamlined testing in development mode, use the **Persona Switcher** in the top navigation bar or log in with these accounts:

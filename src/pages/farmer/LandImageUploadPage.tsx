@@ -55,7 +55,11 @@ const SAMPLE_FARM_IMAGES = [
   },
 ];
 
+import { useLanguage } from '@/context/LanguageContext';
+import { localizePlotOrCropName } from '@/lib/dashboard-localizer';
+
 export const LandImageUploadPage: React.FC = () => {
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const farmer = mockDb.currentUser;
 
@@ -143,8 +147,8 @@ export const LandImageUploadPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Upload Land Photographs"
-      subtitle="Submit 5–6 ground photographs of your approved agricultural property for drone inspection matching"
+      title={t('dashboard.uploadPhotosTitle', 'Upload Land Photographs')}
+      subtitle={t('dashboard.uploadPhotosSubtitle', 'Submit 5–6 ground photographs of your approved agricultural property for drone inspection matching')}
     >
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Approved Property Banner */}
@@ -156,7 +160,7 @@ export const LandImageUploadPage: React.FC = () => {
                 <Badge status={selectedApp.status} size="sm" />
               </div>
               <h3 className="text-base font-bold text-slate-900">
-                {selectedApp.property?.property_name || `Survey No. ${selectedApp.property?.survey_number}`}
+                {selectedApp.property?.property_name ? localizePlotOrCropName(selectedApp.property.property_name, language) : `Survey No. ${selectedApp.property?.survey_number}`}
               </h3>
               <p className="text-xs text-slate-500 font-mono">
                 App Ref: {selectedApp.application_reference} • Gat No: {selectedApp.property?.survey_number} • Area: {selectedApp.property?.land_area} Acres

@@ -21,8 +21,10 @@ import { Button } from '@/components/ui/Button';
 import { notificationService } from '@/services/notification.service';
 import { mockDb } from '@/services/mock-db';
 import { Notification } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const FarmerNotificationsPage: React.FC = () => {
+  const { t } = useLanguage();
   const farmer = mockDb.currentUser;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
@@ -134,8 +136,8 @@ export const FarmerNotificationsPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Notifications & System Alerts"
-      subtitle="Live administrative updates, Tahsildar verification notices, and telemetry plant alerts."
+      title={t('dashboard.notificationsTitle', 'Notifications & System Alerts')}
+      subtitle={t('dashboard.notificationsSubtitle', 'Live administrative updates, Tahsildar verification notices, and telemetry plant alerts.')}
     >
       <div className="space-y-6">
         {/* Metric Cards */}

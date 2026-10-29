@@ -22,3 +22,13 @@ export function canAccessRoleRoute(userRole: UserRole | undefined, requiredRole:
   }
   return userRole === requiredRole;
 }
+
+export function canAccessRoute(role: UserRole | undefined, path: string): boolean {
+  if (!role) return false;
+  if (role === 'admin') return true;
+  if (path.startsWith('/gis/')) return true;
+  if (path.startsWith('/tahsildar') && role !== 'tahsildar') return false;
+  if (path.startsWith('/field-worker') && role !== 'field_worker') return false;
+  if (path.startsWith('/admin')) return false;
+  return true;
+}

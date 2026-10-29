@@ -22,6 +22,8 @@ import {
   Info,
   Droplets,
   Thermometer,
+  Satellite,
+  Compass,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -53,10 +55,24 @@ import {
   PlantHealthAssessment,
   PlantHealthAlert,
   SensorDevice,
+  MonitoringArea,
+  MonitoringPeriodObservation,
 } from '@/types';
 import { PlantObservationModal } from '@/components/plant-intelligence/PlantObservationModal';
 import { CreateMonitoringUnitModal } from '@/components/plant-intelligence/CreateMonitoringUnitModal';
 import { PlantUnitDetailModal } from '@/components/plant-intelligence/PlantUnitDetailModal';
+import { CoordinateMonitoringModal } from '@/components/satellite/CoordinateMonitoringModal';
+import { ContinuousMonitoringTimeline } from '@/components/satellite/ContinuousMonitoringTimeline';
+import { satelliteMonitoringService } from '@/services/satellite-monitoring.service';
+import { useLanguage } from '@/context/LanguageContext';
+import {
+  localizePlotOrCropName,
+  localizeDataFreshness,
+  localizeAlertReason,
+  localizeAlertAction,
+  getTargetLabel,
+  getAgronomicRuleTitle,
+} from '@/lib/dashboard-localizer';
 
 const HEALTH_COLORS = {
   Healthy: '#10b981',
@@ -67,6 +83,7 @@ const HEALTH_COLORS = {
 };
 
 export const FarmerDashboardPage: React.FC = () => {
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const farmer = mockDb.currentUser;
 
@@ -98,6 +115,12 @@ export const FarmerDashboardPage: React.FC = () => {
 
   const [createUnitModalOpen, setCreateUnitModalOpen] = useState(false);
 
+  // Continuous 15-Day Satellite Monitoring State
+  const [monitoringAreas, setMonitoringAreas] = useState<MonitoringArea[]>([]);
+  const [selectedMonitoringAreaId, setSelectedMonitoringAreaId] = useState<string | null>(null);
+  const [areaObservations, setAreaObservations] = useState<MonitoringPeriodObservation[]>([]);
+  const [coordModalOpen, setCoordModalOpen] = useState(false);
+
   const loadAllDashboardData = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -121,10 +144,48 @@ export const FarmerDashboardPage: React.FC = () => {
       // 4. Sensor Readings for Trends
       setSensorReadings([...mockDb.sensorReadings]);
       setLastRefreshedAt(new Date());
+
+      // 5. Continuous Satellite Monitoring Areas & Observations
+      const areas = satelliteMonitoringService.getMonitoringAreas(farmer.id);
+      setMonitoringAreas(areas);
+      if (areas.length > 0) {
+        const activeAreaId = selectedMonitoringAreaId || areas[0].id;
+        setSelectedMonitoringAreaId(activeAreaId);
+        const obs = satelliteMonitoringService.getObservationsForArea(activeAreaId);
+        setAreaObservations(obs);
+      }
     } finally {
       setIsRefreshing(false);
     }
-  }, [farmer.id]);
+  }, [farmer.id, selectedMonitoringAreaId]);
+
+  const handleSelectMonitoringArea = (areaId: string) => {
+    setSelectedMonitoringAreaId(areaId);
+    const obs = satelliteMonitoringService.getObservationsForArea(areaId);
+    setAreaObservations(obs);
+  };
+
+  const handleRefreshAreaObservations = async () => {
+    if (!selectedMonitoringAreaId) return;
+    await satelliteMonitoringService.processAreaObservations(selectedMonitoringAreaId, {
+      usePythonBackend: true,
+    });
+    const obs = satelliteMonitoringService.getObservationsForArea(selectedMonitoringAreaId);
+    setAreaObservations(obs);
+    const areas = satelliteMonitoringService.getMonitoringAreas(farmer.id);
+    setMonitoringAreas(areas);
+  };
+
+  const handleAreaCreated = (newArea: MonitoringArea) => {
+    const areas = satelliteMonitoringService.getMonitoringAreas(farmer.id);
+    setMonitoringAreas(areas);
+    setSelectedMonitoringAreaId(newArea.id);
+    const obs = satelliteMonitoringService.getObservationsForArea(newArea.id);
+    setAreaObservations(obs);
+  };
+
+  const activeMonitoringArea =
+    monitoringAreas.find((a) => a.id === selectedMonitoringAreaId) || monitoringAreas[0];
 
   useEffect(() => {
     loadAllDashboardData();
@@ -193,8 +254,8 @@ export const FarmerDashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Farmer Intelligence Portal"
-      subtitle={`Welcome back, ${farmer.full_name} • Central Agricultural Land & Crop Intelligence`}
+      title={t('dashboard.farmerPortalTitle', 'Farmer Intelligence Portal')}
+      subtitle={`${t('dashboard.welcomeBack', 'Welcome back')}, ${farmer.full_name} • ${t('dashboard.farmerPortalSubtitle', 'Central Agricultural Land & Crop Intelligence')}`}
     >
       <div className="space-y-6">
         {/* Welcome Section & Dual Action Bar */}
@@ -202,15 +263,15 @@ export const FarmerDashboardPage: React.FC = () => {
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-600" />
-              <span>Khatedar Domicile: Pune Division (Haveli Taluk)</span>
+              <span>{t('dashboard.khatedarDomicile', 'Khatedar Domicile: Pune Division (Haveli Taluk)')}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-              Welcome back, {farmer.full_name}
+              {t('dashboard.welcomeBack', 'Welcome back')}, {farmer.full_name}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               {hasVerifiedFarm
-                ? 'Your land registration is verified by the Tahsildar. Live telemetry, plant observations, and crop health assessments are active.'
-                : 'Your land registration application is awaiting Tahsildar approval. Once verified, plant intelligence monitoring will unlock.'}
+                ? t('dashboard.verifiedBannerDesc', 'Your land registration is verified by the Tahsildar. Live telemetry, plant observations, and crop health assessments are active.')
+                : t('dashboard.pendingBannerDesc', 'Your land registration application is awaiting Tahsildar approval. Once verified, plant intelligence monitoring will unlock.')}
             </p>
           </div>
 
@@ -221,7 +282,7 @@ export const FarmerDashboardPage: React.FC = () => {
               icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
               onClick={loadAllDashboardData}
             >
-              Live Refresh
+              {t('dashboard.liveRefresh', 'Live Refresh')}
             </Button>
 
             <Button
@@ -234,7 +295,17 @@ export const FarmerDashboardPage: React.FC = () => {
                 }
               }}
             >
-              Record Plant Observation
+              {t('dashboard.recordObservation', 'Record Plant Observation')}
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+              icon={<Satellite className="w-3.5 h-3.5 text-emerald-600" />}
+              onClick={() => setCoordModalOpen(true)}
+            >
+              Monitor Coordinates
             </Button>
           </div>
         </div>
@@ -243,61 +314,130 @@ export const FarmerDashboardPage: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <Card className="p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>My Farms</span>
+              <span>{t('dashboard.myFarms', 'My Farms')}</span>
               <MapPin className="w-3.5 h-3.5 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalFarms}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{verifiedFarms} Approved</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{verifiedFarms} {t('dashboard.approved', 'Approved')}</div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Monitored Units</span>
+              <span>{t('dashboard.monitoredUnits', 'Monitored Units')}</span>
               <Sprout className="w-3.5 h-3.5 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalUnits}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Plots & Zones</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{t('dashboard.plotsAndZones', 'Plots & Zones')}</div>
           </Card>
 
           <Card className="p-4 bg-emerald-50/50 border-emerald-200">
             <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
-              <span>Healthy Units</span>
+              <span>{t('dashboard.healthyUnits', 'Healthy Units')}</span>
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-emerald-950 mt-1">{healthyUnits}</div>
-            <div className="text-[10px] text-emerald-700 mt-0.5">Optimal conditions</div>
+            <div className="text-[10px] text-emerald-700 mt-0.5">{t('dashboard.optimalConditions', 'Optimal conditions')}</div>
           </Card>
 
           <Card className="p-4 bg-amber-50/50 border-amber-200">
             <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
-              <span>Attention Needed</span>
+              <span>{t('dashboard.attentionNeeded', 'Attention Needed')}</span>
               <Clock className="w-3.5 h-3.5 text-amber-600" />
             </div>
             <div className="text-2xl font-extrabold text-amber-950 mt-1">{attentionUnits}</div>
-            <div className="text-[10px] text-amber-700 mt-0.5">Moisture/pH stress</div>
+            <div className="text-[10px] text-amber-700 mt-0.5">{t('dashboard.stressCondition', 'Moisture/pH stress')}</div>
           </Card>
 
           <Card className="p-4 bg-red-50/50 border-red-200">
             <div className="flex items-center justify-between text-xs font-semibold text-red-800">
-              <span>Critical Alerts</span>
+              <span>{t('dashboard.criticalAlerts', 'Critical Alerts')}</span>
               <AlertCircle className="w-3.5 h-3.5 text-red-600" />
             </div>
             <div className="text-2xl font-extrabold text-red-950 mt-1">{activeAlertsCount}</div>
-            <div className="text-[10px] text-red-700 mt-0.5">Urgent attention</div>
+            <div className="text-[10px] text-red-700 mt-0.5">{t('dashboard.urgentAttention', 'Urgent attention')}</div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Data Freshness</span>
+              <span>{t('dashboard.dataFreshness', 'Data Freshness')}</span>
               <Activity className="w-3.5 h-3.5 text-teal-600" />
             </div>
             <div className="text-xs font-bold text-slate-900 mt-2 truncate">
-              Updated just now
+              {t('dashboard.updatedJustNow', 'Updated just now')}
             </div>
             <div className="text-[10px] text-slate-400 mt-0.5">
               {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           </Card>
+        </div>
+
+        {/* Continuous 15-Day Satellite Remote Sensing & Phenology Monitoring */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
+                  <Satellite className="w-5 h-5" />
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                  15-Day Satellite Farm & Crop Monitoring
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Automated satellite passes every 15 days &bull; Crop growth stage, moisture & greenness tracking
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {monitoringAreas.length > 1 && (
+                <select
+                  value={selectedMonitoringAreaId || ''}
+                  onChange={(e) => handleSelectMonitoringArea(e.target.value)}
+                  className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                >
+                  {monitoringAreas.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <Button
+                size="sm"
+                variant="primary"
+                icon={<PlusCircle className="w-3.5 h-3.5" />}
+                onClick={() => setCoordModalOpen(true)}
+              >
+                Add Farm Coordinates to Monitor
+              </Button>
+            </div>
+          </div>
+
+          {activeMonitoringArea ? (
+            <ContinuousMonitoringTimeline
+              area={activeMonitoringArea}
+              observations={areaObservations}
+              onRefreshObservations={handleRefreshAreaObservations}
+            />
+          ) : (
+            <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                <Satellite className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-800">No Satellite Monitoring Areas Active</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Enter your farm plot coordinates or select a cadastral parcel to begin automated 15-day Sentinel-2 L2A satellite monitoring and crop phenology analysis.
+              </p>
+              <Button
+                size="sm"
+                icon={<Compass className="w-4 h-4" />}
+                onClick={() => setCoordModalOpen(true)}
+              >
+                Input Coordinates & Start Monitoring
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Plant Health Overview: Charts & Telemetry Trends */}
@@ -308,14 +448,14 @@ export const FarmerDashboardPage: React.FC = () => {
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                   <TrendingUp className="w-4 h-4 text-emerald-600" />
-                  Soil Moisture Telemetry Trend (%)
+                  {t('dashboard.soilMoistureTrend', 'Soil Moisture Telemetry Trend (%)')}
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  Continuous root-zone readings compared with Sugarcane optimal threshold [60% - 80%]
+                  {t('dashboard.soilMoistureSubtitle', 'Continuous root-zone readings compared with Sugarcane optimal threshold [60% - 80%]')}
                 </p>
               </div>
               <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                Live Sensor Feed
+                {t('dashboard.liveSensorFeed', 'Live Sensor Feed')}
               </span>
             </div>
 
@@ -340,18 +480,18 @@ export const FarmerDashboardPage: React.FC = () => {
               </div>
             ) : (
               <div className="h-48 flex items-center justify-center text-xs text-slate-400">
-                No sensor readings recorded yet.
+                {t('dashboard.noSensorReadings', 'No sensor readings recorded yet.')}
               </div>
             )}
 
             <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                Optimal Threshold: 60% – 80%
+                {t('dashboard.optimalThreshold', 'Optimal Threshold: 60% – 80%')}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                Permanent Wilting Threshold: &lt; 45%
+                {t('dashboard.wiltingThreshold', 'Permanent Wilting Threshold: < 45%')}
               </span>
             </div>
           </Card>
@@ -360,9 +500,9 @@ export const FarmerDashboardPage: React.FC = () => {
           <Card className="lg:col-span-5 p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                Health Status Distribution
+                {t('dashboard.healthDistribution', 'Health Status Distribution')}
               </h3>
-              <span className="text-[11px] text-slate-500">{totalUnits} units</span>
+              <span className="text-[11px] text-slate-500">{totalUnits} {t('dashboard.unitsLabel', 'units')}</span>
             </div>
 
             {healthDistributionData.length > 0 ? (
@@ -386,25 +526,37 @@ export const FarmerDashboardPage: React.FC = () => {
                 </div>
 
                 <div className="flex-1 space-y-2 text-xs">
-                  {healthDistributionData.map((d) => (
-                    <div key={d.name} className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-slate-700">
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                        <span className="truncate">{d.name}</span>
-                      </span>
-                      <span className="font-bold text-slate-900">{d.value}</span>
-                    </div>
-                  ))}
+                  {healthDistributionData.map((d) => {
+                    const localizedLabel =
+                      d.name === 'Healthy'
+                        ? t('dashboard.healthy', 'Healthy')
+                        : d.name === 'Needs Attention'
+                        ? t('dashboard.needsAttention', 'Needs Attention')
+                        : d.name === 'Critical'
+                        ? t('dashboard.critical', 'Critical')
+                        : d.name === 'Insufficient Data'
+                        ? t('dashboard.insufficientData', 'Insufficient Data')
+                        : d.name;
+                    return (
+                      <div key={d.name} className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-slate-700">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                          <span className="truncate">{localizedLabel}</span>
+                        </span>
+                        <span className="font-bold text-slate-900">{d.value}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
               <div className="h-36 flex items-center justify-center text-xs text-slate-400">
-                No active monitoring units.
+                {t('dashboard.noActiveUnits', 'No active monitoring units.')}
               </div>
             )}
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
-              <strong>Agronomic Separation Rule:</strong> Plant health is evaluated from crop telemetry and observations. Land verification is strictly determined by Tahsildar revenue examination.
+              <strong>{getAgronomicRuleTitle(language)}</strong> {t('dashboard.agronomicRuleNotice', 'Plant health is evaluated from crop telemetry and observations. Land verification is strictly determined by Tahsildar revenue examination.')}
             </div>
           </Card>
         </div>
@@ -414,10 +566,10 @@ export const FarmerDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                Crop & Plant Monitoring Units
+                {t('dashboard.cropMonitoringUnits', 'Crop & Plant Monitoring Units')}
               </h3>
               <p className="text-xs text-slate-500">
-                Select any plot to view continuous telemetry, uploaded images, and agronomic recommendations.
+                {t('dashboard.cropMonitoringDesc', 'Select any plot to view continuous telemetry, uploaded images, and agronomic recommendations.')}
               </p>
             </div>
 
@@ -428,7 +580,7 @@ export const FarmerDashboardPage: React.FC = () => {
               disabled={!hasVerifiedFarm}
               onClick={() => setCreateUnitModalOpen(true)}
             >
-              Add Monitoring Unit
+              {t('dashboard.addMonitoringUnit', 'Add Monitoring Unit')}
             </Button>
           </div>
 
@@ -439,6 +591,16 @@ export const FarmerDashboardPage: React.FC = () => {
               );
               const isCritical = unit.current_health_status === 'Critical';
               const isAttention = unit.current_health_status === 'Needs Attention';
+              const localizedStatus =
+                unit.current_health_status === 'Healthy'
+                  ? t('dashboard.healthy', 'Healthy')
+                  : unit.current_health_status === 'Needs Attention'
+                  ? t('dashboard.needsAttention', 'Needs Attention')
+                  : unit.current_health_status === 'Critical'
+                  ? t('dashboard.critical', 'Critical')
+                  : unit.current_health_status === 'Insufficient Data'
+                  ? t('dashboard.insufficientData', 'Insufficient Data')
+                  : unit.current_health_status;
 
               return (
                 <div
@@ -462,7 +624,7 @@ export const FarmerDashboardPage: React.FC = () => {
                           : 'bg-amber-50 text-amber-800 border-amber-200'
                       }`}
                     >
-                      {unit.current_health_status}
+                      {localizedStatus}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">
                       {unit.zone_identifier}
@@ -470,38 +632,38 @@ export const FarmerDashboardPage: React.FC = () => {
                   </div>
 
                   <h4 className="text-sm font-bold text-slate-900 truncate">
-                    {unit.unit_name}
+                    {localizePlotOrCropName(unit.unit_name, language)}
                   </h4>
                   <div className="text-xs text-emerald-800 font-semibold mb-3">
-                    {unit.crop_variety}
+                    {localizePlotOrCropName(unit.crop_variety, language)}
                   </div>
 
                   {/* Quick telemetry readings preview */}
                   <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50 rounded-lg text-[11px] mb-3">
                     <div>
-                      <span className="text-slate-400 block text-[9px]">Moisture</span>
+                      <span className="text-slate-400 block text-[9px]">{t('dashboard.moisture', 'Moisture')}</span>
                       <span className="font-bold text-slate-800 font-mono">
                         {assessment?.supporting_measurements.soil_moisture?.value !== undefined
                           ? `${assessment.supporting_measurements.soil_moisture.value}%`
-                          : 'No Data'}
+                          : t('dashboard.noData', 'No Data')}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[9px]">Soil pH</span>
+                      <span className="text-slate-400 block text-[9px]">{t('dashboard.soilPh', 'Soil pH')}</span>
                       <span className="font-bold text-slate-800 font-mono">
                         {assessment?.supporting_measurements.soil_ph?.value !== undefined
                           ? assessment.supporting_measurements.soil_ph.value.toFixed(1)
-                          : 'No Data'}
+                          : t('dashboard.noData', 'No Data')}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px]">
                     <span className="text-slate-400 truncate">
-                      {assessment?.data_freshness || 'Updated just now'}
+                      {localizeDataFreshness(assessment?.data_freshness, language) || t('dashboard.updatedJustNow', 'Updated just now')}
                     </span>
                     <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                      Inspect <ArrowRight className="w-3 h-3" />
+                      {t('dashboard.inspect', 'Inspect')} <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
                 </div>
@@ -516,10 +678,10 @@ export const FarmerDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                 <AlertCircle className="w-4 h-4 text-red-500" />
-                Active Agronomic Alerts ({alerts.filter((a) => a.status === 'active').length})
+                {t('dashboard.activeAgronomicAlerts', 'Active Agronomic Alerts')} ({alerts.filter((a) => a.status === 'active').length})
               </h3>
               <span className="text-xs text-slate-500">
-                Rule-based thresholds exceeded
+                {t('dashboard.ruleThresholdsExceeded', 'Rule-based thresholds exceeded')}
               </span>
             </div>
 
@@ -535,9 +697,11 @@ export const FarmerDashboardPage: React.FC = () => {
                 >
                   <div className="flex items-start justify-between gap-3 text-xs">
                     <div>
-                      <span className="font-bold text-slate-900 block">{al.reason}</span>
+                      <span className="font-bold text-slate-900 block">
+                        {localizeAlertReason(al.reason, language)}
+                      </span>
                       <span className="text-[10px] font-semibold text-slate-600">
-                        Target: {al.unit_name} ({al.crop_name})
+                        {getTargetLabel(language)} {localizePlotOrCropName(al.unit_name, language)} ({localizePlotOrCropName(al.crop_name, language)})
                       </span>
                     </div>
                     <span className="text-[10px] text-slate-500 shrink-0 font-mono">
@@ -546,12 +710,12 @@ export const FarmerDashboardPage: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-slate-700">
-                    <strong>Recommended Next Step:</strong> {al.recommended_action}
+                    <strong>{t('dashboard.recommendedNextStep', 'Recommended Next Step:')}</strong> {localizeAlertAction(al.recommended_action, language)}
                   </p>
 
                   <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs">
                     <span className="text-[10px] text-slate-500 italic">
-                      Acknowledging alert does not resolve root stress.
+                      {t('dashboard.acknowledgingNotice', 'Acknowledging alert does not resolve root stress.')}
                     </span>
                     <div className="flex items-center gap-2">
                       {al.status === 'active' && (
@@ -559,7 +723,7 @@ export const FarmerDashboardPage: React.FC = () => {
                           onClick={() => handleAcknowledgeAlert(al.id)}
                           className="px-2.5 py-1 bg-white text-slate-700 font-semibold rounded border border-slate-300 hover:bg-slate-50 text-xs"
                         >
-                          Acknowledge
+                          {t('dashboard.acknowledge', 'Acknowledge')}
                         </button>
                       )}
                       {al.status !== 'resolved' && (
@@ -567,7 +731,7 @@ export const FarmerDashboardPage: React.FC = () => {
                           onClick={() => handleResolveAlert(al.id)}
                           className="px-2.5 py-1 bg-emerald-700 text-white font-semibold rounded hover:bg-emerald-800 text-xs"
                         >
-                          Resolve
+                          {t('dashboard.resolve', 'Resolve')}
                         </button>
                       )}
                     </div>
@@ -583,14 +747,14 @@ export const FarmerDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                Registered Landholdings & Verification Status
+                {t('dashboard.registeredLandholdings', 'Registered Landholdings & Verification Status')}
               </h3>
               <p className="text-xs text-slate-500">
-                Tahsildar verification certifies legal parcel boundaries under Maharashtra Land Revenue Code.
+                {t('dashboard.cadastralDesc', 'Tahsildar verification certifies legal parcel boundaries under Maharashtra Land Revenue Code.')}
               </p>
             </div>
             <Link to="/farmer/properties" className="text-xs font-bold text-emerald-700 hover:text-emerald-900">
-              Manage All Properties →
+              {t('dashboard.manageAllProperties', 'Manage All Properties →')}
             </Link>
           </div>
 
@@ -600,12 +764,12 @@ export const FarmerDashboardPage: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 text-sm">
-                      {app.property?.property_name || `Survey ${app.property?.survey_number}`}
+                      {app.property?.property_name || `${t('dashboard.surveyLabel', 'Survey')} ${app.property?.survey_number}`}
                     </span>
                     <Badge status={app.status} size="sm" />
                   </div>
                   <span className="text-slate-500">
-                    Survey {app.property?.survey_number} • {app.property?.village}, {app.property?.taluk} ({app.property?.land_area} {app.property?.land_area_unit})
+                    {t('dashboard.surveyLabel', 'Survey')} {app.property?.survey_number} • {app.property?.village}, {app.property?.taluk} ({app.property?.land_area} {t('dashboard.acresLabel', 'Acres')})
                   </span>
                 </div>
 
@@ -617,7 +781,7 @@ export const FarmerDashboardPage: React.FC = () => {
                     to="/farmer/properties"
                     className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-bold text-xs"
                   >
-                    View Status
+                    {t('dashboard.viewStatus', 'View Status')}
                   </Link>
                 </div>
               </div>
@@ -659,6 +823,14 @@ export const FarmerDashboardPage: React.FC = () => {
           }
         }}
         onAlertUpdated={loadAllDashboardData}
+      />
+
+      {/* Coordinate-Based Continuous Satellite Monitoring Modal */}
+      <CoordinateMonitoringModal
+        isOpen={coordModalOpen}
+        onClose={() => setCoordModalOpen(false)}
+        availablePlots={mockDb.farmPlots.filter((p) => p.farmer_id === farmer.id)}
+        onAreaCreated={handleAreaCreated}
       />
     </DashboardLayout>
   );

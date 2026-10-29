@@ -25,8 +25,21 @@ import {
   PlantHealthAlert,
   NotificationJob,
   AccountActivationToken,
+  FarmPlot,
+  SatelliteScene,
+  VegetationIndexObservation,
+  WeatherObservation,
+  DroneMissionRecord,
+  MobileFieldSurveyRecord,
+  CropPredictionRecord,
+  YieldForecastRecord,
+  DisasterAssessmentRecord,
+  MonitoringArea,
+  MonitoringPeriodObservation,
+  MonitoringInspectionItem,
 } from '@/types';
 import { DEFAULT_CROP_THRESHOLDS } from './plant-health.service';
+import { firebaseService } from './firebase.service';
 
 // Key for LocalStorage Persistence
 const STORAGE_PREFIX = 'agrisurvey_db_';
@@ -78,7 +91,7 @@ const INITIAL_PROFILES: Profile[] = [
     phone_number: '9822012345',
     role: 'farmer',
     account_status: 'active',
-    preferred_language: 'en',
+    preferred_language: 'mr',
     password: 'FarmerPass123!',
     created_at: '2026-02-10T09:30:00Z',
     updated_at: '2026-02-10T09:30:00Z',
@@ -1014,6 +1027,960 @@ const INITIAL_PLANT_ALERTS: PlantHealthAlert[] = [
 ];
 
 // -----------------------------------------------------------------------------
+// Geospatial & Remote Sensing Initial Seed Data
+// -----------------------------------------------------------------------------
+const INITIAL_FARM_PLOTS: FarmPlot[] = [
+  {
+    id: 'plot-01',
+    plot_reference: 'MH-PUN-HAV-PLOT-2026-00412',
+    property_id: 'prop-01',
+    farmer_id: 'usr-farmer-01',
+    survey_number: '142/2A',
+    subdivision_number: '2A',
+    plot_name: 'Patil Agro Sugarcane Field',
+    boundary_coordinates: [
+      [18.5805, 73.9810],
+      [18.5808, 73.9840],
+      [18.5780, 73.9842],
+      [18.5778, 73.9812],
+      [18.5805, 73.9810],
+    ],
+    area_sqm: 14083,
+    area_hectares: 1.408,
+    area_acres: 3.48,
+    perimeter_meters: 520,
+    village: 'Wagholi',
+    taluk: 'Haveli',
+    district: 'Pune',
+    state: 'Maharashtra',
+    is_cadastral_verified: true,
+    crop_type: 'Sugarcane',
+    sowing_date: '2025-11-10',
+    latest_ndvi: 0.68,
+    latest_weather: '28.7°C, Clear Sky',
+    created_at: '2026-02-12T10:00:00Z',
+    updated_at: '2026-10-24T12:00:00Z',
+  },
+  {
+    id: 'plot-02',
+    plot_reference: 'MH-PUN-BAR-PLOT-2026-00881',
+    property_id: 'prop-02',
+    farmer_id: 'usr-farmer-02',
+    survey_number: '88/1',
+    subdivision_number: '1',
+    plot_name: 'Shinde Organic Soybean Farm',
+    boundary_coordinates: [
+      [18.1530, 74.5755],
+      [18.1535, 74.5790],
+      [18.1505, 74.5792],
+      [18.1500, 74.5758],
+      [18.1530, 74.5755],
+    ],
+    area_sqm: 20963,
+    area_hectares: 2.096,
+    area_acres: 5.18,
+    perimeter_meters: 610,
+    village: 'Supae',
+    taluk: 'Baramati',
+    district: 'Pune',
+    state: 'Maharashtra',
+    is_cadastral_verified: true,
+    crop_type: 'Soybean',
+    sowing_date: '2026-06-18',
+    latest_ndvi: 0.62,
+    latest_weather: '29.2°C, Partly Cloudy',
+    created_at: '2026-03-01T10:15:00Z',
+    updated_at: '2026-10-24T12:00:00Z',
+  },
+];
+
+const INITIAL_SATELLITE_SCENES: SatelliteScene[] = [
+  {
+    id: 'sc-01',
+    scene_id: 'S2C_43QCA_20261020_0_L2A',
+    collection: 'sentinel-2-l2a',
+    acquisition_datetime: '2026-10-20T05:43:56Z',
+    cloud_cover_percentage: 4.8,
+    footprint_coordinates: [
+      [18.4, 73.7],
+      [18.4, 74.3],
+      [19.0, 74.3],
+      [19.0, 73.7],
+      [18.4, 73.7],
+    ],
+    thumbnail_url:
+      'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/43/Q/CA/2026/10/S2C_43QCA_20261020_0_L2A/preview.jpg',
+    visual_url:
+      'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/43/Q/CA/2026/10/S2C_43QCA_20261020_0_L2A/TCI.tif',
+    assets: {
+      thumbnail: {
+        href: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/43/Q/CA/2026/10/S2C_43QCA_20261020_0_L2A/preview.jpg',
+        title: 'Preview',
+      },
+      red: {
+        href: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/43/Q/CA/2026/10/S2C_43QCA_20261020_0_L2A/B04.tif',
+        title: 'B04 (Red 10m)',
+        gsd: 10,
+      },
+      nir: {
+        href: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/43/Q/CA/2026/10/S2C_43QCA_20261020_0_L2A/B08.tif',
+        title: 'B08 (NIR 10m)',
+        gsd: 10,
+      },
+      scl: {
+        href: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/43/Q/CA/2026/10/S2C_43QCA_20261020_0_L2A/SCL.tif',
+        title: 'Scene Classification Layer (SCL 20m)',
+        gsd: 20,
+      },
+    },
+    intersects_plot: true,
+    created_at: '2026-10-20T06:00:00Z',
+  },
+];
+
+const INITIAL_VEGETATION_OBSERVATIONS: VegetationIndexObservation[] = [
+  {
+    id: 'veg-obs-01',
+    plot_id: 'plot-01',
+    scene_id: 'S2C_43QCA_20261020_0_L2A',
+    scene_acquisition_date: '2026-10-20T05:43:56Z',
+    calculation_date: '2026-10-24T10:00:00Z',
+    ndvi_mean: 0.68,
+    ndvi_min: 0.42,
+    ndvi_max: 0.81,
+    valid_pixel_coverage_pct: 98.4,
+    vegetation_classification: 'Very High Density',
+    raster_bounds: [
+      [18.5778, 73.9810],
+      [18.5808, 73.9842],
+    ],
+    processing_method: 'Sentinel-2 L2A (B08-B04)/(B08+B04) + SCL Cloud Masking',
+    processing_status: 'COMPLETED',
+    created_at: '2026-10-24T10:00:00Z',
+  },
+  {
+    id: 'veg-obs-02',
+    plot_id: 'plot-02',
+    scene_id: 'S2C_43QCA_20261020_0_L2A',
+    scene_acquisition_date: '2026-10-20T05:43:56Z',
+    calculation_date: '2026-10-24T10:05:00Z',
+    ndvi_mean: 0.62,
+    ndvi_min: 0.38,
+    ndvi_max: 0.74,
+    valid_pixel_coverage_pct: 99.1,
+    vegetation_classification: 'Very High Density',
+    raster_bounds: [
+      [18.1500, 74.5755],
+      [18.1535, 74.5792],
+    ],
+    processing_method: 'Sentinel-2 L2A (B08-B04)/(B08+B04) + SCL Cloud Masking',
+    processing_status: 'COMPLETED',
+    created_at: '2026-10-24T10:05:00Z',
+  },
+];
+
+const INITIAL_WEATHER_OBSERVATIONS: WeatherObservation[] = [
+  {
+    id: 'wea-01',
+    plot_id: 'plot-01',
+    latitude: 18.5793,
+    longitude: 73.9824,
+    elevation_meters: 586,
+    observation_timestamp: '2026-10-26T10:00:00+05:30',
+    temperature_celsius: 28.7,
+    relative_humidity_pct: 34,
+    precipitation_mm: 0.0,
+    wind_speed_kmh: 6.0,
+    weather_condition: 'Clear Sky',
+    weather_code: 0,
+    daily_forecast: [
+      { date: '2026-10-26', temp_max_celsius: 32.2, temp_min_celsius: 20.9, precipitation_mm: 0.0, rain_probability: 5 },
+      { date: '2026-10-27', temp_max_celsius: 32.0, temp_min_celsius: 20.5, precipitation_mm: 0.0, rain_probability: 5 },
+      { date: '2026-10-28', temp_max_celsius: 31.6, temp_min_celsius: 19.5, precipitation_mm: 0.0, rain_probability: 10 },
+      { date: '2026-10-29', temp_max_celsius: 32.2, temp_min_celsius: 22.3, precipitation_mm: 1.7, rain_probability: 40 },
+      { date: '2026-10-30', temp_max_celsius: 29.8, temp_min_celsius: 21.6, precipitation_mm: 3.0, rain_probability: 65 },
+    ],
+    provider: 'Open-Meteo (Live)',
+    quality_status: 'LIVE',
+    fetched_at: '2026-10-26T10:00:00Z',
+  },
+];
+
+const INITIAL_DRONE_MISSIONS: DroneMissionRecord[] = [
+  {
+    id: 'drm-01',
+    mission_reference: 'DRN-HAV-2026-081',
+    plot_id: 'plot-01',
+    title: 'Post-Monsoon Sugarcane Canopy Assessment',
+    pilot_name: 'Prakash Mahadev Jadhav',
+    flight_date: '2026-10-22',
+    flight_altitude_meters: 65,
+    camera_sensor: 'DJI Zenmuse P1 45MP Full-Frame RGB',
+    photos_count: 4,
+    geotagged_photos: [
+      {
+        id: 'gp-01',
+        url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261022_0142.JPG',
+        latitude: 18.5794,
+        longitude: 73.9825,
+        altitude_meters: 65,
+        captured_at: '2026-10-22T11:15:00Z',
+      },
+      {
+        id: 'gp-02',
+        url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261022_0143.JPG',
+        latitude: 18.5798,
+        longitude: 73.9830,
+        altitude_meters: 65,
+        captured_at: '2026-10-22T11:16:30Z',
+      },
+      {
+        id: 'gp-03',
+        url: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261022_0144.JPG',
+        latitude: 18.5788,
+        longitude: 73.9820,
+        altitude_meters: 65,
+        captured_at: '2026-10-22T11:18:00Z',
+      },
+      {
+        id: 'gp-04',
+        url: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261022_0145.JPG',
+        latitude: 18.5782,
+        longitude: 73.9835,
+        altitude_meters: 65,
+        captured_at: '2026-10-22T11:19:30Z',
+      },
+    ],
+    orthomosaic_url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+    orthomosaic_bounds: [
+      [18.5775, 73.9805],
+      [18.5810, 73.9845],
+    ],
+    status: 'PROCESSED',
+    notes: 'Centimeter-precision RTK survey completed with zero GPS degradation.',
+    created_at: '2026-10-22T11:00:00Z',
+  },
+];
+
+const INITIAL_MOBILE_SURVEYS: MobileFieldSurveyRecord[] = [
+  {
+    id: 'srv-01',
+    survey_reference: 'SRV-MH-8419',
+    plot_id: 'plot-01',
+    surveyor_id: 'usr-worker-01',
+    surveyor_name: 'Prakash Mahadev Jadhav',
+    survey_date: '2026-10-22T14:15:00Z',
+    latitude: 18.5795,
+    longitude: 73.9823,
+    gps_accuracy_meters: 3.2,
+    crop_type: 'Sugarcane',
+    growth_stage: 'Vegetative',
+    sowing_date: '2025-11-10',
+    soil_condition: 'Moist',
+    irrigation_type: 'Drip',
+    photos: ['https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80'],
+    field_notes: 'Uniform cane stalk density. Drip laterals clear and operational with optimal moisture.',
+    sync_status: 'SYNCHRONIZED',
+    synced_at: '2026-10-22T14:20:00Z',
+    created_at: '2026-10-22T14:15:00Z',
+  },
+];
+
+const INITIAL_CROP_PREDICTIONS: CropPredictionRecord[] = [
+  {
+    id: 'pred-01',
+    plot_id: 'plot-01',
+    predicted_crop: 'Sugarcane',
+    confidence_score: 94.8,
+    class_probabilities: {
+      Sugarcane: 94.8,
+      Rice: 3.2,
+      Soybean: 1.4,
+      Cotton: 0.6,
+    },
+    model_version: 'MH-CROP-RF-v2.3 (Random Forest Ensemble)',
+    features_analyzed: {
+      ndvi_mean: 0.68,
+      ndwi: -0.24,
+      b02_blue: 0.045,
+      b03_green: 0.082,
+      b04_red: 0.065,
+      b08_nir: 0.42,
+      season: 'Perennial / Adsali 2026',
+    },
+    verified_crop: 'Sugarcane',
+    verification_status: 'CONFIRMED',
+    reviewer_name: 'Anand Shrikant Kulkarni (Tahsildar)',
+    reviewer_notes: 'Confirmed by Tahsildar Anand Kulkarni: High-vigor cane stand matches 7/12 declaration.',
+    reviewed_at: '2026-10-23T11:00:00Z',
+    created_at: '2026-10-20T10:00:00Z',
+  },
+];
+
+const INITIAL_YIELD_FORECASTS: YieldForecastRecord[] = [
+  {
+    id: 'yf-01',
+    plot_id: 'plot-01',
+    crop_type: 'Sugarcane',
+    cultivated_area_hectares: 1.408,
+    estimated_yield_tonnes_per_ha: 92.5,
+    estimated_total_tonnes: 130.2,
+    historical_baseline_tonnes_per_ha: 88.5,
+    deviation_percentage: 4.5,
+    water_source_factor: 1.08,
+    rainfall_anomaly_factor: 1.02,
+    ndvi_canopy_factor: 1.05,
+    uncertainty_range_tonnes: { min: 114.6, max: 145.8 },
+    model_type: 'Historical Baseline + Environmental Calibration',
+    data_sources: [
+      'Maharashtra Commissionerate of Agriculture Historical Baselines',
+      'Sentinel-2 L2A Top-of-Canopy NDVI',
+      'Open-Meteo High-Resolution Precipitation Index',
+    ],
+    forecast_date: '2026-10-24T10:00:00Z',
+  },
+];
+
+const INITIAL_DISASTER_ASSESSMENTS: DisasterAssessmentRecord[] = [
+  {
+    id: 'dis-01',
+    event_reference: 'DIS-PUN-2026-104',
+    event_name: 'Post-Monsoon Heavy Inundation Assessment',
+    event_type: 'HEAVY_RAINFALL_FLOOD',
+    plot_id: 'plot-01',
+    pre_event_date: '2026-10-05',
+    post_event_date: '2026-10-20',
+    pre_event_ndvi: 0.71,
+    post_event_ndvi: 0.68,
+    ndvi_change_delta: -0.03,
+    affected_area_sqm: 420,
+    affected_area_hectares: 0.042,
+    affected_area_acres: 0.104,
+    affected_percentage: 3.0,
+    damage_severity: 'NEGLIGIBLE',
+    inspection_priority: 'ROUTINE',
+    verification_status: 'PRELIMINARY_AI_OBSERVATION',
+    surveyor_notes: 'Minor pooling near eastern ditch boundary. Drainage functioning adequately with negligible vegetative impact.',
+    assessed_at: '2026-10-24T10:00:00Z',
+  },
+];
+
+const INITIAL_MONITORING_AREAS: MonitoringArea[] = [
+  {
+    id: 'area-01',
+    user_id: 'usr-farmer-01',
+    farmer_id: 'usr-farmer-01',
+    plot_id: 'plot-01',
+    name: 'Wagholi Sugarcane & Tur Parcel (Survey 142/2A)',
+    latitude: 18.5793,
+    longitude: 73.9812,
+    radius_km: 0.5,
+    polygon_coordinates: [
+      [18.5785, 73.9805],
+      [18.5785, 73.9822],
+      [18.5802, 73.9822],
+      [18.5802, 73.9805],
+      [18.5785, 73.9805],
+    ],
+    area_hectares: 1.84,
+    area_acres: 4.54,
+    start_date: '2026-06-01',
+    end_date: '2026-10-31',
+    interval_days: 15,
+    preferred_crop: 'Sugarcane',
+    preferred_season: 'kharif',
+    status: 'ACTIVE',
+    last_observation_at: '2026-10-25T11:30:00Z',
+    next_scheduled_run_at: '2026-11-15T00:00:00Z',
+    total_periods_count: 10,
+    usable_periods_count: 8,
+    warnings: ['Monsoon cloud masking applied for 2 mid-kharif intervals (July)'],
+    created_at: '2026-06-01T08:00:00Z',
+    updated_at: '2026-10-25T12:00:00Z',
+  },
+  {
+    id: 'area-02',
+    user_id: 'usr-farmer-02',
+    farmer_id: 'usr-farmer-02',
+    plot_id: 'plot-02',
+    name: 'Baramati Soybean Field (Survey 89/1B)',
+    latitude: 18.1519,
+    longitude: 74.5772,
+    radius_km: 0.6,
+    polygon_coordinates: [
+      [18.151, 74.576],
+      [18.151, 74.5785],
+      [18.153, 74.5785],
+      [18.153, 74.576],
+      [18.151, 74.576],
+    ],
+    area_hectares: 2.1,
+    area_acres: 5.18,
+    start_date: '2026-06-15',
+    end_date: '2026-10-31',
+    interval_days: 15,
+    preferred_crop: 'Soybean',
+    preferred_season: 'kharif',
+    status: 'ACTIVE',
+    last_observation_at: '2026-10-24T10:00:00Z',
+    next_scheduled_run_at: '2026-11-15T00:00:00Z',
+    total_periods_count: 9,
+    usable_periods_count: 7,
+    created_at: '2026-06-15T09:00:00Z',
+    updated_at: '2026-10-24T12:00:00Z',
+  },
+];
+
+const INITIAL_PERIOD_OBSERVATIONS: MonitoringPeriodObservation[] = [
+  {
+    id: 'obs-01-p01',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 1 (01 Jun - 15 Jun 2026)',
+    period_index: 1,
+    period_start: '2026-06-01',
+    period_end: '2026-06-15',
+    actual_acquisition_dates: ['2026-06-10'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2B_43QCA_20260610_0_L2A'],
+    cloud_cover_pct: 12.4,
+    valid_pixel_fraction: 0.96,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.28,
+      ndvi_median: 0.27,
+      ndvi_min: 0.18,
+      ndvi_max: 0.36,
+      ndvi_std: 0.04,
+      evi_mean: 0.19,
+      savi_mean: 0.21,
+      ndwi_mean: -0.22,
+      ndmi_mean: 0.12,
+      ndre_mean: 0.15,
+      gcvi_mean: 0.42,
+    },
+    growth_stage: 'Emergence',
+    health_status: 'Optimal',
+    delta_ndvi_previous: null,
+    delta_ndmi_previous: null,
+    delta_direction: 'FIRST_PERIOD',
+    change_summary: 'Baseline sowing & germination emergence detected. Healthy initial vigor.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 88.5,
+      ranking: [
+        { crop: 'Sugarcane', fit: 88.5 },
+        { crop: 'Soybean', fit: 6.2 },
+        { crop: 'Cotton', fit: 3.1 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-06-11T04:20:00Z',
+  },
+  {
+    id: 'obs-01-p02',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 2 (16 Jun - 30 Jun 2026)',
+    period_index: 2,
+    period_start: '2026-06-16',
+    period_end: '2026-06-30',
+    actual_acquisition_dates: ['2026-06-25'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2A_43QCA_20260625_0_L2A'],
+    cloud_cover_pct: 18.2,
+    valid_pixel_fraction: 0.91,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.39,
+      ndvi_median: 0.38,
+      ndvi_min: 0.25,
+      ndvi_max: 0.48,
+      ndvi_std: 0.05,
+      evi_mean: 0.27,
+      savi_mean: 0.29,
+      ndwi_mean: -0.15,
+      ndmi_mean: 0.24,
+      ndre_mean: 0.21,
+      gcvi_mean: 0.75,
+    },
+    growth_stage: 'Vegetative',
+    health_status: 'Optimal',
+    delta_ndvi_previous: 0.11,
+    delta_ndmi_previous: 0.12,
+    delta_direction: 'INCREASED',
+    change_summary: 'NDVI +0.11 expansion. Rapid vegetative tillering and leaf area development.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 90.2,
+      ranking: [
+        { crop: 'Sugarcane', fit: 90.2 },
+        { crop: 'Soybean', fit: 5.5 },
+        { crop: 'Cotton', fit: 2.8 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-06-26T04:15:00Z',
+  },
+  {
+    id: 'obs-01-p03',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 3 (01 Jul - 15 Jul 2026)',
+    period_index: 3,
+    period_start: '2026-07-01',
+    period_end: '2026-07-15',
+    actual_acquisition_dates: [],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 0,
+    scene_ids: [],
+    cloud_cover_pct: 98.4,
+    valid_pixel_fraction: 0.02,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: false,
+    missing_reason: 'Monsoon cloud outage (No observation - SCL cloud cover 98%)',
+    indices: {
+      ndvi_mean: 0,
+      ndvi_median: 0,
+      ndvi_min: 0,
+      ndvi_max: 0,
+      ndvi_std: 0,
+      evi_mean: 0,
+      savi_mean: 0,
+      ndwi_mean: 0,
+      ndmi_mean: 0,
+      ndre_mean: 0,
+      gcvi_mean: 0,
+    },
+    growth_stage: 'Unassessed',
+    health_status: 'Cloud Obscured',
+    delta_ndvi_previous: null,
+    delta_ndmi_previous: null,
+    delta_direction: 'NO_DATA',
+    change_summary: 'Monsoon cloud outage: No clear Sentinel-2 acquisition passed SCL pixel validation.',
+    processed_at: '2026-07-16T00:00:00Z',
+  },
+  {
+    id: 'obs-01-p04',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 4 (16 Jul - 31 Jul 2026)',
+    period_index: 4,
+    period_start: '2026-07-16',
+    period_end: '2026-07-31',
+    actual_acquisition_dates: [],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 0,
+    scene_ids: [],
+    cloud_cover_pct: 94.2,
+    valid_pixel_fraction: 0.06,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: false,
+    missing_reason: 'Monsoon cloud outage (No observation - SCL cloud cover 94%)',
+    indices: {
+      ndvi_mean: 0,
+      ndvi_median: 0,
+      ndvi_min: 0,
+      ndvi_max: 0,
+      ndvi_std: 0,
+      evi_mean: 0,
+      savi_mean: 0,
+      ndwi_mean: 0,
+      ndmi_mean: 0,
+      ndre_mean: 0,
+      gcvi_mean: 0,
+    },
+    growth_stage: 'Unassessed',
+    health_status: 'Cloud Obscured',
+    delta_ndvi_previous: null,
+    delta_ndmi_previous: null,
+    delta_direction: 'NO_DATA',
+    change_summary: 'Monsoon cloud outage: Continuous overcast over Pune Haveli taluk.',
+    processed_at: '2026-08-01T00:00:00Z',
+  },
+  {
+    id: 'obs-01-p05',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 5 (01 Aug - 15 Aug 2026)',
+    period_index: 5,
+    period_start: '2026-08-01',
+    period_end: '2026-08-15',
+    actual_acquisition_dates: ['2026-08-10'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2B_43QCA_20260810_0_L2A'],
+    cloud_cover_pct: 22.0,
+    valid_pixel_fraction: 0.82,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.58,
+      ndvi_median: 0.59,
+      ndvi_min: 0.44,
+      ndvi_max: 0.69,
+      ndvi_std: 0.06,
+      evi_mean: 0.44,
+      savi_mean: 0.46,
+      ndwi_mean: 0.08,
+      ndmi_mean: 0.38,
+      ndre_mean: 0.34,
+      gcvi_mean: 1.45,
+    },
+    growth_stage: 'Vegetative',
+    health_status: 'Optimal',
+    delta_ndvi_previous: 0.19,
+    delta_ndmi_previous: 0.14,
+    delta_direction: 'INCREASED',
+    change_summary: 'Clear sky gap acquisition. Strong canopy growth observed since late June.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 91.8,
+      ranking: [
+        { crop: 'Sugarcane', fit: 91.8 },
+        { crop: 'Cotton', fit: 4.8 },
+        { crop: 'Soybean', fit: 2.1 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-08-11T05:00:00Z',
+  },
+  {
+    id: 'obs-01-p06',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 6 (16 Aug - 31 Aug 2026)',
+    period_index: 6,
+    period_start: '2026-08-16',
+    period_end: '2026-08-31',
+    actual_acquisition_dates: ['2026-08-28'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2A_43QCA_20260828_0_L2A'],
+    cloud_cover_pct: 14.5,
+    valid_pixel_fraction: 0.89,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.67,
+      ndvi_median: 0.68,
+      ndvi_min: 0.52,
+      ndvi_max: 0.78,
+      ndvi_std: 0.05,
+      evi_mean: 0.52,
+      savi_mean: 0.54,
+      ndwi_mean: 0.14,
+      ndmi_mean: 0.44,
+      ndre_mean: 0.39,
+      gcvi_mean: 1.88,
+    },
+    growth_stage: 'Peak / Reproductive',
+    health_status: 'Optimal',
+    delta_ndvi_previous: 0.09,
+    delta_ndmi_previous: 0.06,
+    delta_direction: 'INCREASED',
+    change_summary: 'NDVI +0.09 expansion. Reaching peak canopy biomass and dense stalk formation.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 93.4,
+      ranking: [
+        { crop: 'Sugarcane', fit: 93.4 },
+        { crop: 'Cotton', fit: 3.9 },
+        { crop: 'Soybean', fit: 1.5 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-08-29T05:00:00Z',
+  },
+  {
+    id: 'obs-01-p07',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 7 (01 Sep - 15 Sep 2026)',
+    period_index: 7,
+    period_start: '2026-09-01',
+    period_end: '2026-09-15',
+    actual_acquisition_dates: ['2026-09-12'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2B_43QCA_20260912_0_L2A'],
+    cloud_cover_pct: 9.1,
+    valid_pixel_fraction: 0.95,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.74,
+      ndvi_median: 0.75,
+      ndvi_min: 0.58,
+      ndvi_max: 0.84,
+      ndvi_std: 0.05,
+      evi_mean: 0.58,
+      savi_mean: 0.59,
+      ndwi_mean: 0.18,
+      ndmi_mean: 0.48,
+      ndre_mean: 0.43,
+      gcvi_mean: 2.15,
+    },
+    growth_stage: 'Peak / Reproductive',
+    health_status: 'Optimal',
+    delta_ndvi_previous: 0.07,
+    delta_ndmi_previous: 0.04,
+    delta_direction: 'INCREASED',
+    change_summary: 'Peak vegetative vigor achieved. Strong moisture indices (NDMI 0.48).',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 94.8,
+      ranking: [
+        { crop: 'Sugarcane', fit: 94.8 },
+        { crop: 'Cotton', fit: 3.2 },
+        { crop: 'Soybean', fit: 1.1 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-09-13T04:30:00Z',
+  },
+  {
+    id: 'obs-01-p08',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 8 (16 Sep - 30 Sep 2026)',
+    period_index: 8,
+    period_start: '2026-09-16',
+    period_end: '2026-09-30',
+    actual_acquisition_dates: ['2026-09-27'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2A_43QCA_20260927_0_L2A'],
+    cloud_cover_pct: 5.6,
+    valid_pixel_fraction: 0.97,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.72,
+      ndvi_median: 0.73,
+      ndvi_min: 0.56,
+      ndvi_max: 0.82,
+      ndvi_std: 0.05,
+      evi_mean: 0.56,
+      savi_mean: 0.57,
+      ndwi_mean: 0.16,
+      ndmi_mean: 0.44,
+      ndre_mean: 0.41,
+      gcvi_mean: 2.05,
+    },
+    growth_stage: 'Peak / Reproductive',
+    health_status: 'Optimal',
+    delta_ndvi_previous: -0.02,
+    delta_ndmi_previous: -0.04,
+    delta_direction: 'STABLE',
+    change_summary: 'NDVI plateau consistent with perennial cane maturation stage.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 94.2,
+      ranking: [
+        { crop: 'Sugarcane', fit: 94.2 },
+        { crop: 'Cotton', fit: 3.5 },
+        { crop: 'Soybean', fit: 1.2 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-09-28T04:30:00Z',
+  },
+  {
+    id: 'obs-01-p09',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 9 (01 Oct - 15 Oct 2026)',
+    period_index: 9,
+    period_start: '2026-10-01',
+    period_end: '2026-10-15',
+    actual_acquisition_dates: ['2026-10-10'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2B_43QCA_20261010_0_L2A'],
+    cloud_cover_pct: 3.2,
+    valid_pixel_fraction: 0.99,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.70,
+      ndvi_median: 0.71,
+      ndvi_min: 0.54,
+      ndvi_max: 0.80,
+      ndvi_std: 0.04,
+      evi_mean: 0.54,
+      savi_mean: 0.55,
+      ndwi_mean: 0.14,
+      ndmi_mean: 0.41,
+      ndre_mean: 0.39,
+      gcvi_mean: 1.95,
+    },
+    growth_stage: 'Maturity',
+    health_status: 'Optimal',
+    delta_ndvi_previous: -0.02,
+    delta_ndmi_previous: -0.03,
+    delta_direction: 'STABLE',
+    change_summary: 'Stable canopy metrics. Post-monsoon clear atmosphere.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 93.8,
+      ranking: [
+        { crop: 'Sugarcane', fit: 93.8 },
+        { crop: 'Cotton', fit: 3.8 },
+        { crop: 'Soybean', fit: 1.3 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-10-11T04:30:00Z',
+  },
+  {
+    id: 'obs-01-p10',
+    monitoring_area_id: 'area-01',
+    plot_id: 'plot-01',
+    period_label: 'Period 10 (16 Oct - 31 Oct 2026)',
+    period_index: 10,
+    period_start: '2026-10-16',
+    period_end: '2026-10-31',
+    actual_acquisition_dates: ['2026-10-25'],
+    satellite_provider: 'Copernicus Sentinel-2 L2A (AWS Open Data)',
+    scenes_found: 3,
+    scenes_used: 1,
+    scene_ids: ['S2A_43QCA_20261025_0_L2A'],
+    cloud_cover_pct: 2.1,
+    valid_pixel_fraction: 0.98,
+    boa_offset_applied: -1000,
+    scale_factor: 10000,
+    has_data: true,
+    indices: {
+      ndvi_mean: 0.68,
+      ndvi_median: 0.69,
+      ndvi_min: 0.51,
+      ndvi_max: 0.79,
+      ndvi_std: 0.05,
+      evi_mean: 0.52,
+      savi_mean: 0.53,
+      ndwi_mean: 0.12,
+      ndmi_mean: 0.39,
+      ndre_mean: 0.37,
+      gcvi_mean: 1.85,
+    },
+    growth_stage: 'Maturity',
+    health_status: 'Optimal',
+    delta_ndvi_previous: -0.02,
+    delta_ndmi_previous: -0.02,
+    delta_direction: 'STABLE',
+    change_summary: 'Latest 15-day composite. Excellent biomass profile and healthy canopy continuity.',
+    crop_prediction: {
+      crop_name: 'Sugarcane',
+      confidence: 93.5,
+      ranking: [
+        { crop: 'Sugarcane', fit: 93.5 },
+        { crop: 'Cotton', fit: 4.1 },
+        { crop: 'Soybean', fit: 1.4 },
+      ],
+      needs_field_check: false,
+      model_version: 'GM-ML-V2-LightGBM-158feat',
+    },
+    processed_at: '2026-10-25T11:30:00Z',
+  },
+];
+
+const INITIAL_INSPECTION_QUEUE: MonitoringInspectionItem[] = [
+  {
+    id: 'insp-q-01',
+    monitoring_area_id: 'area-02',
+    plot_id: 'plot-02',
+    farmer_name: 'Sunita Dnyaneshwar Shinde',
+    district: 'Pune',
+    taluk: 'Baramati',
+    village: 'Supae',
+    crop_type: 'Soybean',
+    priority: 'HIGH',
+    reasons: [
+      'Cotton vs Tur spectral confusion: ML confidence 82.4% (below 90% threshold)',
+      'Sharp 15-day NDVI decline (-0.17)',
+    ],
+    confidence_score: 82.4,
+    latest_ndvi_delta: -0.17,
+    latest_moisture_level: 0.18,
+    status: 'PENDING_OFFICER_REVIEW',
+    created_at: '2026-10-24T10:00:00Z',
+  },
+  {
+    id: 'insp-q-02',
+    monitoring_area_id: 'area-03',
+    plot_id: 'plot-03',
+    farmer_name: 'Vikas Sharma',
+    district: 'Pune',
+    taluk: 'Shirur',
+    village: 'Koregaon Bhima',
+    crop_type: 'Onion',
+    priority: 'CRITICAL',
+    reasons: [
+      'Severe moisture stress: NDMI dropped to -0.14 (-0.21 delta)',
+      'Vegetative canopy loss (-0.24 NDVI delta)',
+      'Field survey requested for crop insurance assessment',
+    ],
+    confidence_score: 87.1,
+    latest_ndvi_delta: -0.24,
+    latest_moisture_level: -0.14,
+    status: 'PENDING_OFFICER_REVIEW',
+    created_at: '2026-10-23T14:30:00Z',
+  },
+  {
+    id: 'insp-q-03',
+    monitoring_area_id: 'area-04',
+    farmer_name: 'Pandurang Eknath More',
+    district: 'Pune',
+    taluk: 'Haveli',
+    village: 'Uruli Kanchan',
+    crop_type: 'Tur (Pigeon Pea)',
+    priority: 'MEDIUM',
+    reasons: [
+      'Emergence signature delayed by 21 days compared to regional phenology baseline',
+    ],
+    confidence_score: 84.0,
+    latest_ndvi_delta: -0.05,
+    latest_moisture_level: 0.22,
+    status: 'INSPECTION_ASSIGNED',
+    created_at: '2026-10-20T09:15:00Z',
+  },
+];
+
+// -----------------------------------------------------------------------------
 // Reactive Mock Database Engine
 // -----------------------------------------------------------------------------
 export class MockDatabase {
@@ -1046,6 +2013,22 @@ export class MockDatabase {
   public plantHealthAssessments: PlantHealthAssessment[];
   public plantHealthAlerts: PlantHealthAlert[];
 
+  // Geospatial & Remote Sensing Collections
+  public farmPlots: FarmPlot[];
+  public satelliteScenes: SatelliteScene[];
+  public vegetationObservations: VegetationIndexObservation[];
+  public weatherObservations: WeatherObservation[];
+  public droneMissions: DroneMissionRecord[];
+  public mobileSurveys: MobileFieldSurveyRecord[];
+  public cropPredictions: CropPredictionRecord[];
+  public yieldForecasts: YieldForecastRecord[];
+  public disasterAssessments: DisasterAssessmentRecord[];
+
+  // Continuous 15-Day Satellite Monitoring Collections
+  public monitoringAreas: MonitoringArea[];
+  public periodObservations: MonitoringPeriodObservation[];
+  public inspectionQueue: MonitoringInspectionItem[];
+
   // Active simulated user session
   public currentUser: Profile;
 
@@ -1077,9 +2060,86 @@ export class MockDatabase {
     this.plantHealthAssessments = getStorage('plantHealthAssessments', INITIAL_PLANT_ASSESSMENTS);
     this.plantHealthAlerts = getStorage('plantHealthAlerts', INITIAL_PLANT_ALERTS);
 
+    // Load geospatial & remote sensing collections
+    this.farmPlots = getStorage('farmPlots', INITIAL_FARM_PLOTS);
+    this.satelliteScenes = getStorage('satelliteScenes', INITIAL_SATELLITE_SCENES);
+    this.vegetationObservations = getStorage('vegetationObservations', INITIAL_VEGETATION_OBSERVATIONS);
+    this.weatherObservations = getStorage('weatherObservations', INITIAL_WEATHER_OBSERVATIONS);
+    this.droneMissions = getStorage('droneMissions', INITIAL_DRONE_MISSIONS);
+    this.mobileSurveys = getStorage('mobileSurveys', INITIAL_MOBILE_SURVEYS);
+    this.cropPredictions = getStorage('cropPredictions', INITIAL_CROP_PREDICTIONS);
+    this.yieldForecasts = getStorage('yieldForecasts', INITIAL_YIELD_FORECASTS);
+    this.disasterAssessments = getStorage('disasterAssessments', INITIAL_DISASTER_ASSESSMENTS);
+
+    // Continuous 15-Day Satellite Monitoring Collections
+    this.monitoringAreas = getStorage('monitoringAreas', INITIAL_MONITORING_AREAS);
+    this.periodObservations = getStorage('periodObservations', INITIAL_PERIOD_OBSERVATIONS);
+    this.inspectionQueue = getStorage('inspectionQueue', INITIAL_INSPECTION_QUEUE);
+
     const savedUserId = isLocalStorageAvailable() ? localStorage.getItem('agrisurvey_current_user_id') : null;
     const userMatch = this.profiles.find((p) => p.id === savedUserId);
     this.currentUser = userMatch || this.profiles[0]; // Defaults to Ramesh Patil (Farmer)
+
+    // Load any remote documents from Firebase in background
+    if (typeof window !== 'undefined') {
+      this.loadFromFirebase().catch(() => {});
+    }
+  }
+
+  public async loadFromFirebase(): Promise<void> {
+    if (!firebaseService.isConfigured || typeof window === 'undefined') return;
+    try {
+      const remoteApps = await firebaseService.getCollection<RegistrationApplication>('registration_applications');
+      if (remoteApps && remoteApps.length > 0) {
+        remoteApps.forEach((rApp) => {
+          const idx = this.applications.findIndex((a) => a.id === rApp.id);
+          if (idx >= 0) {
+            this.applications[idx] = { ...this.applications[idx], ...rApp };
+          } else {
+            this.applications.unshift(rApp);
+          }
+        });
+      }
+      const remoteProps = await firebaseService.getCollection<Property>('properties');
+      if (remoteProps && remoteProps.length > 0) {
+        remoteProps.forEach((rProp) => {
+          const idx = this.properties.findIndex((p) => p.id === rProp.id);
+          if (idx >= 0) {
+            this.properties[idx] = { ...this.properties[idx], ...rProp };
+          } else {
+            this.properties.unshift(rProp);
+          }
+        });
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  public syncToFirebase(): void {
+    if (!firebaseService.isConfigured) return;
+    try {
+      this.applications.slice(0, 20).forEach((app) => {
+        firebaseService.saveDocument('registration_applications', app.id, app);
+      });
+      this.properties.slice(0, 20).forEach((prop) => {
+        firebaseService.saveDocument('properties', prop.id, prop);
+      });
+      this.profiles.slice(0, 20).forEach((prof) => {
+        firebaseService.saveDocument('profiles', prof.id, prof);
+      });
+      this.inspections.slice(0, 20).forEach((insp) => {
+        firebaseService.saveDocument('field_inspections', insp.id, insp);
+      });
+      this.cropVerifications.slice(0, 20).forEach((cv) => {
+        firebaseService.saveDocument('crop_verifications', cv.id, cv);
+      });
+      this.reports.slice(0, 20).forEach((rep) => {
+        firebaseService.saveDocument('verification_reports', rep.id, rep);
+      });
+    } catch {
+      // Non-blocking
+    }
   }
 
   public static getInstance(): MockDatabase {
@@ -1116,6 +2176,114 @@ export class MockDatabase {
     setStorage('plantObservations', this.plantObservations);
     setStorage('plantHealthAssessments', this.plantHealthAssessments);
     setStorage('plantHealthAlerts', this.plantHealthAlerts);
+
+    // Persist geospatial & remote sensing collections
+    setStorage('farmPlots', this.farmPlots);
+    setStorage('satelliteScenes', this.satelliteScenes);
+    setStorage('vegetationObservations', this.vegetationObservations);
+    setStorage('weatherObservations', this.weatherObservations);
+    setStorage('droneMissions', this.droneMissions);
+    setStorage('mobileSurveys', this.mobileSurveys);
+    setStorage('cropPredictions', this.cropPredictions);
+    setStorage('yieldForecasts', this.yieldForecasts);
+    setStorage('disasterAssessments', this.disasterAssessments);
+
+    // Persist Continuous 15-Day Monitoring Collections
+    setStorage('monitoringAreas', this.monitoringAreas);
+    setStorage('periodObservations', this.periodObservations);
+    setStorage('inspectionQueue', this.inspectionQueue);
+
+    // Sync to Firebase
+    this.syncToFirebase();
+  }
+
+  // Continuous Satellite Monitoring & Periodic Phenology Methods
+  public addMonitoringArea(area: MonitoringArea): void {
+    this.monitoringAreas.unshift(area);
+    this.persistAll();
+  }
+
+  public updateMonitoringArea(area: MonitoringArea): void {
+    const idx = this.monitoringAreas.findIndex((a) => a.id === area.id);
+    if (idx >= 0) {
+      this.monitoringAreas[idx] = area;
+      this.persistAll();
+    }
+  }
+
+  public deleteMonitoringArea(id: string): void {
+    this.monitoringAreas = this.monitoringAreas.filter((a) => a.id !== id);
+    this.periodObservations = this.periodObservations.filter((o) => o.monitoring_area_id !== id);
+    this.inspectionQueue = this.inspectionQueue.filter((q) => q.monitoring_area_id !== id);
+    this.persistAll();
+  }
+
+  public getMonitoringAreaById(id: string): MonitoringArea | undefined {
+    return this.monitoringAreas.find((a) => a.id === id);
+  }
+
+  public getObservationsForArea(areaId: string): MonitoringPeriodObservation[] {
+    return this.periodObservations
+      .filter((o) => o.monitoring_area_id === areaId)
+      .sort((a, b) => a.period_index - b.period_index);
+  }
+
+  public setObservationsForArea(areaId: string, obs: MonitoringPeriodObservation[]): void {
+    this.periodObservations = this.periodObservations
+      .filter((o) => o.monitoring_area_id !== areaId)
+      .concat(obs);
+    this.persistAll();
+  }
+
+  public addPeriodObservation(obs: MonitoringPeriodObservation): void {
+    this.periodObservations.push(obs);
+    this.persistAll();
+  }
+
+  public getInspectionQueue(district?: string, taluk?: string): MonitoringInspectionItem[] {
+    let items = [...this.inspectionQueue];
+    if (district && district !== 'All') {
+      items = items.filter((i) => i.district.toLowerCase() === district.toLowerCase());
+    }
+    if (taluk && taluk !== 'All') {
+      items = items.filter((i) => i.taluk.toLowerCase() === taluk.toLowerCase());
+    }
+    return items;
+  }
+
+  public updateInspectionStatus(
+    id: string,
+    status: 'PENDING_OFFICER_REVIEW' | 'INSPECTION_ASSIGNED' | 'VERIFIED'
+  ): void {
+    const item = this.inspectionQueue.find((i) => i.id === id);
+    if (item) {
+      item.status = status;
+      this.persistAll();
+    }
+  }
+
+  public addInspectionItem(item: MonitoringInspectionItem): void {
+    const exists = this.inspectionQueue.some((i) => i.id === item.id);
+    if (!exists) {
+      this.inspectionQueue.unshift(item);
+      this.persistAll();
+    }
+  }
+
+  public addOrUpdateInspectionItem(item: MonitoringInspectionItem): void {
+    const idx = this.inspectionQueue.findIndex(
+      (i) => i.id === item.id || i.monitoring_area_id === item.monitoring_area_id
+    );
+    if (idx >= 0) {
+      this.inspectionQueue[idx] = item;
+    } else {
+      this.inspectionQueue.unshift(item);
+    }
+    this.persistAll();
+  }
+
+  public setPeriodObservationsForArea(areaId: string, obs: MonitoringPeriodObservation[]): void {
+    this.setObservationsForArea(areaId, obs);
   }
 
   public addMonitoringUnit(unit: MonitoringUnit): void {
@@ -1273,6 +2441,11 @@ export class MockDatabase {
     this.plantObservations = INITIAL_PLANT_OBSERVATIONS;
     this.plantHealthAssessments = INITIAL_PLANT_ASSESSMENTS;
     this.plantHealthAlerts = INITIAL_PLANT_ALERTS;
+
+    // Reset continuous satellite monitoring
+    this.monitoringAreas = INITIAL_MONITORING_AREAS;
+    this.periodObservations = INITIAL_PERIOD_OBSERVATIONS;
+    this.inspectionQueue = INITIAL_INSPECTION_QUEUE;
 
     this.currentUser = INITIAL_PROFILES[0];
     this.persistAll();

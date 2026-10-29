@@ -25,8 +25,11 @@ import { Modal } from '@/components/ui/Modal';
 import { reportService } from '@/services/report.service';
 import { mockDb } from '@/services/mock-db';
 import { VerificationReport, FinalVerificationStatus } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import { localizePlotOrCropName } from '@/lib/dashboard-localizer';
 
 export const FarmerReportsPage: React.FC = () => {
+  const { t, language } = useLanguage();
   const farmer = mockDb.currentUser;
   const [reports, setReports] = useState<VerificationReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<VerificationReport | null>(null);
@@ -73,8 +76,8 @@ export const FarmerReportsPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Official Verification Reports"
-      subtitle="Formal Tahsildar revenue verification certificates, crop survey findings, and official digital dossiers."
+      title={t('dashboard.reportsTitle', 'Official Verification Reports')}
+      subtitle={t('dashboard.reportsSubtitle', 'Formal Tahsildar revenue verification certificates, crop survey findings, and official digital dossiers.')}
     >
       <div className="space-y-6">
         {/* KPI Summary Cards */}
@@ -163,7 +166,7 @@ export const FarmerReportsPage: React.FC = () => {
                         </span>
                       </div>
                       <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                        <span>{prop?.property_name || 'Primary Farmland'}</span>
+                        <span>{prop?.property_name ? localizePlotOrCropName(prop.property_name, language) : 'Primary Farmland'}</span>
                         <span className="text-slate-400 font-normal text-sm">
                           (Survey No: {prop?.survey_number || '142/2A'})
                         </span>

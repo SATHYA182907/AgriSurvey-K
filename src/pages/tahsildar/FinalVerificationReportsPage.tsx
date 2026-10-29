@@ -20,8 +20,18 @@ import { Modal } from '@/components/ui/Modal';
 import { reportService } from '@/services/report.service';
 import { mockDb } from '@/services/mock-db';
 import { VerificationReport, FinalVerificationStatus } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import {
+  getTahsildarLabel,
+  localizeEvidenceTitle,
+  localizeDiscrepancies,
+  getStatusLabel,
+} from '@/lib/dashboard-localizer';
 
 export const FinalVerificationReportsPage: React.FC = () => {
+  const { language } = useLanguage();
+  const tl = (key: string) => getTahsildarLabel(key, language);
+
   const [reports, setReports] = useState<VerificationReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<VerificationReport | null>(null);
   const [compileModalOpen, setCompileModalOpen] = useState(false);
@@ -80,18 +90,18 @@ export const FinalVerificationReportsPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Land Verification Reports"
-      subtitle="Issue and manage certified technical evidence reports for revenue administration"
+      title={tl('landVerificationReportsTitle')}
+      subtitle={tl('landVerificationReportsSubtitle')}
     >
       <div className="space-y-6">
         {/* Top Control Bar */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-sm font-bold text-slate-900">
-              Certified Verification Records ({reports.length})
+              {tl('certifiedVerificationRecords')} ({reports.length})
             </h3>
             <p className="text-xs text-slate-500">
-              Evidence-backed cross-referencing between farmer submissions and drone photogrammetry
+              {tl('evidenceBackedDesc')}
             </p>
           </div>
 
@@ -100,7 +110,7 @@ export const FinalVerificationReportsPage: React.FC = () => {
             onClick={() => setCompileModalOpen(true)}
             icon={<FileCheck2 className="w-3.5 h-3.5" />}
           >
-            Compile New Verification Report
+            {tl('compileNewReportBtn')}
           </Button>
         </div>
 
@@ -128,14 +138,14 @@ export const FinalVerificationReportsPage: React.FC = () => {
                         {rep.report_reference}
                       </span>
                       <span className="text-[11px] text-slate-500">
-                        Survey {prop?.survey_number} • {prop?.village}, {prop?.taluk}
+                        {language === 'mr' ? 'गट क्र.' : 'Survey'} {prop?.survey_number} • {prop?.village}, {prop?.taluk}
                       </span>
                     </div>
                     <Badge status={rep.final_status} size="sm" />
                   </div>
 
                   <div className="text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
-                    <span>Issued: {new Date(rep.created_at).toLocaleDateString()}</span>
+                    <span>{tl('issuedPrefix')} {new Date(rep.created_at).toLocaleDateString()}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -144,7 +154,7 @@ export const FinalVerificationReportsPage: React.FC = () => {
                       className="text-emerald-700 font-semibold hover:underline flex items-center gap-1"
                     >
                       <Download className="w-3 h-3" />
-                      <span>Download PDF</span>
+                      <span>{tl('downloadPdfBtn')}</span>
                     </button>
                   </div>
                 </div>
@@ -160,7 +170,7 @@ export const FinalVerificationReportsPage: React.FC = () => {
                 <div className="border-b border-slate-200 pb-4 flex items-start justify-between">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider">
-                      AgriSurvey Official Technical Record
+                      {tl('officialRecordHeader')}
                     </span>
                     <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">
                       {selectedReport.report_reference}
@@ -175,32 +185,32 @@ export const FinalVerificationReportsPage: React.FC = () => {
                     onClick={() => handleDownloadPdf(selectedReport)}
                     icon={<Download className="w-3.5 h-3.5" />}
                   >
-                    Export Certified PDF
+                    {tl('exportCertifiedPdfBtn')}
                   </Button>
                 </div>
 
                 {/* Status & Reviewer Summary */}
                 <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Verification Decision</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{tl('verificationDecisionLabel')}</span>
                     <div className="mt-1">
                       <Badge status={selectedReport.final_status} />
                     </div>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Authorized Officer</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{tl('authorizedOfficerLabel')}</span>
                     <span className="font-semibold text-slate-800">
-                      {selectedReport.reviewer?.full_name || 'Anand S. Kulkarni (Tahsildar)'}
+                      {selectedReport.reviewer?.full_name || `Anand S. Kulkarni (${language === 'mr' ? 'तहसीलदार' : language === 'hi' ? 'तहसीलदार' : 'Tahsildar'})`}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Surveyed Parcel</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{tl('surveyedParcelLabel')}</span>
                     <span className="font-semibold text-slate-800">
-                      Gat No. {selectedReport.property?.survey_number} ({selectedReport.property?.land_area} Acres)
+                      {language === 'mr' ? 'गट क्र.' : 'Gat No.'} {selectedReport.property?.survey_number} ({selectedReport.property?.land_area} {language === 'mr' ? 'एकर' : language === 'hi' ? 'एकड़' : 'Acres'})
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Digital Timestamp</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">{tl('digitalTimestampLabel')}</span>
                     <span className="font-mono text-slate-700">
                       {new Date(selectedReport.created_at).toLocaleString()}
                     </span>
@@ -210,21 +220,21 @@ export const FinalVerificationReportsPage: React.FC = () => {
                 {/* Evidence Chain Table */}
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">
-                    Evidence Verification Trail
+                    {tl('evidenceTrailTitle')}
                   </h4>
                   <div className="border border-slate-200 rounded-lg overflow-x-auto text-xs">
                     <table className="w-full text-left min-w-[280px]">
                       <thead className="bg-slate-50 border-b border-slate-200 text-[10px] text-slate-500 uppercase font-bold">
                         <tr>
-                          <th className="py-2 px-3">Evidence Source</th>
-                          <th className="py-2 px-3">Reference</th>
-                          <th className="py-2 px-3">Date</th>
+                          <th className="py-2 px-3">{tl('evidenceSourceTh')}</th>
+                          <th className="py-2 px-3">{tl('referenceTh')}</th>
+                          <th className="py-2 px-3">{tl('dateTh')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {selectedReport.supporting_evidence.map((ev, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/50">
-                            <td className="py-2 px-3 font-medium text-slate-800">{ev.title}</td>
+                            <td className="py-2 px-3 font-medium text-slate-800">{localizeEvidenceTitle(ev.title, language)}</td>
                             <td className="py-2 px-3 font-mono text-slate-600">{ev.reference}</td>
                             <td className="py-2 px-3 text-slate-400">{ev.date || '2026-02-18'}</td>
                           </tr>
@@ -237,10 +247,10 @@ export const FinalVerificationReportsPage: React.FC = () => {
                 {/* Discrepancies and Findings Memo */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                    Reviewer Discrepancies & Findings
+                    {tl('reviewerDiscrepanciesTitle')}
                   </h4>
                   <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200 leading-relaxed">
-                    {selectedReport.discrepancies || 'No conflicting land boundary discrepancies detected.'}
+                    {localizeDiscrepancies(selectedReport.discrepancies, language)}
                   </p>
                 </div>
 
@@ -248,16 +258,16 @@ export const FinalVerificationReportsPage: React.FC = () => {
                 <div className="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl text-[11px] text-rose-950 space-y-1">
                   <div className="font-bold flex items-center gap-1.5 text-rose-800">
                     <ShieldCheck className="w-4 h-4 text-rose-600" />
-                    <span>Statutory Administrative Notice & Legal Disclaimer</span>
+                    <span>{tl('statutoryNoticeTitle')}</span>
                   </div>
                   <p className="leading-relaxed">
-                    This document is a technical field verification record compiled under the AgriSurvey platform based on farmer photographic submissions and authorized drone aerial photogrammetry. This verification record does NOT constitute legal proof of title, ownership certification, or conclusive registry of property ownership.
+                    {tl('statutoryNoticeDesc')}
                   </p>
                 </div>
               </Card>
             ) : (
               <div className="p-12 text-center text-xs text-slate-400">
-                Select a verification report to inspect details and export PDF.
+                {tl('selectReportPrompt')}
               </div>
             )}
           </div>
@@ -268,45 +278,49 @@ export const FinalVerificationReportsPage: React.FC = () => {
       <Modal
         isOpen={compileModalOpen}
         onClose={() => setCompileModalOpen(false)}
-        title="Finalize Land Verification Report"
-        description="Compile evidence findings and issue signed administrative verification report"
+        title={tl('finalizeReportModalTitle')}
+        description={tl('finalizeReportModalDesc')}
         maxWidth="lg"
       >
         <div className="space-y-4 text-xs">
           <div>
             <label className="block font-semibold text-slate-700 mb-1">
-              Select Application to Finalize
+              {tl('selectAppToFinalizeLabel')}
             </label>
             <select className="w-full p-2.5 rounded-lg border border-slate-300 bg-white">
               <option value="app-01">
-                AGRI-APP-2026-849102 • Ramesh Patil • Survey 142/2A Wagholi (Ready for Finalization)
+                AGRI-APP-2026-849102 • Ramesh Patil • {language === 'mr' ? 'गट क्र.' : 'Survey'} 142/2A Wagholi ({language === 'mr' ? 'अंतिम मंजुरीसाठी सज्ज' : 'Ready for Finalization'})
               </option>
             </select>
           </div>
 
           <div>
             <label className="block font-semibold text-slate-700 mb-1">
-              Final Verification Status
+              {tl('finalStatusLabel')}
             </label>
             <select
               value={finalStatus}
               onChange={(e) => setFinalStatus(e.target.value as any)}
               className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
             >
-              <option value="VERIFIED">VERIFIED (Evidence fully corresponds)</option>
-              <option value="ADDITIONAL_EVIDENCE_REQUIRED">ADDITIONAL EVIDENCE REQUIRED</option>
-              <option value="REINSPECTION_REQUIRED">REINSPECTION REQUIRED</option>
-              <option value="REJECTED">REJECTED (Boundary or title conflict)</option>
+              <option value="VERIFIED">{getStatusLabel('VERIFIED', language)} ({language === 'mr' ? 'पुरावे पूर्णपणे जुळतात' : 'Evidence fully corresponds'})</option>
+              <option value="ADDITIONAL_EVIDENCE_REQUIRED">{getStatusLabel('ADDITIONAL_EVIDENCE_REQUIRED', language)}</option>
+              <option value="REINSPECTION_REQUIRED">{getStatusLabel('REINSPECTION_REQUIRED', language)}</option>
+              <option value="REJECTED">{getStatusLabel('REJECTED', language)} ({language === 'mr' ? 'हद्दी किंवा मालकी वाद' : 'Boundary or title conflict'})</option>
             </select>
           </div>
 
           <div>
             <label className="block font-semibold text-slate-700 mb-1">
-              Findings & Discrepancy Statement
+              {tl('findingsDiscrepancyStatementLabel')}
             </label>
             <textarea
               rows={3}
-              value={discrepanciesText}
+              value={
+                language === 'mr' && discrepanciesText.includes('Negligible 0.02 acre buffer variation')
+                  ? 'पश्चिम बांधालगतच्या पाणंद रस्त्याशी केवळ ०.०२ एकर किरकोळ तफावत. कोणतीही सीमा अतिक्रमण नाही.'
+                  : discrepanciesText
+              }
               onChange={(e) => setDiscrepanciesText(e.target.value)}
               className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900"
             />
@@ -314,10 +328,10 @@ export const FinalVerificationReportsPage: React.FC = () => {
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <Button variant="ghost" onClick={() => setCompileModalOpen(false)}>
-              Cancel
+              {tl('cancelBtn')}
             </Button>
             <Button onClick={handleCompileNewReport} isLoading={isCompiling}>
-              Compile & Sign Report
+              {tl('compileSignReportBtn')}
             </Button>
           </div>
         </div>

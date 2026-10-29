@@ -14,6 +14,7 @@ import {
   Eye,
   Info,
   Sprout,
+  RefreshCw,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -23,9 +24,11 @@ import { Modal } from '@/components/ui/Modal';
 import { inspectionService } from '@/services/inspection.service';
 import { droneService } from '@/services/drone.service';
 import { plantIntelligenceService } from '@/services/plant-intelligence.service';
+import { mobileSurveyService } from '@/services/mobile-survey.service';
 import { mockDb } from '@/services/mock-db';
-import { FieldInspection, DroneImagery, InspectionStatus, MonitoringUnit } from '@/types';
+import { FieldInspection, DroneImagery, InspectionStatus, MonitoringUnit, FarmPlot } from '@/types';
 import { PlantObservationModal } from '@/components/plant-intelligence/PlantObservationModal';
+import { MobileFieldSurveyModal } from '@/components/field-survey/MobileFieldSurveyModal';
 
 // Pre-packaged high-res aerial drone imagery for demonstration
 const SAMPLE_DRONE_PHOTOS = [
@@ -59,7 +62,10 @@ const SAMPLE_DRONE_PHOTOS = [
   },
 ];
 
+import { useLanguage } from '@/context/LanguageContext';
+
 export const FieldWorkerDashboardPage: React.FC = () => {
+  const { t } = useLanguage();
   const worker = mockDb.currentUser;
   const [inspections, setInspections] = useState<FieldInspection[]>([]);
   const [selectedInspection, setSelectedInspection] = useState<FieldInspection | null>(null);
@@ -71,6 +77,20 @@ export const FieldWorkerDashboardPage: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [observationModalOpen, setObservationModalOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<MonitoringUnit | null>(null);
+  const [fieldSurveyModalOpen, setFieldSurveyModalOpen] = useState(false);
+  const [isSyncingSurveys, setIsSyncingSurveys] = useState(false);
+
+  const handleSyncOfflineSurveys = async () => {
+    setIsSyncingSurveys(true);
+    try {
+      const result = await mobileSurveyService.syncPendingSurveys();
+      alert(`Sync Complete: ${result.syncedCount} survey records synchronized to cloud.`);
+    } catch (err: any) {
+      alert(`Sync failed: ${err.message}`);
+    } finally {
+      setIsSyncingSurveys(false);
+    }
+  };
 
   useEffect(() => {
     loadInspections();
@@ -149,8 +169,8 @@ export const FieldWorkerDashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Field Drone Operations Portal"
-      subtitle={`Field Surveyor & Certified Pilot: ${worker.full_name} • RTK Mission Center`}
+      title={t('dashboard.fieldWorkerTitle', 'Field Drone Operations Portal')}
+      subtitle={`${t('dashboard.fieldWorkerSubtitle', 'Field Surveyor & Certified Pilot • RTK Mission Center')} • ${worker.full_name}`}
     >
       <div className="space-y-6">
         {/* Top Summary Cards */}
@@ -262,6 +282,27 @@ export const FieldWorkerDashboardPage: React.FC = () => {
                       icon={<Camera className="w-3.5 h-3.5" />}
                     >
                       Upload Drone Orthos
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-sky-300 text-sky-800 hover:bg-sky-50"
+                      onClick={() => setFieldSurveyModalOpen(true)}
+                      icon={<MapPin className="w-3.5 h-3.5 text-sky-600" />}
+                    >
+                      Mobile Field Survey (GPS)
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                      onClick={handleSyncOfflineSurveys}
+                      isLoading={isSyncingSurveys}
+                      icon={<RefreshCw className="w-3.5 h-3.5 text-slate-500" />}
+                    >
+                      Sync Offline Drafts
                     </Button>
 
                     <Button
@@ -484,6 +525,18 @@ export const FieldWorkerDashboardPage: React.FC = () => {
           alert('✅ Field observation and telemetry recorded for officer review.');
         }}
       />
+
+      {/* Mobile Ground Field Survey Modal with GPS & Offline Sync */}
+      {selectedInspection && (
+        <MobileFieldSurveyModal
+          plot={mockDb.farmPlots.find((p) => p.property_id === selectedInspection.property_id) || mockDb.farmPlots[0]}
+          isOpen={fieldSurveyModalOpen}
+          onClose={() => setFieldSurveyModalOpen(false)}
+          onSurveySubmitted={() => {
+            loadInspections();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 };

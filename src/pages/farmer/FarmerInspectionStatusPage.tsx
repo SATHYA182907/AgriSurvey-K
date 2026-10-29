@@ -25,8 +25,11 @@ import { inspectionService } from '@/services/inspection.service';
 import { droneService } from '@/services/drone.service';
 import { mockDb } from '@/services/mock-db';
 import { FieldInspection, DroneImagery, InspectionStatus } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import { localizePlotOrCropName } from '@/lib/dashboard-localizer';
 
 export const FarmerInspectionStatusPage: React.FC = () => {
+  const { t, language } = useLanguage();
   const farmer = mockDb.currentUser;
   const [inspections, setInspections] = useState<FieldInspection[]>([]);
   const [droneImages, setDroneImages] = useState<DroneImagery[]>([]);
@@ -90,8 +93,8 @@ export const FarmerInspectionStatusPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Drone Inspection Status"
-      subtitle="Track official UAV aerial photogrammetry missions, flight parameters, and boundary survey evidence."
+      title={t('dashboard.droneStatusTitle', 'Drone Inspection Status')}
+      subtitle={t('dashboard.droneStatusSubtitle', 'Track official UAV aerial photogrammetry missions, flight parameters, and boundary survey evidence.')}
     >
       <div className="space-y-6">
         {/* Header Stats */}
@@ -200,7 +203,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
                         </span>
                       </div>
                       <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                        <span>{insp.property?.property_name || 'Primary Farmland'}</span>
+                        <span>{insp.property?.property_name ? localizePlotOrCropName(insp.property.property_name, language) : 'Primary Farmland'}</span>
                         <span className="text-slate-400 font-normal text-sm">
                           (Survey No: {insp.property?.survey_number || '142/2A'})
                         </span>

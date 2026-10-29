@@ -14,6 +14,9 @@ import {
   Sprout,
   Send,
   Building2,
+  Sparkles,
+  CloudSun,
+  Activity,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -24,14 +27,31 @@ import { PropertyMap } from '@/components/maps/PropertyMap';
 import { registrationService } from '@/services/registration.service';
 import { plantIntelligenceService } from '@/services/plant-intelligence.service';
 import { mockDb } from '@/services/mock-db';
-import { RegistrationApplication, Property, MonitoringUnit } from '@/types';
+import { RegistrationApplication, Property, MonitoringUnit, FarmPlot, VegetationIndexObservation } from '@/types';
 import { CreateMonitoringUnitModal } from '@/components/plant-intelligence/CreateMonitoringUnitModal';
+import { AgriculturalGISMap } from '@/components/maps/AgriculturalGISMap';
+import { SatelliteSearchModal } from '@/components/satellite/SatelliteSearchModal';
+import { PlotWeatherDrawer } from '@/components/weather/PlotWeatherDrawer';
+import { CropIntelligenceModal } from '@/components/intelligence/CropIntelligenceModal';
+import { plotService } from '@/services/plot.service';
+import { reportService } from '@/services/report.service';
+import { useLanguage } from '@/context/LanguageContext';
+import { localizePlotOrCropName, getPropertyFieldLabel } from '@/lib/dashboard-localizer';
 
 export const FarmerPropertiesPage: React.FC = () => {
+  const { t, language } = useLanguage();
   const farmer = mockDb.currentUser;
   const [applications, setApplications] = useState<RegistrationApplication[]>([]);
   const [monitoringUnits, setMonitoringUnits] = useState<MonitoringUnit[]>([]);
   const [selectedApp, setSelectedApp] = useState<RegistrationApplication | null>(null);
+  const [plots, setPlots] = useState<FarmPlot[]>([]);
+  const [selectedPlot, setSelectedPlot] = useState<FarmPlot | null>(null);
+
+  // New GIS & Intelligence Modals State
+  const [satelliteModalOpen, setSatelliteModalOpen] = useState(false);
+  const [weatherDrawerOpen, setWeatherDrawerOpen] = useState(false);
+  const [intelligenceModalOpen, setIntelligenceModalOpen] = useState(false);
+  const [activeNdviObs, setActiveNdviObs] = useState<VegetationIndexObservation | null>(null);
 
   // Resubmit / Additional Info Modal State
   const [resubmitModalOpen, setResubmitModalOpen] = useState(false);
@@ -54,6 +74,12 @@ export const FarmerPropertiesPage: React.FC = () => {
     }
     const units = await plantIntelligenceService.getMonitoringUnits({ farmerId: farmer.id });
     setMonitoringUnits(units);
+
+    const plotList = await plotService.listPlots();
+    setPlots(plotList);
+    if (plotList.length > 0) {
+      setSelectedPlot(plotList[0]);
+    }
   };
 
   const handleOpenResubmit = (app: RegistrationApplication) => {
@@ -86,25 +112,25 @@ export const FarmerPropertiesPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="My Agricultural Properties"
-      subtitle={`Verified Land Registry & Farmland Parcels • ${farmer.full_name}`}
+      title={t('dashboard.myPropertiesTitle', 'My Agricultural Properties')}
+      subtitle={`${t('dashboard.myPropertiesSubtitle', 'Verified Land Registry & Farmland Parcels')} • ${farmer.full_name}`}
     >
       <div className="space-y-6">
         {/* Top Header & Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200">
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-              Registered Agricultural Land Parcels
+              {t('dashboard.registeredLandholdings', 'Registered Agricultural Land Parcels')}
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Properties officially recorded under 7/12 Land Revenue Extracts. Multiple landholdings supported.
+              {t('dashboard.cadastralDesc', 'Properties officially recorded under 7/12 Land Revenue Extracts. Multiple landholdings supported.')}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link to="/farmer/register">
               <Button icon={<PlusCircle className="w-4 h-4" />}>
-                Register New Property
+                {t('dashboard.registerNewProperty', 'Register New Property')}
               </Button>
             </Link>
           </div>
@@ -136,7 +162,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-bold text-slate-900">
-                          {prop?.property_name || `Survey No. ${prop?.survey_number}`}
+                          {localizePlotOrCropName(prop?.property_name || `Survey No. ${prop?.survey_number}`, language)}
                         </h3>
                         <Badge status={app.status} size="sm" />
                       </div>
@@ -155,15 +181,15 @@ export const FarmerPropertiesPage: React.FC = () => {
 
                   <div className="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl text-xs text-slate-600 mb-4">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Survey Number</span>
+                      <span className="text-[10px] text-slate-400 block">{getPropertyFieldLabel('surveyNumber', language)}</span>
                       <span className="font-semibold font-mono">{prop?.survey_number}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Taluk & District</span>
+                      <span className="text-[10px] text-slate-400 block">{getPropertyFieldLabel('talukDistrict', language)}</span>
                       <span className="truncate">{prop?.taluk}, {prop?.district}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Farming Type</span>
+                      <span className="text-[10px] text-slate-400 block">{getPropertyFieldLabel('farmingType', language)}</span>
                       <span>{prop?.farm_type}</span>
                     </div>
                   </div>
@@ -173,7 +199,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                     <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-2">
                       <div className="flex items-center gap-1.5 font-bold text-amber-800">
                         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Action Required: Officer Requested Clarification</span>
+                        <span>{getPropertyFieldLabel('actionRequiredClarification', language)}</span>
                       </div>
                       <p className="italic text-slate-700">
                         "{app.additional_information_request || 'Please submit updated survey boundary clarification.'}"
@@ -186,7 +212,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                         className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>Submit Response & Resubmit Application</span>
+                        <span>{getPropertyFieldLabel('submitResponseResubmit', language)}</span>
                       </button>
                     </div>
                   )}
@@ -196,10 +222,10 @@ export const FarmerPropertiesPage: React.FC = () => {
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-900 space-y-2">
                       <div className="flex items-center gap-1.5 font-bold text-red-800">
                         <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                        <span>Registration Rejected by Revenue Office</span>
+                        <span>{getPropertyFieldLabel('registrationRejected', language)}</span>
                       </div>
                       <p className="text-slate-700">
-                        <strong>Reason:</strong> {app.rejection_reason || 'Application does not conform to revenue land records.'}
+                        <strong>{getPropertyFieldLabel('reasonLabel', language)}</strong> {app.rejection_reason || 'Application does not conform to revenue land records.'}
                       </p>
                       <button
                         onClick={(e) => {
@@ -209,7 +235,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                         className="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>File Rectification Appeal & Resubmit</span>
+                        <span>{getPropertyFieldLabel('fileAppeal', language)}</span>
                       </button>
                     </div>
                   )}
@@ -217,7 +243,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                   {/* Bottom Footer Actions */}
                   <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
                     <span className="text-[11px] text-slate-400">
-                      Monitored Units: <strong className="text-slate-700">{propUnits.length}</strong>
+                      {getPropertyFieldLabel('monitoredUnits', language)} <strong className="text-slate-700">{propUnits.length}</strong>
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -231,11 +257,11 @@ export const FarmerPropertiesPage: React.FC = () => {
                           className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
                         >
                           <Sprout className="w-3.5 h-3.5" />
-                          <span>Add Plant Monitoring Unit</span>
+                          <span>{getPropertyFieldLabel('addUnit', language)}</span>
                         </button>
                       ) : (
                         <span className="text-[11px] text-slate-400 italic">
-                          Monitoring locked until verification
+                          {getPropertyFieldLabel('monitoringLocked', language)}
                         </span>
                       )}
                     </div>
@@ -252,7 +278,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                      Cadastral Boundary Map
+                      {getPropertyFieldLabel('cadastralMap', language)}
                     </h3>
                     <p className="text-[11px] text-slate-400 font-mono">
                       Survey: {selectedApp.property.survey_number} • {selectedApp.property.village}
@@ -261,24 +287,76 @@ export const FarmerPropertiesPage: React.FC = () => {
                   <Badge status={selectedApp.status} size="sm" />
                 </div>
 
-                <PropertyMap
-                  latitude={selectedApp.property.latitude || 18.5793}
-                  longitude={selectedApp.property.longitude || 73.9824}
-                  propertyName={selectedApp.property.property_name || 'Agricultural Parcel'}
-                  surveyNumber={selectedApp.property.survey_number}
-                  landArea={`${selectedApp.property.land_area} ${selectedApp.property.land_area_unit}`}
-                  height="260px"
-                />
+                {/* High-Precision Interactive Agricultural GIS Map */}
+                <div className="rounded-xl overflow-hidden border border-slate-200">
+                  <AgriculturalGISMap
+                    plots={plots}
+                    selectedPlotId={selectedPlot?.id || plots[0]?.id}
+                    onSelectPlot={(p) => setSelectedPlot(p)}
+                    activeNdviObservation={activeNdviObs}
+                    height="340px"
+                    onOpenSatelliteSearch={(p) => {
+                      setSelectedPlot(p);
+                      setSatelliteModalOpen(true);
+                    }}
+                    onOpenWeatherDrawer={(p) => {
+                      setSelectedPlot(p);
+                      setWeatherDrawerOpen(true);
+                    }}
+                    onOpenIntelligenceModal={(p) => {
+                      setSelectedPlot(p);
+                      setIntelligenceModalOpen(true);
+                    }}
+                    onExportReport={(p) => reportService.generateComprehensivePlotPdf(p.id)}
+                  />
+                </div>
+
+                {/* Quick Action Intelligence Toolbar */}
+                {selectedPlot && (
+                  <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                    <button
+                      onClick={() => setSatelliteModalOpen(true)}
+                      className="p-2.5 rounded-xl border border-sky-200 bg-sky-50/70 hover:bg-sky-100/70 text-sky-800 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+                      <span>{getPropertyFieldLabel('satelliteNdvi', language)}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setWeatherDrawerOpen(true)}
+                      className="p-2.5 rounded-xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/70 text-amber-800 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <CloudSun className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{getPropertyFieldLabel('liveWeather', language)}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setIntelligenceModalOpen(true)}
+                      className="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-800 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Activity className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{getPropertyFieldLabel('cropYield', language)}</span>
+                    </button>
+
+                    <button
+                      onClick={() => reportService.generateComprehensivePlotPdf(selectedPlot.id)}
+                      className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>{getPropertyFieldLabel('downloadPdf', language)}</span>
+                    </button>
+                  </div>
+                )}
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
                   <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
-                    7/12 Land Document Details
+                    {getPropertyFieldLabel('docDetails', language)}
                   </div>
                   <div className="text-slate-600">
-                    Document Ref: <span className="font-mono">{selectedApp.property.land_document_reference}</span>
+                    {getPropertyFieldLabel('docRef', language)} <span className="font-mono">{selectedApp.property.land_document_reference}</span>
                   </div>
                   <div className="text-slate-600">
-                    Assigned Tahsildar Office: Haveli / Pune Division
+                    {getPropertyFieldLabel('tahsildarOffice', language)} Haveli / Pune Division
                   </div>
                 </div>
 
@@ -289,7 +367,7 @@ export const FarmerPropertiesPage: React.FC = () => {
                     icon={<Sprout className="w-3.5 h-3.5 text-emerald-600" />}
                     onClick={() => setCreateUnitModalOpen(true)}
                   >
-                    Activate New Plant Monitoring Unit
+                    {getPropertyFieldLabel('activateUnit', language)}
                   </Button>
                 )}
               </Card>
@@ -363,6 +441,38 @@ export const FarmerPropertiesPage: React.FC = () => {
         applications={applications}
         onSuccess={loadData}
       />
+
+      {/* Satellite Imagery Search & NDVI Modal */}
+      {selectedPlot && (
+        <SatelliteSearchModal
+          plot={selectedPlot}
+          isOpen={satelliteModalOpen}
+          onClose={() => setSatelliteModalOpen(false)}
+          onNdviCalculated={(obs) => {
+            setActiveNdviObs(obs);
+            loadData();
+          }}
+        />
+      )}
+
+      {/* Agrometeorological Weather Drawer */}
+      {selectedPlot && (
+        <PlotWeatherDrawer
+          plot={selectedPlot}
+          isOpen={weatherDrawerOpen}
+          onClose={() => setWeatherDrawerOpen(false)}
+        />
+      )}
+
+      {/* Crop Classification, Yield, & Disaster Intelligence Modal */}
+      {selectedPlot && (
+        <CropIntelligenceModal
+          plot={selectedPlot}
+          isOpen={intelligenceModalOpen}
+          onClose={() => setIntelligenceModalOpen(false)}
+          currentUserRole={farmer.role}
+        />
+      )}
     </DashboardLayout>
   );
 };

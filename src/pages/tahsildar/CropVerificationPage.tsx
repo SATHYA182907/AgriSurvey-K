@@ -23,8 +23,13 @@ import {
 import { cropVerificationService, AiCropAnalysisResult } from '@/services/crop-verification.service';
 import { mockDb } from '@/services/mock-db';
 import { CropVerificationResultType } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import { getTahsildarLabel, localizePlotOrCropName } from '@/lib/dashboard-localizer';
 
 export const CropVerificationPage: React.FC = () => {
+  const { language } = useLanguage();
+  const tl = (key: string) => getTahsildarLabel(key, language);
+
   const [declaredCrop, setDeclaredCrop] = useState('Sugarcane (ऊस)');
   const [observedCrop, setObservedCrop] = useState('Sugarcane (ऊस)');
   const [cropCategory, setCropCategory] = useState('Cash Crop');
@@ -101,22 +106,24 @@ export const CropVerificationPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Crop Identification & Verification"
-      subtitle="Cross-reference declared agricultural crops with drone aerial evidence and AI vision analysis"
+      title={tl('cropVerificationTitle')}
+      subtitle={tl('cropVerificationSubtitle')}
     >
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Land Parcel Summary Header */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Verification Target</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase">{tl('verificationTarget')}</span>
               <Badge status={verificationResult} size="sm" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
               Survey Gat 142/2A • Wagholi, Haveli, Pune
             </h3>
             <p className="text-xs text-slate-500 font-mono">
-              Farmer: Ramesh Patil • Declared: Sugarcane (ऊस) • Registered Area: 3.50 Acres
+              {tl('farmerPrefix')} Ramesh Patil • {tl('declaredPrefix')}{' '}
+              {localizePlotOrCropName(declaredCrop, language)} • {tl('registeredAreaPrefix')} 3.50{' '}
+              {language === 'mr' ? 'एकर' : language === 'hi' ? 'एकड़' : 'Acres'}
             </p>
           </div>
 
@@ -127,7 +134,7 @@ export const CropVerificationPage: React.FC = () => {
             isLoading={aiRunning}
             icon={<Sparkles className="w-3.5 h-3.5 text-emerald-600" />}
           >
-            Run AI Crop Identification
+            {tl('runAiCropIdentification')}
           </Button>
         </div>
 
@@ -143,10 +150,10 @@ export const CropVerificationPage: React.FC = () => {
             <div className="flex items-center justify-between font-bold">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-emerald-600" />
-                <span>AI Crop Vision Status</span>
+                <span>{tl('aiCropVisionStatus')}</span>
               </div>
               <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                {aiResult.isConfigured ? 'API Connected' : 'Fallback State Active'}
+                {aiResult.isConfigured ? tl('apiConnected') : tl('fallbackStateActive')}
               </span>
             </div>
 
@@ -155,19 +162,19 @@ export const CropVerificationPage: React.FC = () => {
             {aiResult.prediction && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-emerald-200 text-xs">
                 <div>
-                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">Predicted Crop</span>
-                  <span className="font-bold">{aiResult.prediction.cropName}</span>
+                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">{tl('predictedCrop')}</span>
+                  <span className="font-bold">{localizePlotOrCropName(aiResult.prediction.cropName, language)}</span>
                 </div>
                 <div>
-                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">Confidence</span>
+                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">{tl('confidence')}</span>
                   <span className="font-bold font-mono">{aiResult.prediction.confidence}%</span>
                 </div>
                 <div>
-                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">Vegetation NDVI</span>
+                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">{tl('vegetationNdvi')}</span>
                   <span className="font-bold font-mono">{aiResult.prediction.vegetationIndexNdvi}</span>
                 </div>
                 <div>
-                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">Suggested Result</span>
+                  <span className="text-emerald-800 block text-[10px] uppercase font-bold">{tl('suggestedResult')}</span>
                   <span className="font-bold">{aiResult.prediction.suggestedVerification}</span>
                 </div>
               </div>
@@ -180,10 +187,10 @@ export const CropVerificationPage: React.FC = () => {
           <div className="border-b border-slate-100 pb-3">
             <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Sprout className="w-4 h-4 text-emerald-600" />
-              <span>Official Crop Verification Data Fields</span>
+              <span>{tl('officialCropFieldsTitle')}</span>
             </h4>
             <p className="text-xs text-slate-500 mt-0.5">
-              Record observed crops from field drone orthomosaics and farmer ground photos.
+              {tl('recordObservedCropsDesc')}
             </p>
           </div>
 
@@ -191,7 +198,7 @@ export const CropVerificationPage: React.FC = () => {
             {/* Declared Crop */}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Declared Crop Type (from 7/12 declaration)
+                {tl('declaredCropTypeLabel')}
               </label>
               <select
                 value={declaredCrop}
@@ -200,7 +207,7 @@ export const CropVerificationPage: React.FC = () => {
               >
                 {CROPS_CATALOG.map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.name}
+                    {localizePlotOrCropName(c.name, language)}
                   </option>
                 ))}
               </select>
@@ -209,7 +216,7 @@ export const CropVerificationPage: React.FC = () => {
             {/* Observed Crop */}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Observed Crop Type (from Drone Inspection)
+                {tl('observedCropTypeLabel')}
               </label>
               <select
                 value={observedCrop}
@@ -218,7 +225,7 @@ export const CropVerificationPage: React.FC = () => {
               >
                 {CROPS_CATALOG.map((c) => (
                   <option key={c.id} value={c.name}>
-                    {c.name}
+                    {localizePlotOrCropName(c.name, language)}
                   </option>
                 ))}
               </select>
@@ -227,45 +234,52 @@ export const CropVerificationPage: React.FC = () => {
             {/* Crop Category */}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Crop Classification Category
+                {tl('cropClassificationCategoryLabel')}
               </label>
               <select
                 value={cropCategory}
                 onChange={(e) => setCropCategory(e.target.value)}
                 className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
               >
-                <option value="Cash Crop">Cash Crop</option>
-                <option value="Cereal">Cereal / Grain</option>
-                <option value="Millet">Millet</option>
-                <option value="Oilseed">Oilseed</option>
-                <option value="Horticulture">Horticulture / Fruit</option>
-                <option value="Vegetable">Vegetable</option>
-                <option value="Fiber">Fiber</option>
+                <option value="Cash Crop">{tl('catCashCrop')}</option>
+                <option value="Cereal">{tl('catCerealGrain')}</option>
+                <option value="Millet">{tl('catMillet')}</option>
+                <option value="Oilseed">{tl('catOilseed')}</option>
+                <option value="Horticulture">{tl('catHorticultureFruit')}</option>
+                <option value="Vegetable">{tl('catVegetable')}</option>
+                <option value="Fiber">{tl('catFiber')}</option>
               </select>
             </div>
 
             {/* Cultivation Season */}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Cultivation Season
+                {tl('cultivationSeasonLabel')}
               </label>
               <select
                 value={season}
                 onChange={(e) => setSeason(e.target.value)}
                 className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
               >
-                {CULTIVATION_SEASONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
+                {CULTIVATION_SEASONS.map((s) => {
+                  let label = s;
+                  if (s === 'Kharif (Monsoon)') label = tl('seasonKharif');
+                  else if (s === 'Rabi (Winter)') label = tl('seasonRabi');
+                  else if (s === 'Zaid (Summer)') label = tl('seasonZaid');
+                  else if (s === 'Perennial / Annual') label = tl('seasonPerennial');
+                  return (
+                    <option key={s} value={s}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
             {/* Approx Cultivated Area */}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Approximate Cultivated Area (Acres)
+                {tl('approxCultivatedAreaLabel')}
               </label>
               <input
                 type="number"
@@ -279,18 +293,26 @@ export const CropVerificationPage: React.FC = () => {
             {/* Irrigation Method */}
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Observed Irrigation Method
+                {tl('observedIrrigationMethodLabel')}
               </label>
               <select
                 value={irrigation}
                 onChange={(e) => setIrrigation(e.target.value)}
                 className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
               >
-                {IRRIGATION_METHODS.map((im) => (
-                  <option key={im} value={im}>
-                    {im}
-                  </option>
-                ))}
+                {IRRIGATION_METHODS.map((im) => {
+                  let label = im;
+                  if (im === 'Drip Irrigation') label = tl('irrigDrip');
+                  else if (im === 'Sprinkler Irrigation') label = tl('irrigSprinkler');
+                  else if (im === 'Canal / Flow Irrigation') label = tl('irrigCanal');
+                  else if (im === 'Borewell / Well Irrigation') label = tl('irrigWell');
+                  else if (im === 'Rain-fed (No artificial irrigation)') label = tl('irrigRainfed');
+                  return (
+                    <option key={im} value={im}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -298,7 +320,7 @@ export const CropVerificationPage: React.FC = () => {
           {/* Verification Result Selection (Section 15 Requirement) */}
           <div className="pt-2">
             <label className="block text-xs font-bold text-slate-900 mb-2">
-              Official Crop Verification Result:
+              {tl('officialCropVerificationResultLabel')}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               <button
@@ -310,7 +332,7 @@ export const CropVerificationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-emerald-50'
                 }`}
               >
-                ✓ Matches Declaration
+                {tl('btnMatchesDeclaration')}
               </button>
 
               <button
@@ -322,7 +344,7 @@ export const CropVerificationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50'
                 }`}
               >
-                ~ Partially Matches
+                {tl('btnPartiallyMatches')}
               </button>
 
               <button
@@ -334,7 +356,7 @@ export const CropVerificationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-rose-50'
                 }`}
               >
-                ✗ Does Not Match
+                {tl('btnDoesNotMatch')}
               </button>
 
               <button
@@ -346,7 +368,7 @@ export const CropVerificationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                ? Unable to Determine
+                {tl('btnUnableToDetermine')}
               </button>
             </div>
           </div>
@@ -354,14 +376,18 @@ export const CropVerificationPage: React.FC = () => {
           {/* Tahsildar Notes */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Field Observations & Agronomic Review Notes
+              {tl('fieldObservationsNotesLabel')}
             </label>
             <textarea
               rows={3}
-              value={reviewerNotes}
+              value={
+                language === 'mr' && reviewerNotes.includes('Confirmed by Tahsildar Anand Kulkarni')
+                  ? 'तहसीलदार आनंद कुलकर्णी यांनी प्रमाणित केले: ५-६ महिने वयाचे ऊस पीक प्रत्यक्ष घोषणा व ड्रोन रिफ्लेक्टन्सशी जुळते.'
+                  : reviewerNotes
+              }
               onChange={(e) => setReviewerNotes(e.target.value)}
               className="w-full p-2.5 rounded-lg border border-slate-300 text-xs bg-white text-slate-900"
-              placeholder="Record crop vigor, stand height, weed pressure, or inter-cropping observations..."
+              placeholder={tl('fieldObservationsNotesPlaceholder')}
             />
           </div>
 
@@ -370,16 +396,16 @@ export const CropVerificationPage: React.FC = () => {
             {saveSuccess ? (
               <span className="text-xs text-emerald-700 font-bold flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Crop Verification Record Saved Successfully!
+                {tl('cropVerificationSavedSuccessMsg')}
               </span>
             ) : (
               <span className="text-[11px] text-slate-400">
-                Reviewer: Anand S. Kulkarni (Tahsildar)
+                {tl('reviewerLabel')} Anand S. Kulkarni ({language === 'mr' ? 'तहसीलदार' : language === 'hi' ? 'तहसीलदार' : 'Tahsildar'})
               </span>
             )}
 
             <Button onClick={handleSaveCropVerification} isLoading={isSaving}>
-              Save Crop Verification
+              {tl('saveCropVerificationBtn')}
             </Button>
           </div>
         </Card>

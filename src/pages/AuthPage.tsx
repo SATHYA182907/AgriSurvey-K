@@ -160,6 +160,12 @@ export const AuthPage: React.FC = () => {
 
     try {
       const { user } = await authService.signIn(loginIdentifier, password);
+      // Propagate active language selection to the user profile or adopt user preferred language
+      const targetLang = (language && SUPPORTED_LANGUAGES.some((l) => l.code === language))
+        ? language
+        : (user.preferred_language as LanguageCode) || 'mr';
+      setLanguage(targetLang);
+      user.preferred_language = targetLang;
       setIsSigningIn(false);
       navigate(ROLE_DEFAULT_ROUTES[user.role]);
     } catch (err: any) {
@@ -293,6 +299,12 @@ export const AuthPage: React.FC = () => {
   // Quick switch for evaluation testing
   const handleQuickDemoLogin = (role: UserRole) => {
     const user = authService.switchRole(role);
+    // Propagate active language selection to the user profile or adopt user preferred language
+    const targetLang = (language && SUPPORTED_LANGUAGES.some((l) => l.code === language))
+      ? language
+      : (user.preferred_language as LanguageCode) || 'mr';
+    setLanguage(targetLang);
+    user.preferred_language = targetLang;
     navigate(ROLE_DEFAULT_ROUTES[user.role]);
   };
 

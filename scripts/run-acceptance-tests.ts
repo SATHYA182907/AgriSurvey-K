@@ -237,6 +237,7 @@ async function runAcceptanceTests() {
   console.log('\n======================================================');
   console.log('  ALL 12 FUNCTIONAL ACCEPTANCE TESTS COMPLETED SUCCESSFULLY!  ');
   console.log('======================================================\n');
+  process.exit(0);
 }
 
 runAcceptanceTests().catch((err) => {

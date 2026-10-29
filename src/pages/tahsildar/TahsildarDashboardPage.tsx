@@ -28,6 +28,7 @@ import {
   Check,
   ExternalLink,
   Smartphone,
+  Satellite,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -36,19 +37,50 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { PropertyMap } from '@/components/maps/PropertyMap';
 import { AgriculturalJurisdictionMap } from '@/components/maps/AgriculturalJurisdictionMap';
+import { InspectionQueueTable } from '@/components/satellite/InspectionQueueTable';
+import { ContinuousMonitoringTimeline } from '@/components/satellite/ContinuousMonitoringTimeline';
+import { TahsildarSatelliteCoordinateModal } from '@/components/satellite/TahsildarSatelliteCoordinateModal';
+import { satelliteMonitoringService } from '@/services/satellite-monitoring.service';
 import { registrationService } from '@/services/registration.service';
 import { inspectionService } from '@/services/inspection.service';
 import { plantIntelligenceService } from '@/services/plant-intelligence.service';
 import { msg91Service } from '@/services/msg91.service';
 import { mockDb } from '@/services/mock-db';
-import { RegistrationApplication, MonitoringUnit, Property, NotificationJob } from '@/types';
+import {
+  RegistrationApplication,
+  MonitoringUnit,
+  Property,
+  NotificationJob,
+  MonitoringArea,
+  MonitoringPeriodObservation,
+} from '@/types';
 import { PUNE_TALUKS } from '@/lib/constants';
+import { useLanguage } from '@/context/LanguageContext';
+import { getTahsildarLabel, getStatusLabel, localizePlotOrCropName } from '@/lib/dashboard-localizer';
 
 export const TahsildarDashboardPage: React.FC = () => {
+  const { t, language } = useLanguage();
+  const tl = (key: string) => getTahsildarLabel(key, language);
   const tahsildar = mockDb.currentUser;
 
-  // Active Tab: 'queue' vs 'monitoring'
-  const [activeTab, setActiveTab] = useState<'queue' | 'monitoring'>('queue');
+  // Active Tab: 'queue' vs 'monitoring' vs 'satellite_inspection'
+  const [activeTab, setActiveTab] = useState<'queue' | 'monitoring' | 'satellite_inspection'>('queue');
+  const [satCoordModalOpen, setSatCoordModalOpen] = useState(false);
+  const [inspectedAreaId, setInspectedAreaId] = useState<string | null>('area-02');
+  const [inspectedArea, setInspectedArea] = useState<MonitoringArea | null>(
+    mockDb.getMonitoringAreaById('area-02') || mockDb.monitoringAreas[0] || null
+  );
+  const [inspectedAreaObs, setInspectedAreaObs] = useState<MonitoringPeriodObservation[]>(
+    mockDb.getObservationsForArea('area-02')
+  );
+
+  const handleInspectArea = (areaId: string) => {
+    setInspectedAreaId(areaId);
+    const area = mockDb.getMonitoringAreaById(areaId);
+    setInspectedArea(area || null);
+    const obs = mockDb.getObservationsForArea(areaId);
+    setInspectedAreaObs(obs);
+  };
 
   // Queue State
   const [applications, setApplications] = useState<RegistrationApplication[]>([]);
@@ -269,8 +301,8 @@ export const TahsildarDashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="Tahsildar Administrative Desk"
-      subtitle={`Revenue Office • ${tahsildar.full_name} • Pune Division Jurisdiction`}
+      title={t('dashboard.tahsildarTitle', 'Tahsildar Administrative Desk')}
+      subtitle={`${t('dashboard.tahsildarSubtitle', 'Revenue Office • Pune Division Jurisdiction')} • ${tahsildar.full_name}`}
     >
       <div className="space-y-6">
         {/* Top View Selector: Verification Queue vs Agricultural Monitoring */}
@@ -285,7 +317,7 @@ export const TahsildarDashboardPage: React.FC = () => {
               }`}
             >
               <FileText className="w-4 h-4 text-emerald-600" />
-              <span>Land Verification Queue ({pendingApps + underReviewApps})</span>
+              <span>{tl('tabQueue')} ({pendingApps + underReviewApps})</span>
             </button>
             <button
               onClick={() => setActiveTab('monitoring')}
@@ -296,13 +328,36 @@ export const TahsildarDashboardPage: React.FC = () => {
               }`}
             >
               <Sprout className="w-4 h-4 text-emerald-600" />
-              <span>Agricultural Monitoring View</span>
+              <span>{tl('tabMonitoring')}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('satellite_inspection')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'satellite_inspection'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Satellite className="w-4 h-4 text-emerald-600" />
+              <span>{tl('tabSatellite')} ({mockDb.inspectionQueue.length})</span>
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-semibold flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-slate-400" />
-            <span>Assigned Jurisdiction: <strong>Haveli Taluk (Pune)</strong></span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 shadow-xs flex items-center gap-1.5 font-bold"
+              onClick={() => setSatCoordModalOpen(true)}
+            >
+              <Satellite className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{tl('getSatelliteImages')}</span>
+            </Button>
+
+            <div className="text-xs text-slate-500 font-semibold flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-slate-400" />
+              <span>{tl('assignedJurisdiction')} <strong>{tl('haveliTaluk')}</strong></span>
+            </div>
           </div>
         </div>
 
@@ -315,56 +370,56 @@ export const TahsildarDashboardPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               <Card className="p-4">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                  <span>Total In Queue</span>
+                  <span>{tl('totalInQueue')}</span>
                   <FileText className="w-3.5 h-3.5 text-slate-400" />
                 </div>
                 <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalApps}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Assigned taluk</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">{tl('assignedTaluk')}</div>
               </Card>
 
               <Card className="p-4 bg-amber-50/50 border-amber-200">
                 <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
-                  <span>Pending Review</span>
+                  <span>{tl('pendingReview')}</span>
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                 </div>
                 <div className="text-2xl font-extrabold text-amber-950 mt-1">{pendingApps}</div>
-                <div className="text-[10px] text-amber-700 mt-0.5">Awaiting review</div>
+                <div className="text-[10px] text-amber-700 mt-0.5">{tl('awaitingReview')}</div>
               </Card>
 
               <Card className="p-4 bg-blue-50/50 border-blue-200">
                 <div className="flex items-center justify-between text-xs font-semibold text-blue-800">
-                  <span>Under Review</span>
+                  <span>{tl('underReview')}</span>
                   <Eye className="w-3.5 h-3.5 text-blue-600" />
                 </div>
                 <div className="text-2xl font-extrabold text-blue-950 mt-1">{underReviewApps}</div>
-                <div className="text-[10px] text-blue-700 mt-0.5">Active inspection</div>
+                <div className="text-[10px] text-blue-700 mt-0.5">{tl('activeInspection')}</div>
               </Card>
 
               <Card className="p-4 bg-purple-50/50 border-purple-200">
                 <div className="flex items-center justify-between text-xs font-semibold text-purple-800">
-                  <span>Info Requested</span>
+                  <span>{tl('infoRequested')}</span>
                   <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
                 </div>
                 <div className="text-2xl font-extrabold text-purple-950 mt-1">{actionRequiredApps}</div>
-                <div className="text-[10px] text-purple-700 mt-0.5">Farmer response awaited</div>
+                <div className="text-[10px] text-purple-700 mt-0.5">{tl('farmerResponseAwaited')}</div>
               </Card>
 
               <Card className="p-4 bg-emerald-50/50 border-emerald-200">
                 <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
-                  <span>Approved</span>
+                  <span>{tl('approved')}</span>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 </div>
                 <div className="text-2xl font-extrabold text-emerald-950 mt-1">{approvedApps}</div>
-                <div className="text-[10px] text-emerald-700 mt-0.5">Verified landholders</div>
+                <div className="text-[10px] text-emerald-700 mt-0.5">{tl('verifiedLandholders')}</div>
               </Card>
 
               <Card className="p-4 bg-red-50/50 border-red-200">
                 <div className="flex items-center justify-between text-xs font-semibold text-red-800">
-                  <span>Rejected</span>
+                  <span>{tl('rejected')}</span>
                   <XCircle className="w-3.5 h-3.5 text-red-600" />
                 </div>
                 <div className="text-2xl font-extrabold text-red-950 mt-1">{rejectedApps}</div>
-                <div className="text-[10px] text-red-700 mt-0.5">With recorded reason</div>
+                <div className="text-[10px] text-red-700 mt-0.5">{tl('withRecordedReason')}</div>
               </Card>
             </div>
 
@@ -374,7 +429,7 @@ export const TahsildarDashboardPage: React.FC = () => {
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
-                  placeholder="Search farmer, survey no, or ref..."
+                  placeholder={tl('searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 focus:outline-emerald-600"
@@ -387,13 +442,13 @@ export const TahsildarDashboardPage: React.FC = () => {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-3 py-2 rounded-lg border border-slate-300 bg-white"
                 >
-                  <option value="ALL">All Statuses</option>
-                  <option value="PENDING_TAHSILDAR_REVIEW">Pending Review</option>
-                  <option value="UNDER_REVIEW">Under Review</option>
-                  <option value="ADDITIONAL_INFORMATION_REQUIRED">Info Requested</option>
-                  <option value="RESUBMITTED">Resubmitted</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
+                  <option value="ALL">{tl('allStatuses')}</option>
+                  <option value="PENDING_TAHSILDAR_REVIEW">{getStatusLabel('PENDING_TAHSILDAR_REVIEW', language)}</option>
+                  <option value="UNDER_REVIEW">{getStatusLabel('UNDER_REVIEW', language)}</option>
+                  <option value="ADDITIONAL_INFORMATION_REQUIRED">{getStatusLabel('ADDITIONAL_INFORMATION_REQUIRED', language)}</option>
+                  <option value="RESUBMITTED">{getStatusLabel('RESUBMITTED', language)}</option>
+                  <option value="APPROVED">{getStatusLabel('APPROVED', language)}</option>
+                  <option value="REJECTED">{getStatusLabel('REJECTED', language)}</option>
                 </select>
 
                 <select
@@ -401,7 +456,7 @@ export const TahsildarDashboardPage: React.FC = () => {
                   onChange={(e) => setTalukFilter(e.target.value)}
                   className="px-3 py-2 rounded-lg border border-slate-300 bg-white"
                 >
-                  <option value="ALL">All Taluks</option>
+                  <option value="ALL">{tl('allTaluks')}</option>
                   {PUNE_TALUKS.map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -417,20 +472,20 @@ export const TahsildarDashboardPage: React.FC = () => {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="py-3 px-4">Application Ref</th>
-                      <th className="py-3 px-4">Farmer Name</th>
-                      <th className="py-3 px-4">Survey & Village</th>
-                      <th className="py-3 px-4">Area</th>
-                      <th className="py-3 px-4">Submitted</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                      <th className="py-3 px-4">{tl('thAppRef')}</th>
+                      <th className="py-3 px-4">{tl('thFarmerName')}</th>
+                      <th className="py-3 px-4">{tl('thSurveyVillage')}</th>
+                      <th className="py-3 px-4">{tl('thArea')}</th>
+                      <th className="py-3 px-4">{tl('thSubmitted')}</th>
+                      <th className="py-3 px-4">{tl('thStatus')}</th>
+                      <th className="py-3 px-4 text-right">{tl('thActions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {applications.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="py-8 text-center text-slate-400">
-                          No applications match the current filter criteria.
+                          {tl('noApplications')}
                         </td>
                       </tr>
                     ) : (
@@ -445,7 +500,7 @@ export const TahsildarDashboardPage: React.FC = () => {
                           </td>
                           <td className="py-3.5 px-4">
                             <div className="font-mono font-bold text-emerald-800">
-                              Survey {app.property?.survey_number}
+                              {tl('survey')} {app.property?.survey_number}
                             </div>
                             <div className="text-[10px] text-slate-500">
                               {app.property?.village}, {app.property?.taluk}
@@ -467,7 +522,7 @@ export const TahsildarDashboardPage: React.FC = () => {
                                 variant="outline"
                                 onClick={() => handleOpenReview(app)}
                               >
-                                Review File
+                                {tl('reviewFile')}
                               </Button>
                               {app.status === 'APPROVED' && (
                                 <Button
@@ -478,7 +533,7 @@ export const TahsildarDashboardPage: React.FC = () => {
                                     setAssignModalOpen(true);
                                   }}
                                 >
-                                  Assign Drone
+                                  {tl('assignDrone')}
                                 </Button>
                               )}
                             </div>
@@ -573,10 +628,10 @@ export const TahsildarDashboardPage: React.FC = () => {
               <div className="lg:col-span-7 space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                    Jurisdiction Farmland Health Map
+                    {tl('geoCoverageTitle')}
                   </h3>
                   <span className="text-[11px] text-slate-500 font-mono">
-                    {monitoringSummary.assignedJurisdiction}
+                    {tl('haveliTaluk')}
                   </span>
                 </div>
                 <AgriculturalJurisdictionMap
@@ -590,16 +645,16 @@ export const TahsildarDashboardPage: React.FC = () => {
               <Card className="lg:col-span-5 p-5 space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                   <BarChart3 className="w-4 h-4 text-emerald-600" />
-                  Crop Varieties Under Monitoring
+                  {tl('cropDistributionTitle')}
                 </h3>
 
                 <div className="space-y-3">
                   {monitoringSummary.cropDistribution.map((c) => (
                     <div key={c.crop} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-800">{c.crop}</span>
+                        <span className="font-semibold text-slate-800">{localizePlotOrCropName(c.crop, language)}</span>
                         <span className="text-slate-500 font-mono">
-                          {c.unitCount} plots ({c.percentage}%)
+                          {c.unitCount} ({c.percentage}%)
                         </span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -613,7 +668,7 @@ export const TahsildarDashboardPage: React.FC = () => {
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
-                  Data coverage across Haveli Taluk: <strong>92% verified parcel coverage</strong>. Sensor heartbeats refreshed every 15 minutes.
+                  {tl('cropCoverageNote')}
                 </div>
               </Card>
             </div>
@@ -624,10 +679,10 @@ export const TahsildarDashboardPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-red-900 flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4 text-red-600" />
-                    Parcels Requiring Agronomic Attention in Jurisdiction
+                    {tl('attentionParcelsTitle')}
                   </h3>
                   <span className="text-[10px] text-red-700 bg-red-50 px-2 py-0.5 rounded font-bold">
-                    Direct Farmer Notification Active
+                    {tl('directFarmerNotification')}
                   </span>
                 </div>
 
@@ -637,17 +692,87 @@ export const TahsildarDashboardPage: React.FC = () => {
                       <div>
                         <span className="font-bold text-slate-900">{u.unit_name}</span>
                         <div className="text-slate-500">
-                          {u.property?.property_name} • Survey {u.property?.survey_number} ({u.property?.village})
+                          {u.property?.property_name} • {tl('survey')} {u.property?.survey_number} ({u.property?.village})
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="px-2 py-0.5 bg-red-100 text-red-800 font-bold rounded text-[10px]">
-                          CRITICAL MOISTURE STRESS
+                          {tl('criticalMoistureStress')}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB 3: CONTINUOUS SATELLITE MONITORING & INSPECTION QUEUE
+        ========================================================================== */}
+        {activeTab === 'satellite_inspection' && (
+          <div className="space-y-6">
+            {/* Quick Coordinate Search Action Banner */}
+            <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 rounded-2xl p-5 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-emerald-800/40">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shrink-0">
+                  <Satellite className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    {tl('satInspectorBannerTitle')}
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      {tl('liveSatelliteView')}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    {tl('satInspectorBannerDesc')}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setSatCoordModalOpen(true)}
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shrink-0 shadow-lg"
+              >
+                <Search className="w-3.5 h-3.5 mr-1.5" />
+                {tl('queryByCoords')}
+              </Button>
+            </div>
+
+            {/* Priority Inspection Queue Table */}
+            <InspectionQueueTable onInspectArea={handleInspectArea} />
+
+            {/* Selected Area Continuous 15-Day Satellite Deep Dive */}
+            {inspectedArea && (
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
+                      <Satellite className="w-5 h-5" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">
+                        {inspectedArea.name} — 15-Day Crop Growth & Health Timeline
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Review satellite passes every 15 days, crop greenness changes, and verified field health.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <ContinuousMonitoringTimeline
+                  area={inspectedArea}
+                  observations={inspectedAreaObs}
+                  onRefreshObservations={async () => {
+                    await satelliteMonitoringService.processAreaObservations(inspectedArea.id, {
+                      usePythonBackend: true,
+                    });
+                    const updatedObs = mockDb.getObservationsForArea(inspectedArea.id);
+                    setInspectedAreaObs(updatedObs);
+                  }}
+                />
               </div>
             )}
           </div>
@@ -1083,6 +1208,16 @@ export const TahsildarDashboardPage: React.FC = () => {
           </div>
         </Modal>
       )}
+
+      {/* Satellite Coordinate Search Modal for Tahsildar */}
+      <TahsildarSatelliteCoordinateModal
+        isOpen={satCoordModalOpen}
+        onClose={() => setSatCoordModalOpen(false)}
+        onRegisterMonitoringArea={(newAreaId) => {
+          setActiveTab('satellite_inspection');
+          handleInspectArea(newAreaId);
+        }}
+      />
     </DashboardLayout>
   );
 };

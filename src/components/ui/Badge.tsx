@@ -1,4 +1,6 @@
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { getStatusLabel } from '@/lib/dashboard-localizer';
 
 export interface BadgeProps {
   status?: string;
@@ -15,6 +17,15 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   size = 'md',
 }) => {
+  let lang = 'mr';
+  try {
+    const langCtx = useLanguage();
+    if (langCtx && langCtx.language) {
+      lang = langCtx.language;
+    }
+  } catch {
+    // If rendered outside LanguageContext
+  }
   const getBadgeStyle = (st: string) => {
     switch (st) {
       case 'success':
@@ -85,7 +96,7 @@ export const Badge: React.FC<BadgeProps> = ({
       )} ${className}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-75 shrink-0" />
-      <span className="capitalize">{children !== undefined ? children : formatText(status || '')}</span>
+      <span>{children !== undefined ? children : getStatusLabel(status, lang as any) || formatText(status || '')}</span>
     </span>
   );
 };

@@ -1,4 +1,5 @@
 import { supabase, isLiveSupabaseConfigured } from '@/lib/supabase';
+import { firebaseService } from './firebase.service';
 import { mockDb } from './mock-db';
 import { Profile, UserRole } from '@/types';
 
@@ -98,6 +99,19 @@ export class AuthService {
     }
 
     mockDb.setCurrentUser(user.id);
+
+    // Sync with Firebase Auth and Firestore in background
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('profiles', user.id, user);
+      const email = user.email;
+      if (email) {
+        const pass = password || user.password || 'AgriPass123!';
+        firebaseService.signIn(email, pass).catch(() => {
+          firebaseService.signUp(email, pass).catch(() => {});
+        });
+      }
+    }
+
     return { user };
   }
 
@@ -191,10 +205,24 @@ export class AuthService {
 
     mockDb.setCurrentUser(newProfile.id);
     mockDb.persistAll();
+
+    // Sync newly created farmer and profile to Firebase
+    if (firebaseService.isConfigured) {
+      firebaseService.saveDocument('profiles', newProfile.id, newProfile);
+      firebaseService.saveDocument('farmer_profiles', newFarmerProfile.id, newFarmerProfile);
+      const farmerEmail = newProfile.email;
+      if (farmerEmail) {
+        firebaseService.signUp(farmerEmail, password || 'FarmerAgriPass123!').catch(() => {});
+      }
+    }
+
     return newProfile;
   }
 
   async signOut(): Promise<void> {
+    if (firebaseService.isConfigured) {
+      await firebaseService.signOutUser().catch(() => {});
+    }
     if (isLiveSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
