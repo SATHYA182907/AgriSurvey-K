@@ -218,3 +218,4 @@ This report provides a concrete, file-by-file blueprint of all functional and te
   - Exporting a Kharif Crop Acreage report produces valid GeoJSON readable by QGIS / ArcGIS.
 - **Completion Criteria:**
   - All statutory reports support PDF, CSV, and GeoJSON formats.
+

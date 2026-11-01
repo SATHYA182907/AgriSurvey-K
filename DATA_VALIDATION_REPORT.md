@@ -89,3 +89,4 @@ AgriSurvey AI implements 7 peer-reviewed spectral indices:
 ## 6. Audit Verdict
 
 All remote-sensing calculations in AgriSurvey AI strictly adhere to peer-reviewed spectral formulations and honest data representations. No synthetic scores are passed off as live satellite measurements.
+

@@ -368,3 +368,4 @@ runChallengeComplianceSuite().catch((err) => {
   console.error('\n❌ COMPLIANCE TEST SUITE FAILED:', err);
   process.exit(1);
 });
+

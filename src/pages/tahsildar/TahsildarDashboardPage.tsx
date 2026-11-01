@@ -356,7 +356,7 @@ export const TahsildarDashboardPage: React.FC = () => {
 
             <div className="text-xs text-slate-500 font-semibold flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-400" />
-              <span>{tl('assignedJurisdiction')} <strong>{tl('haveliTaluk')}</strong></span>
+              <span>{tl('assignedJurisdiction')}: <strong>{tl('haveliTaluk')}</strong></span>
             </div>
           </div>
         </div>

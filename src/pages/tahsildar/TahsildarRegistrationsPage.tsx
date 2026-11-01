@@ -258,58 +258,70 @@ export const TahsildarRegistrationsPage: React.FC = () => {
 
         {/* 6 Administrative Status Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <Card className="p-4 bg-white border-slate-200">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>{tl('totalInQueue')}</span>
-              <FileText className="w-3.5 h-3.5 text-slate-400" />
+          <Card className="p-4 bg-white border-slate-200 hover:border-emerald-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                <span className="truncate pr-1">{tl('totalInQueue')}</span>
+                <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalApps}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{tl('assignedTaluk')}</div>
+            <div className="text-[11px] text-slate-400 mt-1 truncate">{tl('assignedTaluk')}</div>
           </Card>
 
-          <Card className="p-4 bg-amber-50/50 border-amber-200">
-            <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
-              <span>{tl('pendingReview')}</span>
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
+          <Card className="p-4 bg-amber-50/50 border-amber-200 hover:border-amber-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
+                <span className="truncate pr-1">{tl('pendingReview')}</span>
+                <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-amber-950 mt-1">{pendingApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-amber-950 mt-1">{pendingApps}</div>
-            <div className="text-[10px] text-amber-700 mt-0.5">{tl('awaitingReview')}</div>
+            <div className="text-[11px] text-amber-700 mt-1 truncate">{tl('awaitingReview')}</div>
           </Card>
 
-          <Card className="p-4 bg-blue-50/50 border-blue-200">
-            <div className="flex items-center justify-between text-xs font-semibold text-blue-800">
-              <span>{tl('underReview')}</span>
-              <Eye className="w-3.5 h-3.5 text-blue-600" />
+          <Card className="p-4 bg-blue-50/50 border-blue-200 hover:border-blue-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-blue-800">
+                <span className="truncate pr-1">{tl('underReview')}</span>
+                <Eye className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-blue-950 mt-1">{underReviewApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-blue-950 mt-1">{underReviewApps}</div>
-            <div className="text-[10px] text-blue-700 mt-0.5">{tl('activeInspection')}</div>
+            <div className="text-[11px] text-blue-700 mt-1 truncate">{tl('activeInspection')}</div>
           </Card>
 
-          <Card className="p-4 bg-purple-50/50 border-purple-200">
-            <div className="flex items-center justify-between text-xs font-semibold text-purple-800">
-              <span>{tl('infoRequested')}</span>
-              <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
+          <Card className="p-4 bg-purple-50/50 border-purple-200 hover:border-purple-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-purple-800">
+                <span className="truncate pr-1">{tl('infoRequested')}</span>
+                <HelpCircle className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-purple-950 mt-1">{actionRequiredApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-purple-950 mt-1">{actionRequiredApps}</div>
-            <div className="text-[10px] text-purple-700 mt-0.5">{tl('farmerResponseAwaited')}</div>
+            <div className="text-[11px] text-purple-700 mt-1 truncate">{tl('farmerResponseAwaited')}</div>
           </Card>
 
-          <Card className="p-4 bg-emerald-50/50 border-emerald-200">
-            <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
-              <span>{tl('approved')}</span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <Card className="p-4 bg-emerald-50/50 border-emerald-200 hover:border-emerald-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+                <span className="truncate pr-1">{tl('approved')}</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-emerald-950 mt-1">{approvedApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-emerald-950 mt-1">{approvedApps}</div>
-            <div className="text-[10px] text-emerald-700 mt-0.5">{tl('verifiedLandholders')}</div>
+            <div className="text-[11px] text-emerald-700 mt-1 truncate">{tl('verifiedLandholders')}</div>
           </Card>
 
-          <Card className="p-4 bg-red-50/50 border-red-200">
-            <div className="flex items-center justify-between text-xs font-semibold text-red-800">
-              <span>{tl('rejected')}</span>
-              <XCircle className="w-3.5 h-3.5 text-red-600" />
+          <Card className="p-4 bg-red-50/50 border-red-200 hover:border-red-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-red-800">
+                <span className="truncate pr-1">{tl('rejected')}</span>
+                <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-red-950 mt-1">{rejectedApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-red-950 mt-1">{rejectedApps}</div>
-            <div className="text-[10px] text-red-700 mt-0.5">{tl('withRecordedReason')}</div>
+            <div className="text-[11px] text-red-700 mt-1 truncate">{tl('withRecordedReason')}</div>
           </Card>
         </div>
 

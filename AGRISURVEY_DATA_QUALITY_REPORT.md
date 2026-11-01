@@ -79,3 +79,4 @@ AgriSurvey AI enforces strict scientific integrity rules to ensure no false clai
 ## 5. Audit Conclusion
 
 The AgriSurvey AI platform adheres to the highest remote-sensing, GIS, and data quality standards. Every metric presented on the dashboard carries clear data quality tags, methodology descriptions, and explicit scientific disclaimers.
+

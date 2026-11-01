@@ -154,62 +154,74 @@ export const TahsildarOverviewPage: React.FC = () => {
 
         {/* 6 Executive Jurisdiction Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <Card className="p-4 bg-white border-slate-200 hover:border-emerald-300 transition-colors">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>{tl('monitoredLandTotal')}</span>
-              <Sprout className="w-3.5 h-3.5 text-emerald-600" />
+          <Card className="p-4 bg-white border-slate-200 hover:border-emerald-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                <span className="truncate pr-1">{tl('monitoredLandTotal')}</span>
+                <Sprout className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1 flex items-baseline gap-1">
+                2,410 <span className="text-xs font-semibold text-slate-500">Ha</span>
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-slate-900 mt-1">
-              2,410 <span className="text-xs font-medium text-slate-400">Ha</span>
-            </div>
-            <div className="text-[10px] text-emerald-700 font-medium mt-0.5">98.4% {tl('verifiedLandholders')}</div>
+            <div className="text-[11px] text-emerald-700 font-medium mt-1 truncate">98.4% {tl('verifiedLandholders')}</div>
           </Card>
 
-          <Card className="p-4 bg-white border-slate-200 hover:border-emerald-300 transition-colors">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>{tl('registeredFarmersCount')}</span>
-              <Building2 className="w-3.5 h-3.5 text-blue-600" />
+          <Card className="p-4 bg-white border-slate-200 hover:border-emerald-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                <span className="truncate pr-1">{tl('registeredFarmersCount')}</span>
+                <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalApps}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{approvedApps} {tl('approved')}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-1 truncate">{approvedApps} {tl('approved')}</div>
           </Card>
 
-          <Card className="p-4 bg-amber-50/60 border-amber-200 hover:border-amber-300 transition-colors">
-            <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
-              <span>{tl('pendingReview')}</span>
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
+          <Card className="p-4 bg-amber-50/60 border-amber-200 hover:border-amber-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
+                <span className="truncate pr-1">{tl('pendingReview')}</span>
+                <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-amber-950 mt-1">{pendingApps}</div>
             </div>
-            <div className="text-2xl font-extrabold text-amber-950 mt-1">{pendingApps}</div>
-            <div className="text-[10px] text-amber-700 font-medium mt-0.5">{tl('awaitingReview')}</div>
+            <div className="text-[11px] text-amber-700 font-medium mt-1 truncate">{tl('awaitingReview')}</div>
           </Card>
 
-          <Card className="p-4 bg-blue-50/60 border-blue-200 hover:border-blue-300 transition-colors">
-            <div className="flex items-center justify-between text-xs font-semibold text-blue-800">
-              <span>{tl('activeInspections')}</span>
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+          <Card className="p-4 bg-blue-50/60 border-blue-200 hover:border-blue-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-blue-800">
+                <span className="truncate pr-1">{tl('activeInspections')}</span>
+                <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-blue-950 mt-1">{activeInspectionsCount}</div>
             </div>
-            <div className="text-2xl font-extrabold text-blue-950 mt-1">{activeInspectionsCount}</div>
-            <div className="text-[10px] text-blue-700 font-medium mt-0.5">{tl('inProgressInspectionsCount')}</div>
+            <div className="text-[11px] text-blue-700 font-medium mt-1 truncate">{tl('inProgressInspectionsCount')}</div>
           </Card>
 
-          <Card className="p-4 bg-emerald-50/60 border-emerald-200 hover:border-emerald-300 transition-colors">
-            <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
-              <span>{tl('certifiedReportsCount')}</span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <Card className="p-4 bg-emerald-50/60 border-emerald-200 hover:border-emerald-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+                <span className="truncate pr-1">{tl('certifiedReportsCount')}</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-emerald-950 mt-1">{certifiedReportsCount}</div>
             </div>
-            <div className="text-2xl font-extrabold text-emerald-950 mt-1">{certifiedReportsCount}</div>
-            <div className="text-[10px] text-emerald-700 font-medium mt-0.5">7/12 Digital Certified</div>
+            <div className="text-[11px] text-emerald-700 font-medium mt-1 truncate">7/12 Digital Certified</div>
           </Card>
 
-          <Card className="p-4 bg-red-50/60 border-red-200 hover:border-red-300 transition-colors">
-            <div className="flex items-center justify-between text-xs font-semibold text-red-800">
-              <span>{tl('criticalAlertsCount')}</span>
-              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+          <Card className="p-4 bg-red-50/60 border-red-200 hover:border-red-300 transition-colors flex flex-col justify-between min-h-[108px]">
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold text-red-800">
+                <span className="truncate pr-1">{tl('criticalAlertsCount')}</span>
+                <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+              </div>
+              <div className="text-2xl font-extrabold text-red-950 mt-1">
+                {monitoringSummary?.criticalAlertCount || 1}
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-red-950 mt-1">
-              {monitoringSummary?.criticalAlertCount || 2}
-            </div>
-            <div className="text-[10px] text-red-700 font-medium mt-0.5">{tl('criticalMoistureStress')}</div>
+            <div className="text-[11px] text-red-700 font-medium mt-1 truncate">{tl('criticalMoistureStress')}</div>
           </Card>
         </div>
 
@@ -227,133 +239,145 @@ export const TahsildarOverviewPage: React.FC = () => {
             {/* Launcher 1: Registrations Queue */}
             <Link
               to="/tahsildar/registrations"
-              className="group block p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all h-full"
             >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
-                  <FileText className="w-5 h-5" />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <Badge variant="warning" className="text-[10px]">
+                    {pendingApps} {tl('pendingReview')}
+                  </Badge>
                 </div>
-                <Badge variant="warning" className="text-[10px]">
-                  {pendingApps} {tl('pendingReview')}
-                </Badge>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>{tl('btnReviewQueue')}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Verify new farmer applications, validate 7/12 land titles, issue approvals, and trigger SMS credentials.
+                </p>
               </div>
-              <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                <span>{tl('btnReviewQueue')}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                Verify new farmer applications, validate 7/12 land titles, issue approvals, and trigger SMS credentials.
-              </p>
             </Link>
 
             {/* Launcher 2: Assign Inspections */}
             <Link
               to="/tahsildar/assign-inspections"
-              className="group block p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all h-full"
             >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
-                  <Calendar className="w-5 h-5" />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <Badge variant="info" className="text-[10px]">
+                    {activeInspectionsCount} Active Missions
+                  </Badge>
                 </div>
-                <Badge variant="info" className="text-[10px]">
-                  {activeInspectionsCount} Active Missions
-                </Badge>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>{tl('btnAssignInspection')}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Deploy certified drone pilots and talathi field surveyors to capture 4K orthomosaics and boundary ground truths.
+                </p>
               </div>
-              <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                <span>{tl('btnAssignInspection')}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                Deploy certified drone pilots and talathi field surveyors to capture 4K orthomosaics and boundary ground truths.
-              </p>
             </Link>
 
             {/* Launcher 3: Image Comparison Workspace */}
             <Link
               to="/tahsildar/image-comparison"
-              className="group block p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all h-full"
             >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
-                  <Eye className="w-5 h-5" />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <Badge variant="neutral" className="text-[10px]">
+                    Split-Screen GIS
+                  </Badge>
                 </div>
-                <Badge variant="neutral" className="text-[10px]">
-                  Split-Screen GIS
-                </Badge>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>Image Comparison Workspace</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Side-by-side swipe comparison of Sentinel-2 satellite telemetry vs ultra-high-resolution aerial drone orthophotos.
+                </p>
               </div>
-              <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                <span>Image Comparison Workspace</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                Side-by-side swipe comparison of Sentinel-2 satellite telemetry vs ultra-high-resolution aerial drone orthophotos.
-              </p>
             </Link>
 
             {/* Launcher 4: Crop Verification */}
             <Link
               to="/tahsildar/crop-verification"
-              className="group block p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all h-full"
             >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                  <Sprout className="w-5 h-5" />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                    <Sprout className="w-5 h-5" />
+                  </div>
+                  <Badge variant="success" className="text-[10px]">
+                    Officer verified
+                  </Badge>
                 </div>
-                <Badge variant="success" className="text-[10px]">
-                  Officer verified
-                </Badge>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>Crop Verification Hub</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Automated ML crop classification, spectral signatures, and phenology matching against registered 7/12 claims.
+                </p>
               </div>
-              <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                <span>Crop Verification Hub</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                Automated ML crop classification, spectral signatures, and phenology matching against registered 7/12 claims.
-              </p>
             </Link>
 
             {/* Launcher 5: Verification Reports */}
             <Link
               to="/tahsildar/reports"
-              className="group block p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all h-full"
             >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5" />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <Badge variant="neutral" className="text-[10px]">
+                    {certifiedReportsCount} Certified
+                  </Badge>
                 </div>
-                <Badge variant="neutral" className="text-[10px]">
-                  {certifiedReportsCount} Certified
-                </Badge>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>Verification Reports & Certificates</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Generate and digitally sign official statutory land and crop verification certificates with QR authentication.
+                </p>
               </div>
-              <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                <span>Verification Reports & Certificates</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                Generate and digitally sign official statutory land and crop verification certificates with QR authentication.
-              </p>
             </Link>
 
             {/* Launcher 6: Audit History */}
             <Link
               to="/tahsildar/audit-logs"
-              className="group block p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all h-full"
             >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
-                  <History className="w-5 h-5" />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+                    <History className="w-5 h-5" />
+                  </div>
+                  <Badge variant="neutral" className="text-[10px] bg-purple-50 text-purple-700 border-purple-200">
+                    {tl('shaVerified')}
+                  </Badge>
                 </div>
-                <Badge variant="neutral" className="text-[10px] bg-purple-50 text-purple-700 border-purple-200">
-                  {tl('shaVerified')}
-                </Badge>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>{tl('auditHistoryTitle')}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Chronological tamper-proof ledger of all revenue reviews, worker dispatches, state diffs, and farmer alerts.
+                </p>
               </div>
-              <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                <span>{tl('auditHistoryTitle')}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                Chronological tamper-proof ledger of all revenue reviews, worker dispatches, state diffs, and farmer alerts.
-              </p>
             </Link>
           </div>
         </div>

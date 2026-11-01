@@ -123,3 +123,4 @@ Every capability across the 11 functional modules (Modules A through K) plus sec
 - **Strengths:** 10 statutory Maharashtra crop survey reports in `src/services/report.service.ts` with PDF and CSV export.
 - **Identified Gaps:**
   1. Add GeoJSON spatial export to all statutory reports containing geographic plot boundaries.
+
