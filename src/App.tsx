@@ -11,7 +11,6 @@ import { FarmerDashboardPage } from '@/pages/farmer/FarmerDashboardPage';
 import { FarmerRegistrationPage } from '@/pages/farmer/FarmerRegistrationPage';
 import { FarmerPropertiesPage } from '@/pages/farmer/FarmerPropertiesPage';
 import { LandImageUploadPage } from '@/pages/farmer/LandImageUploadPage';
-import { FarmerInspectionStatusPage } from '@/pages/farmer/FarmerInspectionStatusPage';
 import { FarmerReportsPage } from '@/pages/farmer/FarmerReportsPage';
 import { FarmerNotificationsPage } from '@/pages/farmer/FarmerNotificationsPage';
 import { TahsildarDashboardPage } from '@/pages/tahsildar/TahsildarDashboardPage';
@@ -51,7 +50,7 @@ export function App() {
         <Route path="/farmer/application-status" element={<FarmerApplicationStatusPage />} />
         <Route path="/farmer/upload-images" element={<ProtectedRoute allowedRoles="farmer"><LandImageUploadPage /></ProtectedRoute>} />
         <Route path="/farmer/properties" element={<ProtectedRoute allowedRoles="farmer"><FarmerPropertiesPage /></ProtectedRoute>} />
-        <Route path="/farmer/inspection-status" element={<ProtectedRoute allowedRoles="farmer"><FarmerInspectionStatusPage /></ProtectedRoute>} />
+        <Route path="/farmer/inspection-status" element={<Navigate to="/farmer/dashboard" replace />} />
         <Route path="/farmer/reports" element={<ProtectedRoute allowedRoles="farmer"><FarmerReportsPage /></ProtectedRoute>} />
         <Route path="/farmer/notifications" element={<ProtectedRoute allowedRoles="farmer"><FarmerNotificationsPage /></ProtectedRoute>} />
 

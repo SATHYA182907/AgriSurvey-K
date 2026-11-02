@@ -120,7 +120,7 @@ export const FarmerNotificationsPage: React.FC = () => {
 
   const getNotificationLink = (n: Notification) => {
     if (n.notification_type.includes('INSPECTION') || n.notification_type.includes('DRONE')) {
-      return { text: 'View Flight Status', href: '/farmer/inspection-status' };
+      return { text: 'View Land Properties', href: '/farmer/properties' };
     }
     if (n.notification_type.includes('FINAL_VERIFICATION_COMPLETED') || n.notification_type.includes('REPORT')) {
       return { text: 'Download Report', href: '/farmer/reports' };

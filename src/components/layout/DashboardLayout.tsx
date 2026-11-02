@@ -77,7 +77,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
           { name: t('dashboard.gisCropSurvey', 'GIS Crop Survey'), href: '/gis/crop-survey', icon: Compass },
           { name: t('dashboard.myProperties', 'My Properties'), href: '/farmer/properties', icon: MapPin },
           { name: t('dashboard.uploadImages', 'Upload Land Images'), href: '/farmer/upload-images', icon: UploadCloud },
-          { name: t('dashboard.droneStatus', 'Drone Inspection Status'), href: '/farmer/inspection-status', icon: Layers },
           { name: t('dashboard.verificationReports', 'Verification Reports'), href: '/farmer/reports', icon: CheckCircle2 },
           { name: t('dashboard.statutoryReports', 'Statutory Reports Hub'), href: '/gis/reports', icon: FileText },
           { name: t('dashboard.notifications', 'Notifications'), href: '/farmer/notifications', icon: Bell },
