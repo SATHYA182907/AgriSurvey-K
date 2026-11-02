@@ -286,16 +286,16 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
 
           {/* Right Metrics & Scan Action Button */}
           <div className="flex sm:items-center justify-between lg:justify-end gap-4 pt-3 lg:pt-0 border-t lg:border-t-0 border-white/10">
-            <div className="text-left sm:text-right">
-              <div className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
+            <div className="text-left sm:text-right shrink-0">
+              <div className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 whitespace-nowrap">
                 Successful Scans
               </div>
-              <div className="text-lg sm:text-xl font-bold text-emerald-400 font-mono flex items-baseline gap-1 sm:justify-end">
+              <div className="text-lg sm:text-xl font-bold text-emerald-400 font-mono flex items-baseline gap-1.5 sm:justify-end whitespace-nowrap">
                 <span>{usableCount} of {observations.length}</span>
                 <span className="text-xs font-normal text-emerald-300/80">clear</span>
               </div>
-              <div className="text-[11px] text-amber-300/90 flex items-center gap-1 sm:justify-end">
-                <Cloud className="w-3 h-3 text-amber-400" />
+              <div className="text-[11px] text-amber-300/90 flex items-center gap-1 sm:justify-end whitespace-nowrap mt-0.5">
+                <Cloud className="w-3 h-3 text-amber-400 shrink-0" />
                 <span>{cloudOutagesCount} cloudy (skipped)</span>
               </div>
             </div>
