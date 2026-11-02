@@ -45,8 +45,8 @@
 ## 🎨 UI/UX Design System (The 80/20 Rule)
 
 AgriSurvey uses a professional, government-grade agricultural technology visual identity:
-* **80% Surfaces**: Clean whites and off-whites (`#FFFFFF`, `#F8FAFC`, `#F1F5F9`).
-* **20% Accents**: Agricultural greenish-blue gradient (`linear-gradient(135deg, #15803D 0%, #0F766E 55%, #0891B2 100%)`), deep teal (`#0F766E`), accent cyan (`#0891B2`), and soft mint highlights (`#ECFDF5`).
+* **80% Surface**: Clean whites and off-whites (`#FFFFFF`, `#F8FAFC`, `#F1F5F9`).
+* **20% Accent**: Agricultural greenish-blue gradient (`linear-gradient(135deg, #15803D 0%, #0F766E 55%, #0891B2 100%)`), deep teal (`#0F766E`), accent cyan (`#0891B2`), and soft mint highlights (`#ECFDF5`).
 * **Typography**: Inter sans-serif with accessible contrast ratios.
 * **Geospatial & Photogrammetry**: Integrated Leaflet interactive maps with parcel boundaries.
 
