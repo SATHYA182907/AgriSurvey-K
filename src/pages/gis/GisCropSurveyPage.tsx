@@ -21,6 +21,7 @@ import {
   Sprout,
   BarChart3,
   Sliders,
+  Satellite,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -29,6 +30,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { AgriculturalGISMap } from '@/components/maps/AgriculturalGISMap';
 import { SatelliteSearchModal } from '@/components/satellite/SatelliteSearchModal';
+import { SatelliteCoordinateInspector } from '@/components/satellite/TahsildarSatelliteCoordinateModal';
 import { PlotWeatherDrawer } from '@/components/weather/PlotWeatherDrawer';
 import { CropIntelligenceModal } from '@/components/intelligence/CropIntelligenceModal';
 import { MobileFieldSurveyModal } from '@/components/field-survey/MobileFieldSurveyModal';
@@ -75,6 +77,20 @@ export const GisCropSurveyPage: React.FC = () => {
   const [intelligenceModalOpen, setIntelligenceModalOpen] = useState(false);
   const [fieldSurveyModalOpen, setFieldSurveyModalOpen] = useState(false);
   const [registerPlotModalOpen, setRegisterPlotModalOpen] = useState(false);
+  const [coordLat, setCoordLat] = useState<number>(18.5793);
+  const [coordLon, setCoordLon] = useState<number>(73.9812);
+
+  // Smooth scroll to in-page Satellite Coordinate Inspector
+  const scrollToSatelliteInspector = (lat?: number, lon?: number) => {
+    if (lat !== undefined && lon !== undefined) {
+      setCoordLat(lat);
+      setCoordLon(lon);
+    }
+    const el = document.getElementById('satellite-coordinate-inspector');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Active Map Overlay Context
   const [activeNdviObs, setActiveNdviObs] = useState<VegetationIndexObservation | null>(null);
@@ -352,6 +368,22 @@ export const GisCropSurveyPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                icon={<Satellite className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  if (selectedPlot && selectedPlot.boundary_coordinates.length > 0) {
+                    const meas = computeGeodesicMeasurements(selectedPlot.boundary_coordinates);
+                    scrollToSatelliteInspector(meas.centroid[0], meas.centroid[1]);
+                  } else {
+                    scrollToSatelliteInspector(18.5793, 73.9812);
+                  }
+                }}
+              >
+                Get Satellite Images by Coordinate
+              </Button>
+
+              <Button
+                size="sm"
                 variant={showAcreagePanel ? 'primary' : 'outline'}
                 icon={<BarChart3 className="w-3.5 h-3.5" />}
                 onClick={() => setShowAcreagePanel(!showAcreagePanel)}
@@ -621,6 +653,9 @@ export const GisCropSurveyPage: React.FC = () => {
                 setFieldSurveyModalOpen(true);
               }}
               onExportReport={(p) => reportService.generatePlotSurveyPdf(p.id)}
+              onOpenCoordinateSatelliteSearch={(lat, lon) => {
+                scrollToSatelliteInspector(lat, lon);
+              }}
             />
           </div>
 
@@ -683,6 +718,23 @@ export const GisCropSurveyPage: React.FC = () => {
                     {getGisLabel('remoteSensingActions', language)}
                   </span>
 
+                  {/* Primary Feature: Get Satellite Images by Coordinate */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedPlot && selectedPlot.boundary_coordinates.length > 0) {
+                        const meas = computeGeodesicMeasurements(selectedPlot.boundary_coordinates);
+                        scrollToSatelliteInspector(meas.centroid[0], meas.centroid[1]);
+                      } else {
+                        scrollToSatelliteInspector(18.5793, 73.9812);
+                      }
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-emerald-400 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Satellite className="w-4 h-4" />
+                    <span>Get Satellite Images by Coordinate</span>
+                  </button>
+
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setSatelliteModalOpen(true)}
@@ -741,15 +793,42 @@ export const GisCropSurveyPage: React.FC = () => {
                 </div>
               </Card>
             ) : (
-              <Card className="p-8 text-center bg-white border border-slate-200">
-                <Compass className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <h4 className="font-bold text-slate-700 text-sm">{getGisLabel('selectPlotOnMap', language)}</h4>
-                <p className="text-xs text-slate-400 mt-1">
-                  {getGisLabel('selectPlotHint', language)}
-                </p>
+              <Card className="p-6 text-center bg-white border border-slate-200 space-y-4">
+                <Compass className="w-10 h-10 text-slate-300 mx-auto" />
+                <div>
+                  <h4 className="font-bold text-slate-700 text-sm">{getGisLabel('selectPlotOnMap', language)}</h4>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {getGisLabel('selectPlotHint', language)}
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-slate-100">
+                  <Button
+                    size="sm"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    icon={<Satellite className="w-4 h-4" />}
+                    onClick={() => {
+                      scrollToSatelliteInspector(18.5793, 73.9812);
+                    }}
+                  >
+                    Get Satellite Images by Coordinate
+                  </Button>
+                </div>
               </Card>
             )}
           </div>
+        </div>
+
+        {/* Primary In-Page Remote Sensing Feature: Satellite Imagery by Coordinate Inspector */}
+        <div id="satellite-coordinate-inspector" className="mt-4 scroll-mt-6">
+          <SatelliteCoordinateInspector
+            embedded={true}
+            autoSearch={true}
+            initialLat={coordLat}
+            initialLon={coordLon}
+            onSelectScene={(scene) => {
+              setActiveSceneFootprint(scene);
+            }}
+          />
         </div>
       </div>
 

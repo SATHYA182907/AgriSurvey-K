@@ -133,6 +133,18 @@ const INITIAL_PROFILES: Profile[] = [
     updated_at: '2025-12-15T11:20:00Z',
   },
   {
+    id: 'usr-worker-02',
+    full_name: 'Sunil Dattatray Gaikwad',
+    email: 'drone.sunil@agrisurvey.gov.in',
+    phone_number: '9822154321',
+    role: 'field_worker',
+    account_status: 'active',
+    preferred_language: 'mr',
+    password: 'WorkerPass123!',
+    created_at: '2026-01-10T09:00:00Z',
+    updated_at: '2026-01-10T09:00:00Z',
+  },
+  {
     id: 'usr-admin-01',
     full_name: 'Dr. Meenakshi Sundaram, IAS',
     email: 'admin.director@agrisurvey.gov.in',
@@ -1074,6 +1086,37 @@ const INITIAL_FARM_PLOTS: FarmPlot[] = [
     created_at: '2026-03-01T10:15:00Z',
     updated_at: '2026-10-24T12:00:00Z',
   },
+  {
+    id: 'plot-03',
+    plot_reference: 'MH-PUN-SHI-PLOT-2026-00204',
+    property_id: 'prop-03',
+    farmer_id: 'usr-farmer-01',
+    survey_number: '204/B',
+    subdivision_number: 'B',
+    plot_name: 'Shirur Agro Wheat & Jowar Plot',
+    boundary_coordinates: [
+      [18.8260, 74.3200],
+      [18.8265, 74.3235],
+      [18.8235, 74.3238],
+      [18.8230, 74.3203],
+      [18.8260, 74.3200],
+    ],
+    area_sqm: 11129,
+    area_hectares: 1.113,
+    area_acres: 2.75,
+    perimeter_meters: 460,
+    village: 'Talegaon Dhamdhere',
+    taluk: 'Shirur',
+    district: 'Pune',
+    state: 'Maharashtra',
+    is_cadastral_verified: true,
+    crop_type: 'Wheat',
+    sowing_date: '2025-11-20',
+    latest_ndvi: 0.71,
+    latest_weather: '27.4°C, Clear',
+    created_at: '2026-03-05T09:00:00Z',
+    updated_at: '2026-10-25T14:00:00Z',
+  },
 ];
 
 const INITIAL_SATELLITE_SCENES: SatelliteScene[] = [
@@ -1245,6 +1288,108 @@ const INITIAL_DRONE_MISSIONS: DroneMissionRecord[] = [
     status: 'PROCESSED',
     notes: 'Centimeter-precision RTK survey completed with zero GPS degradation.',
     created_at: '2026-10-22T11:00:00Z',
+  },
+  {
+    id: 'drm-02',
+    mission_reference: 'DRN-BAR-2026-114',
+    plot_id: 'plot-02',
+    title: 'Pre-Harvest Soybean Multispectral Orthomosaic',
+    pilot_name: 'Prakash Mahadev Jadhav',
+    flight_date: '2026-10-28',
+    flight_altitude_meters: 70,
+    camera_sensor: 'MicaSense RedEdge-P Multispectral + 4K RGB',
+    photos_count: 3,
+    geotagged_photos: [
+      {
+        id: 'gp-05',
+        url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261028_0411.JPG',
+        latitude: 18.1525,
+        longitude: 74.5770,
+        altitude_meters: 70,
+        captured_at: '2026-10-28T09:40:00Z',
+      },
+      {
+        id: 'gp-06',
+        url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261028_0412.JPG',
+        latitude: 18.1512,
+        longitude: 74.5780,
+        altitude_meters: 70,
+        captured_at: '2026-10-28T09:42:30Z',
+      },
+      {
+        id: 'gp-07',
+        url: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261028_0413.JPG',
+        latitude: 18.1518,
+        longitude: 74.5765,
+        altitude_meters: 70,
+        captured_at: '2026-10-28T09:44:00Z',
+      },
+    ],
+    orthomosaic_url: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80',
+    orthomosaic_bounds: [
+      [18.1495, 74.5745],
+      [18.1545, 74.5800],
+    ],
+    status: 'PROCESSED',
+    notes: 'Multispectral pass verified 91.2% canopy NDVI vigor. Geodesic area match within 0.4% variance.',
+    created_at: '2026-10-28T09:30:00Z',
+  },
+  {
+    id: 'drm-03',
+    mission_reference: 'DRN-SHI-2026-193',
+    plot_id: 'plot-03',
+    title: 'Rabi Wheat Stand & Irrigation Infrastructure Photogrammetry',
+    pilot_name: 'Sunil Dattatray Gaikwad',
+    flight_date: '2026-10-30',
+    flight_altitude_meters: 55,
+    camera_sensor: 'DJI Zenmuse H20T Hybrid Thermal/RGB',
+    photos_count: 2,
+    geotagged_photos: [
+      {
+        id: 'gp-08',
+        url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261030_0881.JPG',
+        latitude: 18.8250,
+        longitude: 74.3215,
+        altitude_meters: 55,
+        captured_at: '2026-10-30T10:20:00Z',
+      },
+      {
+        id: 'gp-09',
+        url: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80',
+        filename: 'DJI_20261030_0882.JPG',
+        latitude: 18.8242,
+        longitude: 74.3225,
+        altitude_meters: 55,
+        captured_at: '2026-10-30T10:22:15Z',
+      },
+    ],
+    orthomosaic_url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+    orthomosaic_bounds: [
+      [18.8225, 74.3195],
+      [18.8270, 74.3245],
+    ],
+    status: 'IN_FLIGHT',
+    notes: 'Active telemetry tracking: surveying canal alignment and early vegetative shoot emergence.',
+    created_at: '2026-10-30T10:15:00Z',
+  },
+  {
+    id: 'drm-04',
+    mission_reference: 'DRN-HAV-2026-248',
+    plot_id: 'plot-01',
+    title: 'Gat Boundary Demarcation & Calamity Re-survey',
+    pilot_name: 'Sunil Dattatray Gaikwad',
+    flight_date: '2026-11-04',
+    flight_altitude_meters: 60,
+    camera_sensor: 'DJI Zenmuse P1 45MP Full-Frame RGB',
+    photos_count: 0,
+    geotagged_photos: [],
+    status: 'SCHEDULED',
+    notes: 'Commissioned by Tahsildar Anand Kulkarni for dispute-free boundary demarcation alongside state highway.',
+    created_at: '2026-11-01T14:00:00Z',
   },
 ];
 
@@ -1857,7 +2002,13 @@ export class MockDatabase {
   public currentUser: Profile;
 
   private constructor() {
-    this.profiles = getStorage('profiles', INITIAL_PROFILES);
+    const storedProfiles = getStorage('profiles', INITIAL_PROFILES);
+    const profileIds = new Set(storedProfiles.map((p: Profile) => p.id));
+    const mergedProfiles = [...storedProfiles];
+    for (const pr of INITIAL_PROFILES) {
+      if (!profileIds.has(pr.id)) mergedProfiles.push(pr);
+    }
+    this.profiles = mergedProfiles;
     this.farmerProfiles = getStorage('farmerProfiles', INITIAL_FARMER_PROFILES);
     this.staffRegions = getStorage('staffRegions', INITIAL_STAFF_REGIONS);
     this.properties = getStorage('properties', INITIAL_PROPERTIES);
@@ -1885,11 +2036,25 @@ export class MockDatabase {
     this.plantHealthAlerts = getStorage('plantHealthAlerts', INITIAL_PLANT_ALERTS);
 
     // Load geospatial & remote sensing collections
-    this.farmPlots = getStorage('farmPlots', INITIAL_FARM_PLOTS);
+    const storedPlots = getStorage('farmPlots', INITIAL_FARM_PLOTS);
+    const plotIds = new Set(storedPlots.map((p: FarmPlot) => p.id));
+    const mergedPlots = [...storedPlots];
+    for (const p of INITIAL_FARM_PLOTS) {
+      if (!plotIds.has(p.id)) mergedPlots.push(p);
+    }
+    this.farmPlots = mergedPlots;
+
     this.satelliteScenes = getStorage('satelliteScenes', INITIAL_SATELLITE_SCENES);
     this.vegetationObservations = getStorage('vegetationObservations', INITIAL_VEGETATION_OBSERVATIONS);
     this.weatherObservations = getStorage('weatherObservations', INITIAL_WEATHER_OBSERVATIONS);
-    this.droneMissions = getStorage('droneMissions', INITIAL_DRONE_MISSIONS);
+
+    const storedMissions = getStorage('droneMissions', INITIAL_DRONE_MISSIONS);
+    const missionIds = new Set(storedMissions.map((m: DroneMissionRecord) => m.id));
+    const mergedMissions = [...storedMissions];
+    for (const m of INITIAL_DRONE_MISSIONS) {
+      if (!missionIds.has(m.id)) mergedMissions.push(m);
+    }
+    this.droneMissions = mergedMissions;
     this.mobileSurveys = getStorage('mobileSurveys', INITIAL_MOBILE_SURVEYS);
     // Drop records from the former simulated classifier (no verdict, invented confidence)
     this.cropPredictions = getStorage('cropPredictions', INITIAL_CROP_PREDICTIONS).filter(

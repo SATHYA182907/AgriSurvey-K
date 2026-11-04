@@ -171,6 +171,16 @@ export const TahsildarAssignInspectionsPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link to="/tahsildar/drone-surveys">
+              <Button
+                variant="outline"
+                className="bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border-sky-400/40 font-semibold text-xs flex items-center gap-1.5"
+              >
+                <Plane className="w-4 h-4 text-sky-400" />
+                <span>Drone Surveys & Missions Hub</span>
+              </Button>
+            </Link>
+
             <Button
               onClick={() => {
                 const firstNeeding = parcelsNeedingInspection[0] || applications[0];

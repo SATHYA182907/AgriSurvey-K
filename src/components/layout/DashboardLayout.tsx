@@ -24,6 +24,7 @@ import {
   Camera,
   MapPin,
   ChevronRight,
+  Plane,
 } from 'lucide-react';
 import { authService } from '@/services/auth.service';
 import { notificationService } from '@/services/notification.service';
@@ -87,6 +88,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, titl
           { name: t('dashboard.gisCropSurvey', 'GIS Spatial Intelligence'), href: '/gis/crop-survey', icon: Compass },
           { name: t('dashboard.registrationQueue', 'Registration Review Queue'), href: '/tahsildar/registrations', icon: FileText },
           { name: t('dashboard.assignInspections', 'Assign Inspections'), href: '/tahsildar/assign-inspections', icon: Calendar },
+          { name: t('dashboard.droneSurveys', 'Drone Surveys & Missions'), href: '/tahsildar/drone-surveys', icon: Plane },
           { name: t('dashboard.fieldSurveillance', 'Field Surveillance (15-day)'), href: '/tahsildar/field-surveillance', icon: Satellite },
           { name: t('dashboard.imageComparison', 'Image Comparison Workspace'), href: '/tahsildar/image-comparison', icon: Eye },
           { name: t('dashboard.cropVerification', 'Crop Verification'), href: '/tahsildar/crop-verification', icon: Sprout },

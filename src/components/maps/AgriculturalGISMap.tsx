@@ -49,6 +49,7 @@ import {
   FileText,
   ShieldCheck,
   Maximize2,
+  Satellite,
 } from 'lucide-react';
 import {
   FarmPlot,
@@ -116,6 +117,24 @@ function DrawClickListener({
   return null;
 }
 
+// Coordinate Click Listener for Satellite queries
+function MapCoordClickListener({
+  isDrawing,
+  onMapClick,
+}: {
+  isDrawing: boolean;
+  onMapClick: (point: [number, number]) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      if (!isDrawing) {
+        onMapClick([e.latlng.lat, e.latlng.lng]);
+      }
+    },
+  });
+  return null;
+}
+
 export interface AgriculturalGISMapProps {
   plots: FarmPlot[];
   selectedPlotId?: string;
@@ -131,6 +150,7 @@ export interface AgriculturalGISMapProps {
   onOpenIntelligenceModal?: (plot: FarmPlot) => void;
   onOpenFieldSurveyModal?: (plot: FarmPlot) => void;
   onExportReport?: (plot: FarmPlot) => void;
+  onOpenCoordinateSatelliteSearch?: (lat: number, lon: number) => void;
 }
 
 export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
@@ -148,6 +168,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
   onOpenIntelligenceModal,
   onOpenFieldSurveyModal,
   onExportReport,
+  onOpenCoordinateSatelliteSearch,
 }) => {
   // Basemap State
   const [basemapType, setBasemapType] = useState<'streets' | 'satellite'>('satellite');
@@ -176,6 +197,9 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
   const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
   const [newPlotName, setNewPlotName] = useState<string>('');
   const [newPlotSurveyNo, setNewPlotSurveyNo] = useState<string>('');
+
+  // Coordinate Click Selection for Satellite Retrieval
+  const [clickedCoord, setClickedCoord] = useState<[number, number] | null>(null);
 
   // Currently focused plot
   const activePlot = plots.find((p) => p.id === selectedPlotId) || plots[0];
@@ -360,6 +384,25 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
             </button>
           </div>
 
+          {/* Quick Satellite by Coordinates Trigger */}
+          {onOpenCoordinateSatelliteSearch && (
+            <button
+              onClick={() => {
+                if (activePlot && activePlot.boundary_coordinates.length > 0) {
+                  const meas = computeGeodesicMeasurements(activePlot.boundary_coordinates);
+                  onOpenCoordinateSatelliteSearch(meas.centroid[0], meas.centroid[1]);
+                } else {
+                  onOpenCoordinateSatelliteSearch(mapCenter[0], mapCenter[1]);
+                }
+              }}
+              title="Search Sentinel-2 Satellite Scenes by Coordinates"
+              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 text-xs font-semibold shadow-xs transition-colors"
+            >
+              <Satellite className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Satellite by Coords</span>
+            </button>
+          )}
+
           {/* GeoJSON Import / Export */}
           <input
             type="file"
@@ -471,6 +514,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
         >
           <MapController center={mapCenter} zoom={mapZoom} />
           <DrawClickListener isDrawing={isDrawing} onAddPoint={handleAddDrawingPoint} />
+          <MapCoordClickListener isDrawing={isDrawing} onMapClick={(pt) => setClickedCoord(pt)} />
 
           {/* Base Tile Layer */}
           {basemapType === 'satellite' ? (
@@ -485,6 +529,47 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               maxZoom={19}
             />
+          )}
+
+          {/* Coordinate Click Popup for Satellite Retrieval */}
+          {clickedCoord && !isDrawing && (
+            <Popup
+              position={clickedCoord}
+              eventHandlers={{
+                remove: () => setClickedCoord(null),
+              }}
+            >
+              <div className="p-2 space-y-2 min-w-[210px] text-xs">
+                <div className="font-bold text-slate-900 flex items-center gap-1.5 border-b pb-1">
+                  <Satellite className="w-4 h-4 text-emerald-600" />
+                  <span>Map Coordinate Selected</span>
+                </div>
+                <div className="font-mono text-slate-700 bg-slate-50 p-2 rounded border border-slate-200 text-[11px] space-y-0.5">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Latitude:</span>
+                    <span className="font-bold text-emerald-800">{clickedCoord[0].toFixed(5)}° N</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Longitude:</span>
+                    <span className="font-bold text-emerald-800">{clickedCoord[1].toFixed(5)}° E</span>
+                  </div>
+                </div>
+                {onOpenCoordinateSatelliteSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const [lat, lon] = clickedCoord;
+                      setClickedCoord(null);
+                      onOpenCoordinateSatelliteSearch(lat, lon);
+                    }}
+                    className="w-full py-2 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                  >
+                    <Satellite className="w-3.5 h-3.5" />
+                    <span>Get Satellite Images</span>
+                  </button>
+                )}
+              </div>
+            </Popup>
           )}
 
           {/* 1. Sentinel-2 Satellite Scene Footprint Overlay */}

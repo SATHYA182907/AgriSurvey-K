@@ -188,6 +188,7 @@ export interface Translations {
     verificationReports: string;
     notifications: string;
     assignInspections: string;
+    droneSurveys?: string;
     imageComparison: string;
     cropVerification: string;
     auditLogs: string;
@@ -472,6 +473,7 @@ export const translations: Record<LanguageCode, Translations> = {
       verificationReports: 'Verification Reports',
       notifications: 'Notifications',
       assignInspections: 'Assign Inspections',
+      droneSurveys: 'Drone Surveys & Missions',
       imageComparison: 'Image Comparison',
       cropVerification: 'Crop Verification',
       auditLogs: 'Audit History',
@@ -754,6 +756,7 @@ export const translations: Record<LanguageCode, Translations> = {
       verificationReports: 'पडताळणी अहवाल',
       notifications: 'सूचना',
       assignInspections: 'पाहणी वाटप करा',
+      droneSurveys: 'ड्रोन सर्वेक्षण आणि मोहिमा',
       imageComparison: 'प्रतिमा तुलना',
       cropVerification: 'पीक पडताळणी',
       auditLogs: 'ऑडिट इतिहास',
@@ -1036,6 +1039,7 @@ export const translations: Record<LanguageCode, Translations> = {
       verificationReports: 'सत्यापन रिपोर्ट',
       notifications: 'सूचनाएं',
       assignInspections: 'निरीक्षण आवंटित करें',
+      droneSurveys: 'ड्रोन सर्वेक्षण और मिशन',
       imageComparison: 'छवि तुलना',
       cropVerification: 'फसल सत्यापन',
       auditLogs: 'ऑडिट इतिहास',

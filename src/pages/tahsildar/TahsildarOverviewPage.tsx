@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FileText,
-  Search,
   CheckCircle2,
   Eye,
   MapPin,
@@ -23,6 +22,7 @@ import {
   TrendingUp,
   Activity,
   Check,
+  Plane,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -30,7 +30,6 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { AgriculturalJurisdictionMap } from '@/components/maps/AgriculturalJurisdictionMap';
 import { ContinuousMonitoringTimeline } from '@/components/satellite/ContinuousMonitoringTimeline';
-import { TahsildarSatelliteCoordinateModal } from '@/components/satellite/TahsildarSatelliteCoordinateModal';
 import { registrationService } from '@/services/registration.service';
 import { plantIntelligenceService } from '@/services/plant-intelligence.service';
 import { mockDb } from '@/services/mock-db';
@@ -49,7 +48,6 @@ export const TahsildarOverviewPage: React.FC = () => {
   const tl = (key: string) => getTahsildarLabel(key, language);
   const tahsildar = mockDb.currentUser;
 
-  const [satCoordModalOpen, setSatCoordModalOpen] = useState(false);
   const [applications, setApplications] = useState<RegistrationApplication[]>([]);
   const [inspectedArea, setInspectedArea] = useState<MonitoringArea | null>(
     mockDb.getMonitoringAreaById('area-02') || mockDb.monitoringAreas[0] || null
@@ -138,17 +136,6 @@ export const TahsildarOverviewPage: React.FC = () => {
                 {tl('executiveDeskSubtitle')}
               </p>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              size="sm"
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md flex items-center gap-1.5"
-              onClick={() => setSatCoordModalOpen(true)}
-            >
-              <Satellite className="w-3.5 h-3.5" />
-              <span>{tl('getSatelliteImages')}</span>
-            </Button>
           </div>
         </div>
 
@@ -280,6 +267,30 @@ export const TahsildarOverviewPage: React.FC = () => {
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">
                   Deploy certified drone pilots and talathi field surveyors to capture 4K orthomosaics and boundary ground truths.
+                </p>
+              </div>
+            </Link>
+
+            {/* Launcher 2B: Drone Surveys & Missions */}
+            <Link
+              to="/tahsildar/drone-surveys"
+              className="group flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 hover:border-sky-400 hover:shadow-md transition-all h-full"
+            >
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center">
+                    <Plane className="w-5 h-5" />
+                  </div>
+                  <Badge variant="info" className="text-[10px]">
+                    {mockDb.droneMissions.length} Drone Missions
+                  </Badge>
+                </div>
+                <h4 className="font-bold text-slate-900 mt-3 group-hover:text-sky-700 transition-colors flex items-center gap-1.5 text-sm">
+                  <span>Drone Surveys & Missions</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                  Commission UAV flights, review 4K orthomosaics with opacity sliders, inspect EXIF geotags, and certify cadastral dossiers.
                 </p>
               </div>
             </Link>
@@ -477,27 +488,12 @@ export const TahsildarOverviewPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSatCoordModalOpen(true)}
-                className="text-xs flex items-center gap-1.5"
-              >
-                <Search className="w-3.5 h-3.5" />
-                <span>{tl('queryByCoords')}</span>
-              </Button>
             </div>
 
             <ContinuousMonitoringTimeline area={inspectedArea} observations={inspectedAreaObs} />
           </div>
         )}
       </div>
-
-      {/* Coordinate Search Modal */}
-      <TahsildarSatelliteCoordinateModal
-        isOpen={satCoordModalOpen}
-        onClose={() => setSatCoordModalOpen(false)}
-      />
     </DashboardLayout>
   );
 };

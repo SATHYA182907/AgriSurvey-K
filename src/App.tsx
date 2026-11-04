@@ -22,6 +22,7 @@ import { ImageComparisonWorkspacePage } from '@/pages/tahsildar/ImageComparisonW
 import { CropVerificationPage } from '@/pages/tahsildar/CropVerificationPage';
 import { FinalVerificationReportsPage } from '@/pages/tahsildar/FinalVerificationReportsPage';
 import { FieldSurveillancePage } from '@/pages/tahsildar/FieldSurveillancePage';
+import { TahsildarDroneSurveyPage } from '@/pages/tahsildar/TahsildarDroneSurveyPage';
 import { FieldWorkerDashboardPage } from '@/pages/field-worker/FieldWorkerDashboardPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { GisCropSurveyPage } from '@/pages/gis/GisCropSurveyPage';
@@ -58,6 +59,7 @@ export function App() {
         <Route path="/tahsildar/dashboard" element={<ProtectedRoute allowedRoles="tahsildar"><TahsildarOverviewPage /></ProtectedRoute>} />
         <Route path="/tahsildar/registrations" element={<ProtectedRoute allowedRoles="tahsildar"><TahsildarRegistrationsPage /></ProtectedRoute>} />
         <Route path="/tahsildar/assign-inspections" element={<ProtectedRoute allowedRoles="tahsildar"><TahsildarAssignInspectionsPage /></ProtectedRoute>} />
+        <Route path="/tahsildar/drone-surveys" element={<ProtectedRoute allowedRoles="tahsildar"><TahsildarDroneSurveyPage /></ProtectedRoute>} />
         <Route path="/tahsildar/image-comparison" element={<ProtectedRoute allowedRoles="tahsildar"><ImageComparisonWorkspacePage /></ProtectedRoute>} />
         <Route path="/tahsildar/crop-verification" element={<ProtectedRoute allowedRoles="tahsildar"><CropVerificationPage /></ProtectedRoute>} />
         <Route path="/tahsildar/reports" element={<ProtectedRoute allowedRoles="tahsildar"><FinalVerificationReportsPage /></ProtectedRoute>} />
