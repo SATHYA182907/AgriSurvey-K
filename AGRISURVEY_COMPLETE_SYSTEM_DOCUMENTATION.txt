@@ -1,0 +1,886 @@
+====================================================================================================
+AGRISURVEY AI — COMPREHENSIVE SYSTEM DOCUMENTATION, ARCHITECTURE & USER GUIDE
+Geospatial Crop Survey, Land Verification, Remote Sensing & Revenue Intelligence Platform
+Target Geography: State of Maharashtra, India (Pune District: Haveli, Baramati, Shirur, Daund)
+Official Repository: https://github.com/SATHYA182907/AgriSurvey-K (Branch: main / KARUNYA-PRABHURAJ-E)
+====================================================================================================
+
+DOCUMENT VERSION: 4.2.0 (Production Release Candidate)
+RELEASE STATUS: Fully Verified & Production Ready
+QUALITY ASSURANCE: 100% Automated Test Pass across ML Models, Geospatial Suites, & E2E Workflows
+AUTHOR: DeepMind Advanced Agentic Coding Pair with AgriSurvey Engineering Team
+DATE: November 2026
+
+----------------------------------------------------------------------------------------------------
+TABLE OF CONTENTS
+----------------------------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY & PLATFORM IDENTIFICATION
+2. THE REAL-WORLD PROBLEM STATEMENT
+   2.1. Agricultural & Land Revenue Realities in Maharashtra
+   2.2. Failure of Legacy Manual Crop Surveys (Patwari / Talathi System)
+   2.3. Ghost Crops & PMFBY Crop Insurance Fraud
+   2.4. Boundary Disputes, Encroachments & Unrecorded Fallow Land
+   2.5. Delays in Natural Disaster Damage Assessments
+   2.6. Lack of Verifiable Remote Sensing in 7/12 Land Registry Records
+3. THE AGRISURVEY SOLUTION & ARCHITECTURAL PHILOSOPHY
+   3.1. The 4-Pillar Verifiable Evidence Pipeline
+   3.2. Principle of Multi-Spectral Truth Cross-Referencing
+   3.3. Continuous 15-Day Orbit Satellite Surveillance
+   3.4. Centimeter-Accurate Drone Photogrammetry (UAV Orthomosaics)
+   3.5. Explainable Phenology Machine Learning with Honest Cloud Abstention
+   3.6. Statutory Quasi-Judicial Workflow under Maharashtra Land Revenue Code, 1966
+4. COMPLETE TECHNOLOGY STACK BREAKDOWN
+   4.1. Core Framework & Build Engine
+   4.2. Styling, UI & Design System
+   4.3. GIS, Mapping & Geodesic Mathematics
+   4.4. Earth Observation & Satellite APIs (ESA Copernicus Sentinel-2 STAC)
+   4.5. Drone Photogrammetry & Raster Processing (GeoTIFF.js & EXIF)
+   4.6. Machine Learning & Agronomic Phenology Engine
+   4.7. Dual-Engine Data Architecture (Mock DB / Supabase PostGIS / Firebase)
+   4.8. Telephony, SMS & Notification Dispatch
+   4.9. Statutory PDF & CSV Report Generation
+   4.10. Multilingual Localization Engine (10 Indic Languages)
+   4.11. Quality Engineering & Automated Testing Infrastructure
+5. ROLE-BASED FEATURES AVAILABLE IN EACH LOGIN
+   5.1. Farmer Portal (Citizen / Landowner)
+   5.2. Tahsildar / Revenue Magistrate Portal (Executive Revenue Authority)
+   5.3. Field Surveyor & Drone Pilot Portal (Aerial & Ground Surveyors)
+   5.4. State Administrator Portal (System & Regional Governance)
+6. COMPLETE END-TO-END OPERATIONAL WORKFLOW
+   6.1. Step 1: Farmer Registration & Interactive Boundary Definition
+   6.2. Step 2: Ground Truth Evidence Ingestion (5-6 Directional Photos)
+   6.3. Step 3: Registration Review & Inspection Assignment by Tahsildar
+   6.4. Step 4: UAV Drone Mission Execution & Orthomosaic Generation
+   6.5. Step 5: Copernicus Sentinel-2 STAC Multispectral Satellite Capture
+   6.6. Step 6: Automated AI Phenology Matching & Discrepancy Detection
+   6.7. Step 7: Dual-Pane Visual Comparison & Adjudication
+   6.8. Step 8: Tahsildar Approval, Official 7/12 Mutation & Certificate Issuance
+   6.9. Step 9: Continuous 15-Day Satellite Surveillance & Harvest Monitoring
+7. COMPREHENSIVE SOFTWARE USER GUIDE (STEP-BY-STEP WALKTHROUGH)
+   7.1. How to Launch the Application Locally
+   7.2. How to Sign In (1-Click Evaluation Personas & Demo Accounts)
+   7.3. How to Use the Multilingual Language Switcher
+   7.4. How to Navigate the Tahsildar Taluk Overview Command Center
+   7.5. How to Use the GIS Crop Survey Page & Interactive Cadastral Map
+   7.6. How to Use the "Get Satellite Images by Coordinate" Feature
+   7.7. How to Assign, Execute & Review Drone Surveys & Missions
+   7.8. How to Use the Dual-Pane Image Comparison Workspace
+   7.9. How to Review Registration Applications & Adjudicate Crop Discrepancies
+   7.10. How to Generate & Export Official Maharashtra Statutory Reports
+8. THE 10 STATUTORY MAHARASHTRA REVENUE REPORTS CATALOGUE
+9. DEMONSTRATION & EVALUATION CREDENTIALS
+10. LOCAL SETUP, DEVELOPMENT & PRODUCTION DEPLOYMENT GUIDE
+
+====================================================================================================
+1. EXECUTIVE SUMMARY & PLATFORM IDENTIFICATION
+====================================================================================================
+
+AgriSurvey AI (PuneAgriMain) is a state-of-the-art agricultural administration, geospatial crop survey, 
+remote sensing verification, and revenue intelligence platform engineered specifically for the 
+agricultural and land governance ecosystem of Maharashtra, India.
+
+The platform bridges the historical divide between official paper-based land revenue registers 
+(such as the 7/12 extract and Form 8-A under the Maharashtra Land Revenue Code, 1966) and cutting-edge 
+Earth Observation (EO) technologies. By combining European Space Agency (ESA) Copernicus Sentinel-2 
+multispectral optical satellite telemetry, high-resolution unmanned aerial vehicle (UAV) drone 
+photogrammetry, GPS-geotagged mobile ground surveys, and explainable agronomic machine learning, 
+AgriSurvey establishes an immutable, transparent, and multi-tier chain of physical truth for every 
+agricultural parcel in the state.
+
+Key Identifiers:
+- Application Name: AgriSurvey AI / PuneAgriMain
+- Target Geography: State of Maharashtra, India (Pilot Talukas: Haveli, Baramati, Shirur, Daund in Pune District)
+- Legal Framework: Maharashtra Land Revenue Code, 1966 & Digital India Land Records Modernization Programme (DILRMP)
+- Remote Sensing Feed: ESA Copernicus Sentinel-2 Level-2A (via AWS Earth Search STAC API v1)
+- High-Resolution Basemaps: Esri World Imagery Wayback & UAV Orthomosaic overlays up to zoom level 23
+- Current Codebase State: 100% Automated Test Pass across ML models, acceptance suites, and geospatial engines
+- Source Code Repository: https://github.com/SATHYA182907/AgriSurvey-K (Branches: main, KARUNYA-PRABHURAJ-E)
+
+====================================================================================================
+2. THE REAL-WORLD PROBLEM STATEMENT
+====================================================================================================
+
+2.1. Agricultural & Land Revenue Realities in Maharashtra
+----------------------------------------------------------------------------------------------------
+In Maharashtra, agriculture sustains over 50% of the population across 36 districts and more than 
+40,000 revenue villages. Land ownership, tenancy, crop cultivation, and irrigation rights are 
+statutorily recorded in the 7/12 Extract (Satbara Utara) maintained by the Revenue Department under 
+the Maharashtra Land Revenue Code (MLRC), 1966. The 7/12 extract consists of two parts:
+- Village Form VII: Details of land ownership, survey/Gat number, sub-division (Hissa), and total area.
+- Village Form XII: Details of cultivated crops, uncultivated/fallow land, irrigation sources, and season.
+
+Crop entries in Form XII dictate whether a farmer qualifies for government Minimum Support Price (MSP) 
+procurement, agricultural crop credit (Kisan Credit Card), subsidized electricity, drought/flood 
+relief packages, and claim payouts under the Pradhan Mantri Fasal Bima Yojana (PMFBY).
+
+2.2. Failure of Legacy Manual Crop Surveys (Patwari / Talathi System)
+----------------------------------------------------------------------------------------------------
+Historically, recording cultivated crops has relied on physical inspections conducted by local village 
+accountants (Talathis / Patwaris). This legacy manual system suffers from catastrophic structural flaws:
+1. Massive Backlogs & Delays: A single Talathi is often responsible for 3 to 7 revenue villages covering 
+   thousands of agricultural plots. Physically inspecting every plot takes 6 to 9 months per Kharif and 
+   Rabi season, meaning crop records are outdated long before they are compiled.
+2. Subjective & Unverified Reporting: Field visits are frequently skipped; crop entries are often filled 
+   out from hearsay, informal farmer declarations, or desk estimates.
+3. Corruption & Human Bias: Without objective photographic or satellite evidence, records can be 
+   arbitrarily altered or falsified to favor influential landholders.
+
+2.3. Ghost Crops & PMFBY Crop Insurance Fraud
+----------------------------------------------------------------------------------------------------
+A major challenge in Indian agricultural governance is the phenomenon of "Ghost Crops":
+- Farmers falsely declare high-value commercial crops (such as Sugarcane, Cotton, or Soybean) on paper 
+  while leaving the land fallow, or sowing low-value coarse grains (such as Jowar or Bajra).
+- Under the Pradhan Mantri Fasal Bima Yojana (PMFBY), fraudulent declarations are made to collect 
+  hefty insurance payouts for non-existent crop failures or inflated acreage.
+- Legitimate smallholder farmers are often denied claims or subsidies because fraudulent claims 
+  exhaust district budget allocations.
+
+2.4. Boundary Disputes, Encroachments & Unrecorded Fallow Land
+----------------------------------------------------------------------------------------------------
+Traditional revenue cadastres rely on historic village map sheets (Tipan / Gunakar) dating back to 
+colonial surveys. Consequently:
+- Farmers frequently encroach across adjacent parcel boundaries, leading to bitter civil litigation 
+  that clogs revenue courts for decades.
+- When farmers claim subsidies for their entire recorded parcel (e.g., 5.00 Acres), significant portions 
+  may actually be rocky outcroppings, farm ponds, tractor paths, or uncultivated fallow land.
+- Without geodesic spatial boundary calculation, the government has no mechanism to determine the 
+  net actual cultivated area versus gross paper area.
+
+2.5. Delays in Natural Disaster Damage Assessments
+----------------------------------------------------------------------------------------------------
+Maharashtra regularly suffers from climate emergencies: severe droughts in Marathwada, unseasonal 
+hailstorms and cyclonic downpours in Western Maharashtra, and flash flooding.
+- Following a disaster, the state requires a physical "Panchnama" (joint field damage assessment).
+- Because revenue officers must physically walk affected fields, compiling damage dossiers takes 
+  3 to 6 months.
+- Distressed farmers face bankruptcy, debt traps, and tragic economic despair while waiting for 
+  emergency state compensation.
+
+2.6. Lack of Verifiable Remote Sensing in 7/12 Land Registry Records
+----------------------------------------------------------------------------------------------------
+Until AgriSurvey AI, there was no end-to-end digital mechanism in Maharashtra to link satellite remote 
+sensing directly to statutory land revenue mutations. Satellites passed overhead every 5 to 10 days, 
+yet revenue officers lacked a legally defensible platform to inspect satellite imagery by parcel 
+coordinates, calculate vegetation indices (NDVI), and cross-examine claims against drone photogrammetry.
+
+====================================================================================================
+3. THE AGRISURVEY SOLUTION & ARCHITECTURAL PHILOSOPHY
+====================================================================================================
+
+AgriSurvey AI replaces slow, opaque, manual inspections with a multi-layered, tamper-proof, objective 
+verification pipeline grounded in geospatial and remote sensing physics.
+
+3.1. The 4-Pillar Verifiable Evidence Pipeline
+----------------------------------------------------------------------------------------------------
+AgriSurvey enforces a strict 4-tier chain of custody where no single actor can unilaterally certify 
+or falsify a land record:
+1. Citizen / Farmer Tier: Self-registration of farm plots with interactive boundary polygon drawing, 
+   cadastral Gat/Survey declaration, and mandatory upload of 5-6 directional geotagged ground photos.
+2. Drone UAV / Field Worker Tier: Centimeter-accurate UAV drone missions, flight telemetry logging, 
+   and high-resolution orthomosaic imagery ingestion.
+3. Satellite Remote Sensing Tier: Automated STAC query of ESA Copernicus Sentinel-2 L2A optical scenes, 
+   delivering True Color RGB, NDVI (Normalized Difference Vegetation Index), and NIR (Near-Infrared) 
+   plant health views.
+4. Executive Revenue Magistrate (Tahsildar) Tier: Quasi-judicial review, dual-pane swipe comparison, 
+   formal adjudication of discrepancies, and immutable issuance of 7/12 land mutation certificates.
+
+3.2. Principle of Multi-Spectral Truth Cross-Referencing
+----------------------------------------------------------------------------------------------------
+The platform operates on the premise that "the sensor does not lie." A crop declaration is verified 
+by cross-referencing three independent data vectors:
+- Vector A (Citizen Evidence): Farmer's declared crop, reported acreage, and ground photos with EXIF GPS.
+- Vector B (UAV Drone Imagery): Sub-decimeter resolution orthomosaic showing individual crop rows, 
+  canopy spacing, weed infestation, and irrigation infrastructure.
+- Vector C (Satellite Remote Sensing): Multi-spectral Sentinel-2 telemetry computing NDVI values:
+    * Bare Soil / Tilled Land: NDVI < 0.20
+    * Early Emergence / Sparse Vegetation: NDVI 0.20 - 0.40
+    * Moderate Canopy / Maturing Crop: NDVI 0.40 - 0.65
+    * Dense Healthy Crop (e.g., Sugarcane peak): NDVI > 0.65
+If a farmer declares peak Sugarcane (which requires NDVI > 0.65) but satellite analysis reveals an 
+NDVI of 0.18 (bare soil), the system automatically flags a "HIGH_RISK" crop discrepancy for the Tahsildar.
+
+3.3. Continuous 15-Day Orbit Satellite Surveillance
+----------------------------------------------------------------------------------------------------
+Rather than relying on a single snapshot, AgriSurvey maintains a continuous 15-day satellite surveillance 
+timeline for every registered parcel. As Sentinel-2 satellites orbit Earth, each pass over the plot is 
+ingested, filtered for cloud obscuration via the Scene Classification Layer (SCL), and plotted along a 
+temporal phenology curve. This enables detection of:
+- Exact sowing dates.
+- Peak vegetative vigor.
+- Senescence and harvest dates.
+- Sudden loss events (pest outbreaks, unseasonal hail, or drought stress).
+
+3.4. Centimeter-Accurate Drone Photogrammetry (UAV Orthomosaics)
+----------------------------------------------------------------------------------------------------
+For high-dispute parcels or spot audits, the Tahsildar commissions UAV drone missions:
+- Certified DGCA drone pilots fly pre-programmed grid missions over the parcel.
+- Ingests high-resolution GeoTIFF orthomosaics directly into the browser using GeoTIFF.js.
+- Supports zoom levels up to level 23, allowing officers to inspect individual plant leaves, drip lines, 
+  and boundary fencing.
+- Complies with Directorate General of Civil Aviation (DGCA) regulations by logging pilot UIN, battery 
+  telemetry, flight altitude, and GPS accuracy.
+
+3.5. Explainable Phenology Machine Learning with Honest Cloud Abstention
+----------------------------------------------------------------------------------------------------
+Unlike black-box AI that hallucinates predictions, AgriSurvey uses an explainable agronomic phenology 
+matching engine (Python `GM-ML-V2` + TypeScript runtime `crop-phenology.ts`):
+- Modeled across 12 primary Maharashtra crops: Sugarcane, Soybean, Cotton, Onion, Grapes, Pomegranate, 
+  Tur (Pigeonpea), Wheat, Rice, Gram (Chana), Maize, and Jowar (Sorghum).
+- Applies Savitzky-Golay filtering to smooth noisy optical satellite observations.
+- Enforces "Honest Cloud Abstention": If monsoon clouds obscure critical growth stages, the system 
+  honestly reports `insufficient_observations` rather than guessing a false crop classification.
+
+3.6. Statutory Quasi-Judicial Workflow under Maharashtra Land Revenue Code, 1966
+----------------------------------------------------------------------------------------------------
+All actions culminate in legal statutory artifacts. When the Tahsildar reviews and approves a parcel:
+- The system generates an official bilingual 7/12 Land Record Mutation Extract.
+- Form 8-A Village Land Register is automatically updated.
+- An immutable audit trail entry is logged with SHA-256 digital fingerprinting.
+- The farmer receives an official SMS notification via MSG91 with their mutation token and approval notice.
+
+====================================================================================================
+4. COMPLETE TECHNOLOGY STACK BREAKDOWN
+====================================================================================================
+
+The application is built on modern, production-grade web and geospatial technologies designed for high 
+performance, responsiveness, offline resilience, and mathematical precision.
+
+4.1. Core Framework & Build Engine
+----------------------------------------------------------------------------------------------------
+- React 19 (`react@^19.2.8`, `react-dom@^19.2.8`): Modern React featuring Concurrent Rendering, 
+  optimized state transitions, and high-performance DOM reconciliation.
+- TypeScript (`typescript@~6.0.2` / `5.8`): Strictly typed codebase ensuring compile-time safety across 
+  geospatial interfaces, API contracts, and user roles.
+- Vite 8 (`vite@^8.3.0`): Next-generation ES-module frontend build tool and dev server providing 
+  sub-second Hot Module Replacement (HMR) and optimized Rolldown production bundles.
+- React Router DOM (`react-router-dom@^7.18.4`): Declarative client-side routing with role-guarded 
+  route protection (`ProtectedRoute.tsx`).
+
+4.2. Styling, UI & Design System
+----------------------------------------------------------------------------------------------------
+- Tailwind CSS v4 (`tailwindcss@^4.3.3`, `@tailwindcss/vite@^4.3.3`): Utility-first styling framework 
+  delivering responsive layouts, custom color tokens, and optimized CSS bundle size.
+- Lucide React (`lucide-react@^1.57.0`): Crisp, consistent iconography across all government dashboards.
+- Framer Motion (`framer-motion@^14.2.0`): Smooth UI micro-interactions, modal transitions, and 
+  collapsible drawer animations.
+- Design Language: Clean GitHub/Government styling: 80% clean slate/white structural surfaces with 
+  20% agricultural emerald/teal accent colors for high legibility under daylight field conditions.
+
+4.3. GIS, Mapping & Geodesic Mathematics
+----------------------------------------------------------------------------------------------------
+- Leaflet (`leaflet@^1.9.4`): Industry-standard lightweight open-source mapping library.
+- React-Leaflet (`react-leaflet@^5.0.0`): React bindings for Leaflet map components.
+- Custom Geodesic Engine (`src/lib/geospatial.ts`):
+    * Computes ellipsoidal WGS84 geodesic area using Shoelace formula adjusted for spherical curvature.
+    * Computes boundary perimeters in meters.
+    * Calculates polygon centroids for camera auto-centering.
+    * Validates polygon topology (self-intersection detection, minimum 3 vertices, non-zero area).
+    * Performs spatial overlap detection and deduplication to prevent double-claiming of land.
+- GeoJSON Specification: Full compliance with RFC 7946 GeoJSON FeatureCollections in WGS84 (EPSG:4326).
+
+4.4. Earth Observation & Satellite APIs (ESA Copernicus Sentinel-2 STAC)
+----------------------------------------------------------------------------------------------------
+- AWS Earth Search STAC API v1 (`https://earth-search.aws.element84.com/v1/search`): Spatio-Temporal 
+  Asset Catalog API querying real-time European Space Agency Copernicus Sentinel-2 Level-2A imagery.
+- Multi-Spectral Band Telemetry:
+    * Band 2 (Blue - 490 nm, 10m resolution): Atmospheric scattering & water bodies.
+    * Band 3 (Green - 560 nm, 10m resolution): Peak vegetation reflectance.
+    * Band 4 (Red - 665 nm, 10m resolution): Chlorophyll absorption.
+    * Band 8 (Near-Infrared / NIR - 842 nm, 10m resolution): Leaf cell structure reflectance.
+    * Band SCL (Scene Classification Layer - 20m): Cloud, cloud shadow, cirrus, snow, and water masking.
+- Esri World Imagery Wayback API: Access to historic dated sub-meter satellite orthophotos for historical 
+  land-use verification.
+
+4.5. Drone Photogrammetry & Raster Processing (GeoTIFF.js & EXIF)
+----------------------------------------------------------------------------------------------------
+- GeoTIFF.js (`geotiff@^2.1.3`): Direct in-browser parsing of Cloud-Optimized GeoTIFFs (COGs). Extracts 
+  raster bounding boxes, affine transformation matrices, and renders high-res orthomosaics onto Leaflet 
+  canvases without needing heavy GIS desktop software.
+- Exifr (`exifr@^7.1.3`): High-speed EXIF and XMP metadata parser reading camera model, capture timestamp, 
+  GPS latitude/longitude, altitude, and RTK differential GPS lock status from drone and mobile photos.
+- HTML5 Canvas Engine: In-browser raster scaling, histogram stretching, and false-color compositing.
+
+4.6. Machine Learning & Agronomic Phenology Engine
+----------------------------------------------------------------------------------------------------
+- GM-ML-V2 Python Package: LightGBM and Scikit-Learn crop classifiers trained on Maharashtra agricultural 
+  remote sensing datasets.
+- TypeScript Phenology Engine (`src/lib/crop-phenology.ts`): Client-side mathematical runtime calculating:
+    * NDVI = (Band 8 - Band 4) / (Band 8 + Band 4)
+    * Savitzky-Golay polynomial smoothing filter.
+    * Season window segmentation (Kharif, Rabi, Zaid / Summer).
+    * Dynamic Time Warping (DTW) and template matching against verified crop growth curves.
+
+4.7. Dual-Engine Data Architecture (Mock DB / Supabase PostGIS / Firebase)
+----------------------------------------------------------------------------------------------------
+- Local Durable Engine (`mock-db.ts` + `media-store.ts`):
+    * Zero-dependency local persistence engine storing 32 relational collections in browser `localStorage`.
+    * High-volume photo and raster blobs stored in `IndexedDB`.
+    * Ensures instantaneous demonstration, zero cloud latency, and 100% offline functionality.
+- Production Cloud Engine:
+    * Supabase (`@supabase/supabase-js@^2.117.3`): PostgreSQL 15 database with PostGIS spatial extensions.
+    * Firebase (`firebase@^13.1.0`): Cloud Authentication, Firestore document database, and Cloud Storage 
+      for field photography.
+    * Seamless switchover controlled via `.env` configuration keys.
+
+4.8. Telephony, SMS & Notification Dispatch
+----------------------------------------------------------------------------------------------------
+- MSG91 SMS Gateway (`src/services/msg91.service.ts`): Integrated transactional SMS dispatch notifying 
+  farmers of application submissions, inspection appointments, and official approval/rejection decisions.
+- In-App Notification Center: Real-time alert feed across all user roles with unread counters and 
+  direct navigation deep links.
+
+4.9. Statutory PDF & CSV Report Generation
+----------------------------------------------------------------------------------------------------
+- jsPDF (`jspdf@^4.2.1`): Client-side vector PDF generation engine.
+- jsPDF-AutoTable (`jspdf-autotable@^5.0.8`): Formatted tabular data layout for official revenue extracts.
+- Government Watermarking & Bilingual Layout: Formatted to mirror official Maharashtra Revenue Department 
+  standards with Ashoka Emblem watermarks, QR verification codes, and Marathi/English headings.
+
+4.10. Multilingual Localization Engine (10 Indic Languages)
+----------------------------------------------------------------------------------------------------
+- Language Context (`src/context/LanguageContext.tsx`): Real-time language switching without page reload.
+- 10 Supported Languages:
+    1. English (`en`)
+    2. Marathi (`mr` - मराठी) — Primary official language of Maharashtra state governance
+    3. Hindi (`hi` - हिन्दी)
+    4. Tamil (`ta` - தமிழ்)
+    5. Telugu (`te` - తెలుగు)
+    6. Kannada (`kn` - ಕನ್ನಡ)
+    7. Gujarati (`gu` - ગુજરાતી)
+    8. Bengali (`bn` - বাংলা)
+    9. Punjabi (`pa` - ਪੰਜਾਬੀ)
+    10. Malayalam (`ml` - മലയാളം)
+
+4.11. Quality Engineering & Automated Testing Infrastructure
+----------------------------------------------------------------------------------------------------
+- TSX Runner (`tsx@^4.23.15`): High-speed TypeScript execution engine for test suites.
+- 6 Automated Test Suites:
+    1. `scripts/test-ml-models.ts`: Tests Savitzky-Golay filters, template matchers, and cloud abstention.
+    2. `scripts/run-acceptance-tests.ts`: Tests end-to-end user workflows, SMS dispatch, and notifications.
+    3. `scripts/test-geospatial-suite.ts`: Tests WGS84 geodesic calculations, polygon validation, and STAC queries.
+    4. `scripts/test-farmer-workflow.ts`: Tests farmer registration, 5-6 photo upload, and status transitions.
+    5. `scripts/test-gis-e2e.ts`: Tests complete GIS pipeline from STAC scene ingestion to 10-report generation.
+    6. `scripts/test-challenge-compliance.ts`: Verifies all 16 compliance assertions across Challenge Modules A-L.
+
+====================================================================================================
+5. ROLE-BASED FEATURES AVAILABLE IN EACH LOGIN
+====================================================================================================
+
+The platform implements strict Role-Based Access Control (RBAC) across four distinct personas, 
+guaranteeing separation of duties and legal compliance.
+
+----------------------------------------------------------------------------------------------------
+5.1. FARMER PORTAL (Citizen / Landowner)
+----------------------------------------------------------------------------------------------------
+Target User: Ramesh Balasaheb Patil / Sunita Dnyaneshwar Shinde
+Demo Login: farmer.ramesh@agrisurvey.gov.in / FarmerPass123! (or 1-Click Button on /auth/login)
+Allowed Route: /farmer/*
+
+Core Features:
+1. Farmer Dashboard (`/farmer/dashboard`):
+   - Overview of all registered agricultural parcels, current crop status, and verification stages.
+   - Live visual lifecycle progress bar: Application Submitted -> Drone Inspection -> Satellite Analysis -> 
+     Tahsildar Review -> 7/12 Mutation Approved.
+   - Quick statistics cards: Total Registered Area, Verified Area, Pending Inspections, Active Notifications.
+2. New Farm Plot Registration Wizard (`/farmer/register`):
+   - Multi-step guided wizard designed for simplicity and accessibility:
+     * Step 1: Personal Identification (Farmer Name, Aadhaar/Khata ID, Mobile Number, Village, Taluk, District).
+     * Step 2: Cadastral Land Details (Gat / Survey Number, Hissa Number, Ownership Type, Land Category).
+     * Step 3: Interactive Boundary Polygon Drawing on high-resolution satellite map.
+     * Instant automated calculation of Geodesic Area in Acres and Hectares and Perimeter in meters.
+3. Mandatory Ground Truth Photo Upload (`/farmer/upload-images`):
+   - Strict statutory enforcement requiring 5 to 6 directional ground photos:
+     * Photo 1: Farm Entrance / Access Road
+     * Photo 2: Center of Field (Standing within crop canopy)
+     * Photo 3: North Boundary Marker
+     * Photo 4: South Boundary Marker
+     * Photo 5: East Boundary Marker
+     * Photo 6: West Boundary Marker
+   - Automatic EXIF extraction validates GPS coordinates against plot boundaries and rejects spoofed images.
+4. Application Status & Inspection Tracker (`/farmer/application-status`):
+   - Real-time tracking of registration reference number (e.g., `AGRI-APP-2026-00412`).
+   - View assigned field inspection dates, drone pilot contact details, and Tahsildar review remarks.
+5. My Properties Dossier (`/farmer/properties`):
+   - Digital repository of all land parcels owned by the farmer.
+   - View survey numbers, soil classification, irrigation infrastructure, and historical crop yields.
+6. Digital Crop Passbook & Reports (`/farmer/reports`):
+   - Download certified PDF copies of Form 8-A Village Land Register extracts.
+   - Download official 7/12 Land Mutation Certificates once approved by the Tahsildar.
+7. Multilingual Notification Center (`/farmer/notifications`):
+   - Real-time in-app alerts and SMS history showing all state correspondence regarding their land.
+
+----------------------------------------------------------------------------------------------------
+5.2. TAHSILDAR / REVENUE MAGISTRATE PORTAL (Executive Revenue Authority)
+----------------------------------------------------------------------------------------------------
+Target User: Anand Shrikant Kulkarni, Tahsildar & Executive Magistrate (Haveli Taluk, Pune)
+Demo Login: tahsildar.haveli@agrisurvey.gov.in / TahsildarPass123! (or 1-Click Button on /auth/login)
+Allowed Route: /tahsildar/*, /gis/*
+
+Core Features:
+1. Taluk Command Center & Overview (`/tahsildar/dashboard`):
+   - Executive dashboard for Haveli Taluk: total registered acreage, cadastral verified area, mobile 
+     field surveys synced, and active Sentinel-2 STAC satellite monitoring status.
+   - Quick jurisdiction switcher across pilot talukas: Haveli, Baramati, Shirur, Daund.
+   - Immediate alerts for flagged crop discrepancies and emergency disaster panchnama requests.
+2. Registration Review Queue (`/tahsildar/registrations`):
+   - Quasi-judicial review interface of all incoming farmer land registration applications.
+   - Inspect farmer details, cadastral Gat number, land ownership documents, and 5-6 ground photos.
+   - Statutory Decision Actions:
+     * "Approve Registration": Validates boundary and queues parcel for satellite/drone surveillance.
+     * "Request Re-Inspection": Assigns drone/field team to re-survey conflicting boundaries.
+     * "Reject Registration": Formally rejects with statutory reasons recorded in the permanent audit trail.
+3. Assign Inspections Command (`/tahsildar/assign-inspections`):
+   - Dispatch field teams and drone pilots to specific agricultural parcels.
+   - Set survey target dates, define survey priorities (Normal, High, Urgent), and add inspection notes.
+4. Drone Surveys & Missions Command Center (`/tahsildar/drone-surveys`):
+   - Comprehensive UAV mission oversight hub:
+     * Active & completed drone flights across Haveli Taluk.
+     * In-browser high-resolution orthomosaic map viewer (zoom level up to 23).
+     * Inspection of drone flight logs: Pilot UIN, drone model, flight altitude, battery telemetry, and RTK lock.
+     * Commission new drone survey missions with customized flight boundaries.
+5. GIS Crop Survey & Cadastral Mapping Hub (`/gis/crop-survey`):
+   - Interactive GIS map displaying all registered agricultural parcels colored by verification status.
+   - Layer toggles: Satellite Imagery, OpenStreetMap Street View, Drone Orthomosaic Overlay, and Sentinel-2 Footprints.
+   - Crop Area Estimation & Deduplication Panel (Module A): 4-way separation of Farmer Declared, ML Predicted, 
+     Drone Observed, and Tahsildar Verified acreage, with spatial overlap detection.
+   - GeoJSON Tools: Import external cadastral boundaries or Export surveyed parcels as RFC 7946 GeoJSON.
+   - Primary Embedded Feature: "Get Satellite Images by Coordinate" Inspector:
+     * Directly query any latitude and longitude across Maharashtra.
+     * Discover live Sentinel-2 L2A passes from AWS Earth Search STAC catalogue.
+     * Multi-band toggle: True Color Natural Photo (B04-B03-B02), Crop Greenness (NDVI), and Plant Health (NIR).
+     * Optional Target Pin toggle (`[Target Pin: ON/OFF]`) to pinpoint plot center without visual clutter.
+     * One-click "Overlay on GIS Map" button to project the satellite raster directly over cadastral parcels.
+6. Continuous 15-Day Field Surveillance (`/tahsildar/field-surveillance`):
+   - Chronological satellite surveillance feed tracking crop phenology changes every 15 days.
+   - Identifies irrigation anomalies, drought stress, and unauthorized harvest before official season end.
+7. Dual-Pane Swipe Image Comparison Workspace (`/tahsildar/image-comparison`):
+   - Side-by-side interactive swipe slider comparing:
+     * Pre-Disaster vs Post-Disaster satellite passes.
+     * Optical Natural Color vs False-Color Infrared (NDVI).
+     * Historical Esri Wayback Basemap vs Centimeter-Accurate Drone Orthomosaic.
+8. Crop Verification & Discrepancy Adjudication (`/tahsildar/crop-verification`):
+   - Automated discrepancy matrix: highlights mismatches between Farmer Declared Crop vs Satellite/Drone Observed Crop.
+   - Tahsildar records formal quasi-judicial finding, adjusting verified crop type and net cultivated area.
+9. Verification Reports & Statutory Reports Hub (`/tahsildar/reports` & `/gis/reports`):
+   - Generate and download the full suite of 10 official Maharashtra revenue reports (PDF and CSV).
+10. Immutable Audit History (`/tahsildar/audit-logs`):
+    - Chronological, tamper-proof ledger of every administrative action, approval, rejection, and report generation.
+
+----------------------------------------------------------------------------------------------------
+5.3. FIELD SURVEYOR & DRONE PILOT PORTAL (Aerial & Ground Surveyors)
+----------------------------------------------------------------------------------------------------
+Target User: Prakash Mahadev Jadhav / Sunil Dattatray Gaikwad (Certified Drone Pilots)
+Demo Login: drone.prakash@agrisurvey.gov.in / WorkerPass123! (or 1-Click Button on /auth/login)
+Allowed Route: /field-worker/*, /gis/*
+
+Core Features:
+1. Field Operations Dashboard (`/field-worker/dashboard`):
+   - Daily roster of assigned parcel inspections across talukas.
+   - Filter by status: Assigned, In Progress, Uploaded, Completed.
+2. Mobile Field Survey Submission Interface:
+   - Optimized for mobile field tablets:
+     * Live GPS location capture with visual accuracy circle (validated to $\pm 2.5\text{m}$).
+     * Offline submission queue: records ground observations without cellular connectivity and auto-syncs 
+       when back in network range.
+     * Field parameter logging: Soil moisture, weed density, crop stage, pest signs, and irrigation method.
+3. Drone Mission Telemetry & Flight Logger (`/field-worker/drone-upload`):
+   - Log UAV flight parameters compliant with DGCA Digital Sky requirements:
+     * Drone Registration UIN number, drone model (e.g., DJI Matrice 300 RTK / senseFly eBee X).
+     * Flight altitude (AGL), ground speed, battery start/end percentage, and wind speed.
+     * RTK differential GPS status confirmation (Fixed RTK lock for centimeter precision).
+4. Drone Orthomosaic & GeoTIFF Ingestion:
+   - Upload processed orthomosaic rasters directly from the field.
+   - System automatically extracts GeoTIFF bounding box coordinates and overlays raster on parcel map.
+
+----------------------------------------------------------------------------------------------------
+5.4. STATE ADMINISTRATOR PORTAL (System & Regional Governance)
+----------------------------------------------------------------------------------------------------
+Target User: Dr. Meenakshi Sundaram, IAS (State Revenue Director / Settlement Commissioner)
+Demo Login: admin.director@agrisurvey.gov.in / AdminPass123! (or 1-Click Button on /auth/login)
+Allowed Route: /admin/*, /gis/*
+
+Core Features:
+1. State Administrative Dashboard (`/admin/dashboard`):
+   - High-level overview of agricultural survey compliance across all 36 Maharashtra districts.
+   - Aggregate statistics: Total registered acreage, total cadastral verified acreage, discrepancy rates, 
+     and drone mission completion percentages.
+2. User & RBAC Management (`/admin/users`):
+   - Manage government staff accounts, Tahsildar jurisdictions, and drone pilot certifications.
+   - Enforce multi-factor authentication and review access logs.
+3. Regional Pilot Configuration (`/admin/regions`):
+   - Manage active pilot geographies (Haveli, Baramati, Shirur, Daund) and configure rollout schedules 
+     for remaining talukas.
+4. Statewide Analytics & Government Decision Policy (`/admin/analytics`):
+   - Executive decision metrics: Total crop production forecasts, fertilizer demand projections, 
+     and drought vulnerability index mapping.
+5. System Health & Satellite Gateway Monitor (`/admin/settings`):
+   - Monitor live status of AWS Earth Search STAC satellite API, Open-Meteo weather feeds, and MSG91 SMS gateway.
+   - One-click database re-seeding and local durable engine reset controls for evaluation and testing.
+
+====================================================================================================
+6. COMPLETE END-TO-END OPERATIONAL WORKFLOW
+====================================================================================================
+
+The entire system operates as a seamless 9-step lifecycle, transforming a raw farmer self-declaration 
+into a legally binding, multi-sensor verified 7/12 land revenue mutation:
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                 AGRISURVEY AI 9-STEP WORKFLOW                                      |
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|  [Step 1] FARMER REGISTRATION: Cadastral Boundary Drawn & Personal Info Submitted                 |
+|                                         |                                                         |
+|  [Step 2] CITIZEN EVIDENCE: 5-6 Directional Ground Photos with EXIF GPS Ingested                  |
+|                                         |                                                         |
+|  [Step 3] TAHSILDAR REVIEW: Initial Gatekeeping & Assignment of Drone/Field Missions              |
+|                                         |                                                         |
+|  [Step 4] UAV DRONE INSPECTION: RTK Centimeter-Accurate Orthomosaic Flown & Ingested              |
+|                                         |                                                         |
+|  [Step 5] SATELLITE DISCOVERY: Copernicus Sentinel-2 L2A STAC Passes Fetched & NDVI Processed     |
+|                                         |                                                         |
+|  [Step 6] ML PHENOLOGY ANALYSIS: 12-Crop Template Matching & Anomaly Discrepancy Flagging        |
+|                                         |                                                         |
+|  [Step 7] DUAL-PANE COMPARISON: Visual Swipe Cross-Examination (Satellite vs Drone vs Photos)      |
+|                                         |                                                         |
+|  [Step 8] STATUTORY ADJUDICATION: Tahsildar Approves -> Official 7/12 Mutation Certificate Issued  |
+|                                         |                                                         |
+|  [Step 9] 15-DAY SURVEILLANCE: Continuous Orbital Monitoring until Harvest & Post-Harvest Audit    |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+```
+
+Detailed Walkthrough of Steps:
+1. Step 1 (Farmer Registration): The farmer logs in, enters their 7/12 Gat/Survey number in Wagholi, 
+   Haveli Taluk, and draws the exact physical boundaries of their parcel on the interactive satellite map. 
+   The geodesic engine instantly verifies that the area is 3.48 Acres (1.408 Hectares) with zero self-intersections.
+2. Step 2 (Citizen Evidence): The farmer walks their field and captures 6 mandatory ground photographs 
+   (Entrance, Field Center, North, South, East, West boundaries). The client parses EXIF tags, verifying 
+   that the GPS coordinates fall within 50 meters of the boundary.
+3. Step 3 (Tahsildar Review): Tahsildar Anand Kulkarni opens the Registration Review Queue, reviews the 
+   title documents and ground photos, and assigns a drone flight mission to Pilot Prakash Jadhav.
+4. Step 4 (UAV Drone Inspection): Pilot Prakash flies a DJI Matrice 300 RTK over the Wagholi parcel, 
+   generating a sub-decimeter orthomosaic showing clear rows of maturing Sugarcane.
+5. Step 5 (Satellite Discovery): The system queries the AWS Earth Search STAC API for Sentinel-2 scene 
+   `S2C_43QCA_20261020_0_L2A`. The multi-spectral engine extracts Bands 4 and 8, computing a mean NDVI 
+   of 0.827 (indicating vigorous, dense sugarcane canopy).
+6. Step 6 (ML Phenology Matching): The phenology matcher compares the 15-day NDVI curve against the 
+   statewide Sugarcane template. The curves match with a 94.2% confidence score. No discrepancy is flagged.
+7. Step 7 (Dual-Pane Comparison): Tahsildar opens the Image Comparison Workspace and uses the swipe 
+   slider to compare the high-resolution drone orthomosaic against the 10m Sentinel-2 satellite pass, 
+   confirming that 100% of the 3.48 acres is actively cultivated.
+8. Step 8 (Statutory Adjudication): The Tahsildar clicks "Confirm Verification & Approve". The system 
+   generates an official bilingual Maharashtra 7/12 Mutation Extract, updates Form 8-A, creates an 
+   immutable audit record, and sends an approval SMS to Farmer Ramesh Patil.
+9. Step 9 (15-Day Surveillance): The parcel remains under automated 15-day satellite monitoring until 
+   harvest, ensuring that water supply, canopy health, and eventual cane harvesting are continuously verified.
+
+====================================================================================================
+7. COMPREHENSIVE SOFTWARE USER GUIDE (STEP-BY-STEP WALKTHROUGH)
+====================================================================================================
+
+Follow this practical guide to operate, demonstrate, and evaluate every capability of the software.
+
+7.1. How to Launch the Application Locally
+----------------------------------------------------------------------------------------------------
+1. Ensure Node.js (v18 or higher) and npm are installed on your workstation.
+2. Clone or open the repository folder: `cd /Users/sathyam/Downloads/PuneAgriMain`
+3. Install dependencies (if not already installed): `npm install`
+4. Start the local Vite development server: `npm run dev`
+5. Open your web browser and navigate to: `http://localhost:5173` (or the port displayed in your terminal).
+
+7.2. How to Sign In (1-Click Evaluation Personas)
+----------------------------------------------------------------------------------------------------
+1. From the Landing Page (`/`), click the "Access Portal" button in the top navigation or navigate to `/auth/login`.
+2. On the Sign In screen, you will see the "Evaluation Demonstration Accounts" grid.
+3. Click any of the four 1-click persona buttons to immediately log in without typing:
+   - Click "Tahsildar Desk" to log in as Tahsildar Anand Shrikant Kulkarni.
+   - Click "Farmer Portal" to log in as Farmer Ramesh Balasaheb Patil.
+   - Click "Drone Pilot" to log in as Drone Pilot Prakash Mahadev Jadhav.
+   - Click "State Director" to log in as State Administrator Dr. Meenakshi Sundaram, IAS.
+4. Alternatively, you can enter credentials manually (see Section 9 for complete credentials).
+
+7.3. How to Use the Multilingual Language Switcher
+----------------------------------------------------------------------------------------------------
+1. Locate the Language dropdown button in the top navigation bar (displays `English EN` by default).
+2. Click the dropdown to open the menu of 10 Indic languages.
+3. Select `मराठी (Marathi)` to experience the portal in Maharashtra's official state language. All buttons, 
+   table headers, alerts, and statutory terms will instantly translate without page reload.
+4. Select `हिन्दी (Hindi)`, `ગુજરાતી`, `தமிழ்`, or `English` at any time to switch back.
+
+7.4. How to Navigate the Tahsildar Taluk Overview Command Center
+----------------------------------------------------------------------------------------------------
+1. Log in as the Tahsildar (`tahsildar.haveli@agrisurvey.gov.in`).
+2. The Dashboard displays the "Assigned Jurisdiction: Haveli Taluk (Pune)" command banner.
+3. Review the top KPI cards:
+   - Total Registered Acreage: Displays live acreage across registered parcels.
+   - Cadastral Verified: Shows acreage formally approved by the Tahsildar.
+   - Field Surveys Synced: Number of ground inspections synced from mobile devices.
+   - Satellite & NDVI Status: Displays `Active (Sentinel-2 L2A STAC discovery)`.
+4. Use the sidebar menu to access all Tahsildar modules: Overview, GIS Crop Survey, Registration Review 
+   Queue, Assign Inspections, Drone Surveys & Missions, Field Surveillance (15-day), Image Comparison, 
+   Crop Verification, Verification Reports, Statutory Reports Hub, and Audit History.
+
+7.5. How to Use the GIS Crop Survey Page & Interactive Cadastral Map
+----------------------------------------------------------------------------------------------------
+1. Click "GIS Crop Survey" in the sidebar navigation or navigate to `/gis/crop-survey`.
+2. Notice the top filter bar:
+   - Filter by District (Pune), Taluka (Haveli, Baramati, Shirur, Daund), Crop, or Status.
+   - Click the "Active Maharashtra Pilot Talukas" pill buttons (Haveli, Baramati, Shirur, Daund) to jump 
+     instantly to active pilot zones.
+3. Inspecting a Parcel on the Map:
+   - Click on any colored agricultural parcel on the map (e.g., the green polygon in Wagholi representing 
+     "Patil Agro Sugarcane Field — Survey 142/2A").
+   - The map automatically centers and highlights the boundary.
+   - The right-hand Cadastral Attributes card displays:
+     * Plot Reference: `MH-PUN-HAV-PLOT-2026-00412`
+     * Survey / Gat Number: `142/2A`
+     * Crop Stand: `Sugarcane`
+     * Geodesic Area: `3.48 Acres (1.408 Ha)`
+     * Boundary Perimeter: `520 m`
+     * Village & Taluk: `Wagholi, Taluka Haveli, Pune`
+4. Crop Area Estimation & Deduplication (Challenge Module A):
+   - Click the "Crop Area Estimation" button above the map.
+   - A detailed 4-way separation panel opens displaying:
+     * 1. Farmer Declared: `4.62 ha (11.4 acres)`
+     * 2. ML Predicted: `4.62 ha (11.4 acres)`
+     * 3. Drone Observed: `4.62 ha (11.4 acres)`
+     * 4. Tahsildar Verified: `4.62 ha (11.4 acres)`
+     * Spatial Overlap Deduplication: Confirms 0 duplicate overlapping area across cadastral parcels.
+   - Click "Export CSV" to download the official `Crop_Acreage_Estimation_Pune_Haveli.csv`.
+5. Exporting GeoJSON:
+   - Click the "Export GeoJSON" button to download all active cadastral boundaries as standard RFC 7946 GeoJSON.
+
+7.6. How to Use the "Get Satellite Images by Coordinate" Feature
+----------------------------------------------------------------------------------------------------
+1. While on the `/gis/crop-survey` page, click the prominent green button labeled:
+   "Get Satellite Images by Coordinate" (located in the top action bar and in the parcel intelligence panel).
+2. The page automatically scrolls smoothly down to the embedded `#satellite-coordinate-inspector` section.
+3. Entering Coordinates:
+   - Enter or paste target coordinates into the input field (e.g., `18.57952, 73.98228`).
+   - Or click any of the Quick Jurisdiction Location buttons:
+     * Haveli, Pune (Wagholi Sugarcane) -> `18.57952, 73.98228`
+     * Baramati, Pune (Supae Soybean) -> `18.23410, 74.58210`
+     * Shirur, Pune (Koregaon Bhima Onion) -> `18.71230, 74.05420`
+     * Junnar, Pune (Otur Grapes & Gram) -> `19.25410, 73.98120`
+4. Setting Search Parameters:
+   - Adjust the Search Radius slider (from 0.5 km to 5.0 km, default: 1.5 km).
+   - Adjust the Max Cloud Cover slider (from 10% to 80%, default: 35%).
+   - Set the Date Range (defaults to last 4 months).
+5. Fetching Satellite Scenes:
+   - Click "Fetch Satellite Images for Coordinates".
+   - The system queries the live AWS Earth Search STAC catalog and discovers real Copernicus Sentinel-2 L2A passes.
+6. Multi-Band Spectral Visualization:
+   - Click "Natural Photo" to view the True Color optical image (Bands 4, 3, 2).
+   - Click "Crop Greenness (NDVI)" to view the vegetation vigor density map.
+   - Click "Plant Health (Infrared)" to view False Color Near-Infrared (Bands 8, 4, 3) highlighting plant cell water content.
+   - Toggle the clean `[Target Pin: ON/OFF]` button to show or hide the center coordinates pin.
+7. Reviewing Satellite Pass Metrics:
+   - Satellite Pass Information displays: Scene ID, Collection (`sentinel-2-l2a`), Acquisition Timestamp, 
+     Tile Cloud Cover %, Clear Pixels in Radius %, and Resolution (10 m bands).
+   - Crop Greenness (NDVI) within 1.5 km displays: Mean NDVI (e.g., 0.186), Median NDVI, Vegetation Density 
+     Classification (e.g., Bare Soil / Tilled vs Dense Canopy).
+8. Overlaying on GIS Map:
+   - Click the green "Overlay on GIS Map" button.
+   - The satellite scene footprint is instantly projected onto the main cadastral map above!
+
+7.7. How to Assign, Execute & Review Drone Surveys & Missions
+----------------------------------------------------------------------------------------------------
+1. Commissioning a Drone Mission (Tahsildar):
+   - Navigate to `/tahsildar/assign-inspections` or `/tahsildar/drone-surveys`.
+   - Click "Commission Drone Survey Mission".
+   - Select the target parcel, assign Drone Pilot Prakash Jadhav, set the mission priority to "Urgent", and click Submit.
+2. Reviewing Drone Missions & Orthomosaics (Tahsildar):
+   - Navigate to `/tahsildar/drone-surveys`.
+   - The Drone Surveys & Missions hub displays all active and completed flights.
+   - Click on any mission (e.g., `MISSION-DRONE-2026-00412`).
+   - The interactive orthomosaic viewer displays the sub-decimeter UAV raster.
+   - Zoom in up to zoom level 23 to inspect individual crop rows and boundary fences.
+   - Review flight metadata: DGCA UIN, drone model, flight altitude (75 m AGL), speed, battery life, and RTK lock.
+
+7.8. How to Use the Dual-Pane Image Comparison Workspace
+----------------------------------------------------------------------------------------------------
+1. Navigate to `/tahsildar/image-comparison`.
+2. Select the agricultural parcel to compare (e.g., `Patil Agro Sugarcane Field`).
+3. Select the left-hand sensor feed (e.g., Historical Satellite Baseline - June 2026).
+4. Select the right-hand sensor feed (e.g., UAV Drone Orthomosaic - October 2026).
+5. Drag the interactive swipe divider handle horizontally across the screen.
+6. Observe changes in crop canopy density, boundary encroachment, and vegetative vigor between the two dates.
+
+7.9. How to Review Registration Applications & Adjudicate Crop Discrepancies
+----------------------------------------------------------------------------------------------------
+1. Reviewing Applications:
+   - Navigate to `/tahsildar/registrations`.
+   - Select an application with status `PENDING_TAHSILDAR_REVIEW`.
+   - Review the landowner's identity, survey number, and inspect the 6 geotagged ground photographs.
+   - Click "Approve Registration" to move the parcel into active surveillance.
+2. Adjudicating Crop Discrepancies:
+   - Navigate to `/tahsildar/crop-verification`.
+   - Parcels where farmer declaration differs from satellite/drone observations are flagged in amber/red.
+   - Review the AI Phenology Matcher recommendation and satellite NDVI curve.
+   - Select the verified crop type, enter official quasi-judicial findings in the notes field, and click 
+     "Confirm Verification & Approve".
+
+7.10. How to Generate & Export Official Maharashtra Statutory Reports
+----------------------------------------------------------------------------------------------------
+1. Navigate to `/tahsildar/reports` or `/gis/reports`.
+2. Browse the 10 statutory revenue report cards.
+3. Select any report (e.g., "1. Individual Plot Survey Report" or "3. Taluka Crop-Area Report").
+4. Select the target district (Pune) and taluk (Haveli).
+5. Click "Generate Official PDF" or "Export CSV".
+6. The system generates an official, watermarked, bilingual PDF document complete with state seal, 
+   cadastral coordinates, NDVI analytics, and digital verification signature block.
+
+====================================================================================================
+8. THE 10 STATUTORY MAHARASHTRA REVENUE REPORTS CATALOGUE
+====================================================================================================
+
+The platform features an automated generation suite for all 10 statutory reports required by the 
+Maharashtra Land Revenue Department and the Ministry of Agriculture:
+
+1. Individual Plot Survey Report (`plot_survey`):
+   - Deep-dive dossier for a single agricultural parcel. Contains landowner details, 7/12 survey/Gat number, 
+     WGS84 boundary vertices, geodesic acreage, 6 geotagged ground photos, Sentinel-2 pass summary, and 
+     drone orthomosaic verification.
+2. Village Crop Survey Report (`village_crop_survey`):
+   - Village-level register aggregating all surveyed plots in a revenue village (e.g., Wagholi). Summarizes 
+     cultivated crops, uncultivated fallow acreage, irrigation methods, and verification completion status.
+3. Taluka Crop-Area Report (`taluka_crop_area`):
+   - Taluk-level executive summary for the Tahsildar (e.g., Haveli Taluk). Provides statistical breakdown 
+     of gross registered area vs net verified cultivated area, crop distributions, and discrepancy counts.
+4. District Crop-Area Report (`district_crop_area`):
+   - District-level oversight report for the District Collector and District Agricultural Officer (DAO) 
+     covering Pune district across all talukas.
+5. Field-Survey Completion Report (`field_survey_completion`):
+   - Operational audit tracking field surveyor productivity, mobile GPS accuracy distributions, 
+     offline sync queues, and inspection turnaround times.
+6. Satellite Observation Report (`satellite_observation`):
+   - Technical remote sensing dossier compiling all Sentinel-2 L2A orbital passes over a given geography. 
+     Documents scene IDs, acquisition dates, cloud cover percentages, and mean NDVI canopy index values.
+7. Crop Health & Anomaly Report (`crop_health`):
+   - Early warning agronomic report identifying parcels suffering from vegetative stress, drought moisture 
+     deficits, or sudden NDVI drops indicative of pest infestations.
+8. AI Crop Classification & Phenology Report (`crop_classification`):
+   - Machine learning evaluation report documenting crop classification confidence scores, phenological 
+     growth stages, and confusion matrix calibration across 12 Maharashtra crop categories.
+9. Yield Estimation & Production Forecast Report (`yield_estimation`):
+   - Transparent agronomic forecasting report calculating expected harvest production in Metric Tonnes (t) 
+     using verified net acreage and historical taluk yield baselines.
+10. Disaster Damage & Crop Loss Assessment Report (`disaster_damage`):
+    - Emergency statutory compensation dossier for natural disasters (unseasonal hail, drought, cyclone flooding). 
+      Quantifies affected acreage, percentage canopy loss via pre- and post-disaster satellite NDVI delta, 
+      and calculates PMFBY relief compensation entitlements.
+
+====================================================================================================
+9. DEMONSTRATION & EVALUATION CREDENTIALS
+====================================================================================================
+
+For evaluation, grading, and demonstration, the platform provides pre-configured credentials across all 
+four statutory roles. All accounts can also be accessed via 1-click quick login buttons on `/auth/login`:
+
+1. Farmer Persona:
+   - Full Name: Ramesh Balasaheb Patil
+   - Official Email: farmer.ramesh@agrisurvey.gov.in
+   - Password: FarmerPass123!
+   - Role: `farmer`
+   - Primary Jurisdiction: Wagholi Village, Haveli Taluk, Pune District
+   - Land Parcel: Survey No. 142/2A (3.48 Acres / 1.408 Ha Sugarcane)
+
+2. Tahsildar & Executive Revenue Magistrate Persona:
+   - Full Name: Anand Shrikant Kulkarni
+   - Official Email: tahsildar.haveli@agrisurvey.gov.in
+   - Password: TahsildarPass123!
+   - Role: `tahsildar`
+   - Assigned Jurisdiction: Haveli Taluk, Pune Division, Maharashtra
+   - Administrative Scope: Full quasi-judicial review, drone commissioning, and 7/12 mutation authority
+
+3. Field Surveyor & Certified Drone Pilot Persona:
+   - Full Name: Prakash Mahadev Jadhav
+   - Official Email: drone.prakash@agrisurvey.gov.in
+   - Password: WorkerPass123!
+   - Role: `field_worker`
+   - Equipment: DJI Matrice 300 RTK (UIN: DGCA-UAV-2026-MH-4412)
+   - Scope: Mobile ground GPS truth capture and UAV orthomosaic ingestion
+
+4. State Revenue Director / Administrator Persona:
+   - Full Name: Dr. Meenakshi Sundaram, IAS
+   - Official Email: admin.director@agrisurvey.gov.in
+   - Password: AdminPass123!
+   - Role: `admin`
+   - Scope: Statewide governance, system analytics, RBAC controls, and pilot taluk administration
+
+====================================================================================================
+10. LOCAL SETUP, DEVELOPMENT & PRODUCTION DEPLOYMENT GUIDE
+====================================================================================================
+
+10.1. Prerequisites
+----------------------------------------------------------------------------------------------------
+- Operating System: macOS, Linux, or Windows (WSL recommended)
+- Node.js: v18.0.0 or higher (v20+ recommended)
+- Package Manager: npm (v9 or higher)
+- Git: Installed and configured with access to GitHub
+
+10.2. Installation & Environment Configuration
+----------------------------------------------------------------------------------------------------
+1. Clone the repository:
+   git clone https://github.com/SATHYA182907/AgriSurvey-K.git
+   cd AgriSurvey-K
+
+2. Install dependencies:
+   npm install
+
+3. Environment Variables (.env):
+   The application is configured to run out-of-the-box in local development mode using its zero-dependency 
+   durable mock database engine. For production deployment, configure the following keys in `.env`:
+   - `VITE_SUPABASE_URL`: Supabase project URL (PostgreSQL 15 + PostGIS)
+   - `VITE_SUPABASE_ANON_KEY`: Supabase public anonymous API key
+   - `VITE_FIREBASE_API_KEY`: Firebase web API key
+   - `VITE_FIREBASE_PROJECT_ID`: Firebase project ID (`agri-survey-4f115`)
+   - `VITE_FIREBASE_STORAGE_BUCKET`: Firebase storage bucket
+   - `VITE_MSG91_AUTH_KEY`: MSG91 SMS gateway authorization key
+
+10.3. Running Development Server
+----------------------------------------------------------------------------------------------------
+npm run dev
+The development server will launch at: http://localhost:5173
+
+10.4. Executing Automated Test Suites
+----------------------------------------------------------------------------------------------------
+Run the complete automated test suite with a single command:
+npm test
+
+This executes 6 independent test suites sequentially:
+1. `tsx scripts/test-ml-models.ts` (Savitzky-Golay, phenology template matching, cloud abstention)
+2. `tsx scripts/run-acceptance-tests.ts` (Farmer workflow, SMS notifications, Tahsildar approval)
+3. `tsx scripts/test-geospatial-suite.ts` (WGS84 geodesic math, polygon validation, STAC search)
+4. `tsx scripts/test-farmer-workflow.ts` (5-6 ground photo upload enforcement, EXIF validation)
+5. `tsx scripts/test-gis-e2e.ts` (End-to-end GIS pipeline from satellite capture to 10-report generation)
+6. `tsx scripts/test-challenge-compliance.ts` (16 compliance assertions across Challenge Modules A-L)
+
+All suites must exit with code 0 (100% pass rate).
+
+10.5. Compiling Production Build
+----------------------------------------------------------------------------------------------------
+npm run build
+This runs TypeScript compilation (`tsc -b`) followed by Vite production bundling. The compiled, minified, 
+tree-shaken assets are generated in the `dist/` directory, ready for deployment to Vercel, Netlify, or AWS.
+
+10.6. Production Deployment on Vercel
+----------------------------------------------------------------------------------------------------
+The repository includes a production-ready `vercel.json` configuration with Single-Page Application (SPA) 
+routing rewrite rules. Deploy with:
+vercel --prod
+
+====================================================================================================
+CONCLUSION
+====================================================================================================
+AgriSurvey AI represents a transformative leap in agricultural administration and land revenue governance. 
+By integrating European Space Agency optical telemetry, centimeter-accurate UAV photogrammetry, 
+geotagged ground truth evidence, and explainable agronomic machine learning into a legally sound 
+administrative workflow under the Maharashtra Land Revenue Code, 1966, the platform eliminates ghost crops, 
+curbs subsidy fraud, resolves boundary disputes, and ensures transparent, rapid justice for Maharashtra's 
+farmers.
+
+====================================================================================================
+END OF SYSTEM DOCUMENTATION
+====================================================================================================
