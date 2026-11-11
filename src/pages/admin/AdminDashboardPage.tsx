@@ -61,6 +61,7 @@ const tabForPath = (pathname: string): AdminTab => {
 
 export const AdminDashboardPage: React.FC = () => {
   const { t, language } = useLanguage();
+  const al = (key: string) => getAdminLabel(key, language);
   const { pathname } = useLocation();
   const [activeTab, setActiveTab] = useState<AdminTab>(() => tabForPath(pathname));
   const [tabPath, setTabPath] = useState(pathname);
@@ -177,7 +178,7 @@ export const AdminDashboardPage: React.FC = () => {
             { id: 'thresholds', label: t('dashboard.systemSettings', 'Crop Health Thresholds & Policies'), icon: Sprout },
             { id: 'users', label: t('dashboard.userManagement', 'User & Staff Provisioning'), icon: Users },
             { id: 'regions', label: t('dashboard.geoRegions', 'Geographic Allocations'), icon: MapPin },
-            { id: 'sms', label: 'SMS & Delivery Queue', icon: Smartphone },
+            { id: 'sms', label: al('tabSms'), icon: Smartphone },
             { id: 'audit', label: t('dashboard.auditLogs', 'Immutable Audit Logs'), icon: History },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -205,29 +206,29 @@ export const AdminDashboardPage: React.FC = () => {
             {/* Top 4 Key Metric Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="p-5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase">Registered Farmers</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">{al("registeredFarmers")}</span>
                 <div className="text-3xl font-extrabold text-slate-900 mt-1">{stats?.totalFarmers ?? 2}</div>
-                <div className="text-xs text-emerald-700 font-semibold mt-1">Verified identities in registry</div>
+                <div className="text-xs text-emerald-700 font-semibold mt-1">{al("verifiedIdentities")}</div>
               </Card>
 
               <Card className="p-5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase">Agricultural Land Area</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">{al("agriculturalLandArea")}</span>
                 <div className="text-3xl font-extrabold text-slate-900 mt-1">
                   {stats?.totalLandAreaAcres ?? 11.45} <span className="text-base font-normal text-slate-500">Acres</span>
                 </div>
-                <div className="text-xs text-teal-700 font-semibold mt-1">Across 3 Pune taluks</div>
+                <div className="text-xs text-teal-700 font-semibold mt-1">{al("acrossTaluks")}</div>
               </Card>
 
               <Card className="p-5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase">Pending Approvals</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">{al("pendingApprovals")}</span>
                 <div className="text-3xl font-extrabold text-amber-800 mt-1">{stats?.pendingRegistrations ?? 2}</div>
-                <div className="text-xs text-amber-600 font-semibold mt-1">Tahsildar review queue</div>
+                <div className="text-xs text-amber-600 font-semibold mt-1">{al("tahsildarQueue")}</div>
               </Card>
 
               <Card className="p-5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase">Verified Properties</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">{al("verifiedProperties")}</span>
                 <div className="text-3xl font-extrabold text-emerald-800 mt-1">{stats?.completedVerifications ?? 1}</div>
-                <div className="text-xs text-emerald-600 font-semibold mt-1">Certified reports compiled</div>
+                <div className="text-xs text-emerald-600 font-semibold mt-1">{al("certifiedReportsCompiled")}</div>
               </Card>
             </div>
 
@@ -237,66 +238,66 @@ export const AdminDashboardPage: React.FC = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                   <div>
                     <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
-                      Module G — Government Decision Support
+                      {al("moduleGTitle")}
                     </span>
                     <h3 className="text-base font-extrabold text-white mt-1">
-                      Maharashtra Spatial Agricultural Intelligence & Policy Indicators
+                      {al("spatialIntelligenceTitle")}
                     </h3>
                   </div>
                   <span className="text-xs text-white/60">
-                    Active Pilot Zones: Haveli, Baramati, Shirur, Daund
+                    {al("activePilotZones")}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">1. Kharif Crop Acreage</span>
+                    <span className="text-white/60 block text-[10px]">{al("kharifAcreage")}</span>
                     <strong className="text-lg text-emerald-300 font-bold">{govMetrics.kharifAcreageMapped} Acres</strong>
-                    <span className="block text-[10px] text-white/40">Sugarcane, Soybean, Cotton</span>
+                    <span className="block text-[10px] text-white/40">{al("kharifCrops")}</span>
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">2. Rabi Crop Acreage</span>
+                    <span className="text-white/60 block text-[10px]">{al("rabiAcreage")}</span>
                     <strong className="text-lg text-teal-300 font-bold">{govMetrics.rabiAcreageMapped} Acres</strong>
-                    <span className="block text-[10px] text-white/40">Wheat, Gram, Rabi Onion</span>
+                    <span className="block text-[10px] text-white/40">{al("rabiCrops")}</span>
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">3. Subsidy Pass Rate</span>
+                    <span className="text-white/60 block text-[10px]">{al("subsidyPassRate")}</span>
                     <strong className="text-lg text-amber-300 font-bold">{govMetrics.subsidyVerificationRatePct}%</strong>
-                    <span className="block text-[10px] text-white/40">7/12 & Ground Photo Verified</span>
+                    <span className="block text-[10px] text-white/40">{al("subsidyCriteria")}</span>
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">4. Overlap Deduplicated</span>
+                    <span className="text-white/60 block text-[10px]">{al("overlapDeduplicated")}</span>
                     <strong className="text-lg text-sky-300 font-bold">{govMetrics.nonOverlappingNetAreaHa} Ha</strong>
-                    <span className="block text-[10px] text-white/40">{govMetrics.overlapAvoidedHa} ha duplicate avoided</span>
+                    <span className="block text-[10px] text-white/40">{govMetrics.overlapAvoidedHa} ha {al("duplicateAvoided")}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">5. Disaster Screened Area</span>
+                    <span className="text-white/60 block text-[10px]">{al("disasterScreened")}</span>
                     <strong className="text-lg text-rose-300 font-bold">{govMetrics.criticalDamageHectares} Ha</strong>
-                    <span className="block text-[10px] text-rose-300/80">Pending Tahsildar survey</span>
+                    <span className="block text-[10px] text-rose-300/80">{al("pendingSurvey")}</span>
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">6. High Moisture Stress</span>
+                    <span className="text-white/60 block text-[10px]">{al("highMoistureStress")}</span>
                     <strong className="text-lg text-amber-300 font-bold">{govMetrics.highStressMoistureHectares} Ha</strong>
-                    <span className="block text-[10px] text-amber-300/80">NDWI / NDMI Deficit</span>
+                    <span className="block text-[10px] text-amber-300/80">{al("moistureDeficit")}</span>
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">7. Crop Discrepancies</span>
+                    <span className="text-white/60 block text-[10px]">{al("cropDiscrepancies")}</span>
                     <strong className="text-lg text-purple-300 font-bold">{govMetrics.discrepanciesCount} Parcels</strong>
-                    <span className="block text-[10px] text-white/40">Phenology vs Farmer Claim</span>
+                    <span className="block text-[10px] text-white/40">{al("phenologyVsClaim")}</span>
                   </div>
 
                   <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white/60 block text-[10px]">8. Resolution Turnaround</span>
+                    <span className="text-white/60 block text-[10px]">{al("resolutionTurnaround")}</span>
                     <strong className="text-lg text-emerald-300 font-bold">{govMetrics.avgResolutionTurnaroundDays} Days</strong>
-                    <span className="block text-[10px] text-white/40">Officer dispatch to verify</span>
+                    <span className="block text-[10px] text-white/40">{al("officerDispatch")}</span>
                   </div>
                 </div>
               </Card>

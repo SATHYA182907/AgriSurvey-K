@@ -31,9 +31,13 @@ import {
 } from '@/lib/constants';
 import { registrationService } from '@/services/registration.service';
 import { mockDb } from '@/services/mock-db';
+import { useLanguage } from '@/context/LanguageContext';
+import { getFarmerLabel, localizePlotOrCropName } from '@/lib/dashboard-localizer';
 
 export const FarmerRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedApp, setSubmittedApp] = useState<{
@@ -157,16 +161,16 @@ export const FarmerRegistrationPage: React.FC = () => {
   };
 
   const stepsHeader = [
-    { num: 1, label: 'Personal Info' },
-    { num: 2, label: 'Identity & Address' },
-    { num: 3, label: 'Property Details' },
-    { num: 4, label: 'Documents & Consent' },
+    { num: 1, label: fl('stepPersonalInfo') },
+    { num: 2, label: fl('stepIdentityAddress') },
+    { num: 3, label: fl('stepPropertyDetails') },
+    { num: 4, label: fl('stepDocsConsent') },
   ];
 
   return (
     <DashboardLayout
-      title="Land Registration Wizard"
-      subtitle="Submit new agricultural property for official verification & Tahsildar approval"
+      title={fl("landRegWizard")}
+      subtitle={fl("landRegSubtitle")}
     >
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Step Progress Bar */}
@@ -222,27 +226,27 @@ export const FarmerRegistrationPage: React.FC = () => {
 
             <div className="max-w-md mx-auto space-y-2">
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                Application Submitted Successfully
+                {fl("appSubmittedSuccess")}
               </h2>
               <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-semibold text-xs sm:text-sm leading-relaxed">
-                “Your registration has been submitted successfully. Your application is awaiting Tahsildar verification. Your login credentials will be provided after approval.”
+                “{fl("appSubmittedMsg")}”
               </div>
             </div>
 
             {/* Reference Details Box */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 max-w-sm mx-auto text-left space-y-2 font-mono text-xs">
               <div className="flex justify-between border-b border-slate-200 pb-1.5">
-                <span className="text-slate-500 font-sans">Application Reference:</span>
+                <span className="text-slate-500 font-sans">{fl("appRef")}:</span>
                 <span className="font-bold text-slate-900">{submittedApp.application_reference}</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-1.5">
-                <span className="text-slate-500 font-sans">Property Reference:</span>
+                <span className="text-slate-500 font-sans">{fl("propertyRef")}:</span>
                 <span className="font-bold text-slate-900">{submittedApp.property_reference}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500 font-sans">Initial Status:</span>
+                <span className="text-slate-500 font-sans">{fl("initialStatus")}:</span>
                 <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  PENDING VERIFICATION
+                  {fl("pendingVerification")}
                 </span>
               </div>
             </div>
@@ -250,11 +254,11 @@ export const FarmerRegistrationPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
               <Link to={`/farmer/application-status?ref=${submittedApp.application_reference}&phone=${personalInfo.mobileNumber}`}>
                 <Button icon={<ArrowRight className="w-4 h-4" />}>
-                  Track Application Status
+                  {fl("checkAppStatus")}
                 </Button>
               </Link>
               <Button variant="outline" onClick={() => setSubmittedApp(null)}>
-                Register Another Parcel
+                {fl("landRegWizard")}
               </Button>
             </div>
           </Card>
@@ -266,7 +270,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <User className="w-5 h-5 text-emerald-600" />
-                    <span>Step 1: Landholder Personal Information</span>
+                    <span>{fl("stepPersonalInfo")}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Enter the primary farmer details as recorded in government land records.
@@ -276,7 +280,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Full Name of Farmer / Khatedar <span className="text-rose-500">*</span>
+                      {fl("fullName")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -290,7 +294,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Mobile Number (For SMS Alerts) <span className="text-rose-500">*</span>
+                      {fl("mobileNumber")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -306,7 +310,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Email Address (Optional)
+                      {fl("email")}
                     </label>
                     <input
                       type="email"
@@ -319,7 +323,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Preferred Language
+                      {fl("preferredLanguage")}
                     </label>
                     <select
                       value={personalInfo.preferredLanguage}
@@ -345,7 +349,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                    <span>Step 2: Identity & Residential Address</span>
+                    <span>{fl("stepIdentityAddress")}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Authorized identity document and permanent domicile.
@@ -365,7 +369,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Identity Document Type <span className="text-rose-500">*</span>
+                      {fl("identityMethod")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={identityInfo.identityMethod}
@@ -384,7 +388,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Document Identification Reference <span className="text-rose-500">*</span>
+                      {fl("identityNumber")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -403,7 +407,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Residential Street Address <span className="text-rose-500">*</span>
+                      {fl("residentialAddress")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -419,7 +423,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Village / Gaon <span className="text-rose-500">*</span>
+                      {fl("village")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -435,7 +439,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Taluk / Tehsil <span className="text-rose-500">*</span>
+                      {fl("taluk")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={identityInfo.taluk}
@@ -454,7 +458,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      District <span className="text-rose-500">*</span>
+                      {fl("district")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={identityInfo.district}
@@ -473,7 +477,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Postal PIN Code <span className="text-rose-500">*</span>
+                      {fl("pinCode")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -497,7 +501,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-emerald-600" />
-                    <span>Step 3: Agricultural Land Property Details</span>
+                    <span>{fl("stepPropertyDetails")}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Land revenue extract (7/12) records, survey number, acreage, and farm type.
@@ -507,7 +511,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Property / Farm Designation (Optional)
+                      {fl("propertyName")}
                     </label>
                     <input
                       type="text"
@@ -522,7 +526,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Land Document / 7/12 Extract No. <span className="text-rose-500">*</span>
+                      {fl("landDocNumber")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -538,7 +542,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Survey / Gat Number <span className="text-rose-500">*</span>
+                      {fl("surveyNumber")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -554,7 +558,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Subdivision Number (Hissa)
+                      {fl("subdivisionNumber")}
                     </label>
                     <input
                       type="text"
@@ -569,7 +573,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Total Land Area <span className="text-rose-500">*</span>
+                      {fl("landArea")} <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -607,7 +611,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Land Type Classification <span className="text-rose-500">*</span>
+                      {fl("landType")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={propertyInfo.landType}
@@ -626,7 +630,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Farm Type <span className="text-rose-500">*</span>
+                      {fl("farmType")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={propertyInfo.farmType}
@@ -645,7 +649,7 @@ export const FarmerRegistrationPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Ownership Category <span className="text-rose-500">*</span>
+                      {fl("ownershipCategory")} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={propertyInfo.ownershipCategory}
@@ -666,7 +670,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 {/* Location Map Preview */}
                 <div className="pt-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-2">
-                    Approximate Location Preview & GPS Pin
+                    {fl("pinpointLocation")}
                   </label>
                   <PropertyMap
                     latitude={propertyInfo.latitude}
@@ -686,7 +690,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 <div className="border-b border-slate-100 pb-3">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <UploadCloud className="w-5 h-5 text-emerald-600" />
-                    <span>Step 4: Land Document Upload & Verification Consent</span>
+                    <span>{fl("stepDocsConsent")}</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Attach revenue document (7/12 extract) and confirm inspection consent.
@@ -696,7 +700,7 @@ export const FarmerRegistrationPage: React.FC = () => {
                 {/* Document Upload Area */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-2">
-                    Upload Official Land Document (7/12 Extract, Ferfar, or Title Deed)
+                    {fl("upload712")}
                   </label>
                   <div className="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-6 text-center bg-slate-50/50 hover:bg-emerald-50/20 transition-all cursor-pointer">
                     <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
@@ -761,7 +765,7 @@ export const FarmerRegistrationPage: React.FC = () => {
               {currentStep > 1 ? (
                 <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>
                   <ArrowLeft className="w-4 h-4 mr-1.5" />
-                  Previous Step
+                  {fl("btnBack")}
                 </Button>
               ) : (
                 <div />
@@ -769,12 +773,12 @@ export const FarmerRegistrationPage: React.FC = () => {
 
               {currentStep < 4 ? (
                 <Button onClick={handleNext}>
-                  Next Step
+                  {fl("btnNext")}
                   <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} isLoading={isSubmitting}>
-                  Submit Application for Review
+                  {fl("btnSubmitReg")}
                 </Button>
               )}
             </div>

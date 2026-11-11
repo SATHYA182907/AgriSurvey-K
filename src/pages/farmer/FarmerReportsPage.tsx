@@ -26,10 +26,11 @@ import { reportService } from '@/services/report.service';
 import { mockDb } from '@/services/mock-db';
 import { VerificationReport, FinalVerificationStatus } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
-import { localizePlotOrCropName } from '@/lib/dashboard-localizer';
+import { localizePlotOrCropName, getFarmerLabel } from '@/lib/dashboard-localizer';
 
 export const FarmerReportsPage: React.FC = () => {
   const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const farmer = mockDb.currentUser;
   const [reports, setReports] = useState<VerificationReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<VerificationReport | null>(null);
@@ -84,7 +85,7 @@ export const FarmerReportsPage: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Total Reports Issued</span>
+              <span>{fl("totalReportsIssued")}</span>
               <FileText className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalReports}</div>
@@ -93,7 +94,7 @@ export const FarmerReportsPage: React.FC = () => {
 
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Verified Parcels</span>
+              <span>{fl("verifiedParcels")}</span>
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-emerald-600 mt-1">{verifiedCount}</div>
@@ -135,7 +136,7 @@ export const FarmerReportsPage: React.FC = () => {
             icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
             onClick={loadData}
           >
-            {t('dashboard.liveRefresh', 'Refresh Reports')}
+            {fl("btnRefreshReports")}
           </Button>
         </div>
 

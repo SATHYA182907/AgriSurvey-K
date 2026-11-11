@@ -472,7 +472,7 @@ export const TahsildarRegistrationsPage: React.FC = () => {
         <Modal
           isOpen={reviewModalOpen}
           onClose={() => setReviewModalOpen(false)}
-          title={`Administrative 7/12 Review: ${selectedApp.application_reference}`}
+          title={`${tl("tabQueue")} - 7/12: ${selectedApp.application_reference}`}
           size="xl"
         >
           <div className="space-y-6 text-xs text-slate-700 max-h-[75vh] overflow-y-auto pr-1">
@@ -480,19 +480,19 @@ export const TahsildarRegistrationsPage: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                  Applicant Name
+                  {tl("colFarmerName")}
                 </span>
                 <p className="font-bold text-slate-900 mt-0.5">{selectedApp.farmer?.full_name}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                  Contact Phone
+                  {tl("applicantPhone")}
                 </span>
                 <p className="font-mono text-slate-900 mt-0.5">{selectedApp.farmer?.phone_number}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                  Survey / Gat No.
+                  {tl("colSurveyNumber")}
                 </span>
                 <p className="font-bold text-slate-900 mt-0.5">
                   {selectedApp.property?.survey_number}
@@ -500,7 +500,7 @@ export const TahsildarRegistrationsPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                  Village & Taluk
+                  {tl("colTaluk")}
                 </span>
                 <p className="text-slate-900 mt-0.5">
                   {selectedApp.property?.village}, {selectedApp.property?.taluk}
@@ -556,7 +556,7 @@ export const TahsildarRegistrationsPage: React.FC = () => {
             {/* Administrative Decision Choice */}
             <div className="space-y-3 border-t border-slate-200 pt-4">
               <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide">
-                Official Administrative Determination
+                {tl("adminDetermination")}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button

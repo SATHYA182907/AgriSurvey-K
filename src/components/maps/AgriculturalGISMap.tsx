@@ -65,6 +65,8 @@ import {
   MaharashtraDistrict,
 } from '@/lib/geospatial';
 import { plotService } from '@/services/plot.service';
+import { useLanguage } from '@/context/LanguageContext';
+import { getGisLabel, localizePlotOrCropName } from '@/lib/dashboard-localizer';
 
 // Fix Leaflet icons in Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -170,6 +172,8 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
   onExportReport,
   onOpenCoordinateSatelliteSearch,
 }) => {
+  const { language } = useLanguage();
+
   // Basemap State
   const [basemapType, setBasemapType] = useState<'streets' | 'satellite'>('satellite');
 
@@ -345,7 +349,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
 
           {/* Plot Quick-Picker */}
           <span className="text-slate-500 ml-1">|</span>
-          <span className="text-slate-400">Plot:</span>
+          <span className="text-slate-400">{getGisLabel('plotLabel', language)}</span>
           <select
             value={activePlot?.id || ''}
             onChange={(e) => {
@@ -356,7 +360,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
           >
             {plots.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.plot_name} — Survey {p.survey_number} ({p.area_acres} Ac)
+                {localizePlotOrCropName(p.plot_name, language)} — {localizePlotOrCropName('Survey', language)} {p.survey_number} ({p.area_acres} {getGisLabel('acres', language)})
               </option>
             ))}
           </select>
@@ -372,7 +376,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                 basemapType === 'satellite' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Satellite
+              {getGisLabel('satelliteBasemap', language)}
             </button>
             <button
               onClick={() => setBasemapType('streets')}
@@ -380,7 +384,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                 basemapType === 'streets' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
               }`}
             >
-              OSM Streets
+              {getGisLabel('streetsBasemap', language)}
             </button>
           </div>
 
@@ -399,7 +403,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
               className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 text-xs font-semibold shadow-xs transition-colors"
             >
               <Satellite className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Satellite by Coords</span>
+              <span className="hidden sm:inline">{getGisLabel('satelliteByCoords', language)}</span>
             </button>
           )}
 
@@ -417,7 +421,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
             className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 border border-slate-700"
           >
             <Upload className="w-3 h-3 text-emerald-400" />
-            <span className="hidden sm:inline">Import GeoJSON</span>
+            <span className="hidden sm:inline">{getGisLabel('importGeoJson', language)}</span>
           </button>
 
           {activePlot && (
@@ -436,7 +440,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
               className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 border border-slate-700"
             >
               <Download className="w-3 h-3 text-cyan-400" />
-              <span className="hidden sm:inline">Export GeoJSON</span>
+              <span className="hidden sm:inline">{getGisLabel('exportGeoJson', language)}</span>
             </button>
           )}
 
@@ -450,7 +454,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{isDrawing ? 'Drawing Active' : 'Draw Plot'}</span>
+            <span>{isDrawing ? getGisLabel('drawingActive', language) : getGisLabel('drawPlot', language)}</span>
           </button>
         </div>
       </div>
@@ -492,13 +496,13 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
               onClick={handleSaveDrawnPlot}
               className="px-2.5 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded font-semibold flex items-center gap-1 shadow-xs"
             >
-              <Check className="w-3 h-3" /> Save Plot
+              <Check className="w-3 h-3" /> {getGisLabel('savePlot', language)}
             </button>
             <button
               onClick={handleClearDrawing}
               className="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded flex items-center gap-1"
             >
-              <X className="w-3 h-3" /> Cancel
+              <X className="w-3 h-3" /> {getGisLabel('cancel', language)}
             </button>
           </div>
         </div>
@@ -542,15 +546,15 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
               <div className="p-2 space-y-2 min-w-[210px] text-xs">
                 <div className="font-bold text-slate-900 flex items-center gap-1.5 border-b pb-1">
                   <Satellite className="w-4 h-4 text-emerald-600" />
-                  <span>Map Coordinate Selected</span>
+                  <span>{getGisLabel('mapCoordSelected', language)}</span>
                 </div>
                 <div className="font-mono text-slate-700 bg-slate-50 p-2 rounded border border-slate-200 text-[11px] space-y-0.5">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Latitude:</span>
+                    <span className="text-slate-500">{getGisLabel('latitude', language)}</span>
                     <span className="font-bold text-emerald-800">{clickedCoord[0].toFixed(5)}° N</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Longitude:</span>
+                    <span className="text-slate-500">{getGisLabel('longitude', language)}</span>
                     <span className="font-bold text-emerald-800">{clickedCoord[1].toFixed(5)}° E</span>
                   </div>
                 </div>
@@ -565,7 +569,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                     className="w-full py-2 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer transition-colors"
                   >
                     <Satellite className="w-3.5 h-3.5" />
-                    <span>Get Satellite Images</span>
+                    <span>{getGisLabel('getSatelliteImages', language)}</span>
                   </button>
                 )}
               </div>
@@ -641,7 +645,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                   <Popup>
                     <div className="p-1.5 text-xs max-w-xs space-y-2">
                       <div className="flex items-center justify-between border-b pb-1">
-                        <span className="font-bold text-slate-900">{plot.plot_name}</span>
+                        <span className="font-bold text-slate-900">{localizePlotOrCropName(plot.plot_name, language)}</span>
                         <span
                           className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
                             plot.is_cadastral_verified
@@ -649,28 +653,28 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                               : 'bg-amber-100 text-amber-800'
                           }`}
                         >
-                          {plot.is_cadastral_verified ? 'Verified Cadastral' : 'Self-Delineated'}
+                          {plot.is_cadastral_verified ? getGisLabel('verifiedCadastral', language) : getGisLabel('selfDelineated', language)}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600">
                         <div>
-                          Survey No: <span className="font-semibold text-slate-900">{plot.survey_number}</span>
+                          {localizePlotOrCropName('Survey', language)}: <span className="font-semibold text-slate-900">{plot.survey_number}</span>
                         </div>
                         <div>
-                          Crop: <span className="font-semibold text-emerald-700">{plot.crop_type || 'Sugarcane'}</span>
+                          {getGisLabel('cropStand', language)}: <span className="font-semibold text-emerald-700">{localizePlotOrCropName(plot.crop_type || 'Sugarcane', language)}</span>
                         </div>
                         <div>
-                          Area: <span className="font-bold text-slate-900">{plot.area_acres} Acres</span>
+                          {getGisLabel('geodesicArea', language)}: <span className="font-bold text-slate-900">{plot.area_acres} {getGisLabel('acres', language)}</span>
                         </div>
                         <div>
-                          Metric: <span className="font-mono text-slate-700">{plot.area_hectares} Ha</span>
+                          {getGisLabel('haAcrossParcels', language)}: <span className="font-mono text-slate-700">{plot.area_hectares} Ha</span>
                         </div>
                         <div>
-                          Perimeter: <span className="font-mono text-slate-700">{plot.perimeter_meters}m</span>
+                          {getGisLabel('perimeter', language)}: <span className="font-mono text-slate-700">{plot.perimeter_meters}m</span>
                         </div>
                         <div>
-                          Latest NDVI: <span className="font-bold text-emerald-600">{plot.latest_ndvi ?? '0.68'}</span>
+                          NDVI: <span className="font-bold text-emerald-600">{plot.latest_ndvi ?? '0.68'}</span>
                         </div>
                       </div>
 
@@ -681,7 +685,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                             onClick={() => onOpenSatelliteSearch(plot)}
                             className="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded text-[10px] font-medium flex items-center gap-1"
                           >
-                            <Sparkles className="w-3 h-3 text-sky-600" /> Sentinel-2 Search
+                            <Sparkles className="w-3 h-3 text-sky-600" /> {getGisLabel('sentinel2SearchBtn', language)}
                           </button>
                         )}
                         {onOpenWeatherDrawer && (
@@ -689,7 +693,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                             onClick={() => onOpenWeatherDrawer(plot)}
                             className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded text-[10px] font-medium flex items-center gap-1"
                           >
-                            <CloudSun className="w-3 h-3 text-amber-600" /> Live Weather
+                            <CloudSun className="w-3 h-3 text-amber-600" /> {getGisLabel('liveWeatherBtn', language)}
                           </button>
                         )}
                         {onOpenIntelligenceModal && (
@@ -697,7 +701,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                             onClick={() => onOpenIntelligenceModal(plot)}
                             className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded text-[10px] font-medium flex items-center gap-1"
                           >
-                            <Activity className="w-3 h-3 text-emerald-600" /> AI Crop & Yield
+                            <Activity className="w-3 h-3 text-emerald-600" /> {getGisLabel('aiCropYieldBtn', language)}
                           </button>
                         )}
                         {onExportReport && (
@@ -705,7 +709,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
                             onClick={() => onExportReport(plot)}
                             className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-medium flex items-center gap-1"
                           >
-                            <FileText className="w-3 h-3 text-slate-600" /> Download PDF
+                            <FileText className="w-3 h-3 text-slate-600" /> {getGisLabel('downloadPdfBtn', language)}
                           </button>
                         )}
                       </div>
@@ -809,7 +813,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
       <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-200 p-2.5 z-20 text-xs max-w-xs space-y-2">
         <div className="flex items-center justify-between font-bold text-slate-800 border-b pb-1">
           <span className="flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-emerald-600" /> Active GIS Layers
+            <Layers className="w-3.5 h-3.5 text-emerald-600" /> {getGisLabel('activeGisLayers', language)}
           </span>
           <span className="text-[10px] text-slate-400">EPSG:4326</span>
         </div>
@@ -818,7 +822,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
           <label className="flex items-center justify-between cursor-pointer">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-              Farm Plot Boundaries
+              {getGisLabel('farmPlotBoundaries', language)}
             </span>
             <input
               type="checkbox"
@@ -831,7 +835,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
           <label className="flex items-center justify-between cursor-pointer">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
-              Sentinel-2 Footprint
+              {getGisLabel('sentinel2Footprint', language)}
             </span>
             <input
               type="checkbox"
@@ -845,7 +849,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
             <label className="flex items-center justify-between cursor-pointer">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-yellow-400 to-green-600" />
-                NDVI Raster Heatmap
+                {getGisLabel('ndviRasterHeatmap', language)}
               </span>
               <input
                 type="checkbox"
@@ -875,7 +879,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
             <label className="flex items-center justify-between cursor-pointer">
               <span className="flex items-center gap-1.5">
                 <Plane className="w-3 h-3 text-sky-600" />
-                Drone Orthomosaic
+                {getGisLabel('droneOrthomosaic', language)}
               </span>
               <input
                 type="checkbox"
@@ -904,7 +908,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
           <label className="flex items-center justify-between cursor-pointer">
             <span className="flex items-center gap-1.5">
               <Camera className="w-3 h-3 text-sky-600" />
-              Geotagged Drone Pins
+              {getGisLabel('geotaggedDronePins', language)}
             </span>
             <input
               type="checkbox"
@@ -917,7 +921,7 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
           <label className="flex items-center justify-between cursor-pointer">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3 text-emerald-600" />
-              Field Surveyor Points
+              {getGisLabel('fieldSurveyorPoints', language)}
             </span>
             <input
               type="checkbox"
@@ -931,12 +935,12 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
         {/* NDVI Scientific Legend */}
         {showNdviRaster && (
           <div className="pt-2 border-t border-slate-100">
-            <div className="text-[10px] font-bold text-slate-500 mb-1">NDVI Scale:</div>
+            <div className="text-[10px] font-bold text-slate-500 mb-1">{getGisLabel('ndviScale', language)}</div>
             <div className="h-2 rounded-full w-full bg-gradient-to-r from-amber-700 via-yellow-400 via-lime-400 to-green-800" />
             <div className="flex justify-between text-[9px] text-slate-400 font-mono mt-0.5">
-              <span>0.1 Bare</span>
-              <span>0.4 Moderate</span>
-              <span>0.8+ Dense</span>
+              <span>0.1 {getGisLabel('bare', language)}</span>
+              <span>0.4 {getGisLabel('moderate', language)}</span>
+              <span>0.8+ {getGisLabel('dense', language)}</span>
             </div>
           </div>
         )}
@@ -946,28 +950,28 @@ export const AgriculturalGISMap: React.FC<AgriculturalGISMapProps> = ({
       {activePlot && (
         <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-200 p-3 z-20 text-xs max-w-sm hidden md:block">
           <div className="flex items-center justify-between font-bold text-slate-900 border-b pb-1.5">
-            <span className="truncate">{activePlot.plot_name}</span>
-            <span className="text-emerald-700 font-bold ml-2 shrink-0">{activePlot.area_acres} Acres</span>
+            <span className="truncate">{localizePlotOrCropName(activePlot.plot_name, language)}</span>
+            <span className="text-emerald-700 font-bold ml-2 shrink-0">{activePlot.area_acres} {getGisLabel('acres', language)}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-600 mt-2">
             <div>
-              Survey No: <span className="font-semibold text-slate-900">{activePlot.survey_number}</span>
+              {localizePlotOrCropName('Survey', language)}: <span className="font-semibold text-slate-900">{activePlot.survey_number}</span>
             </div>
             <div>
-              Village: <span className="font-semibold text-slate-900">{activePlot.village}</span>
+              {localizePlotOrCropName('Village', language)}: <span className="font-semibold text-slate-900">{activePlot.village}</span>
             </div>
             <div>
-              Hectares: <span className="font-mono text-slate-900">{activePlot.area_hectares} Ha</span>
+              {getGisLabel('haAcrossParcels', language)}: <span className="font-mono text-slate-900">{activePlot.area_hectares} Ha</span>
             </div>
             <div>
-              Perimeter: <span className="font-mono text-slate-900">{activePlot.perimeter_meters}m</span>
+              {getGisLabel('perimeter', language)}: <span className="font-mono text-slate-900">{activePlot.perimeter_meters}m</span>
             </div>
             <div>
-              Crop: <span className="font-semibold text-emerald-700">{activePlot.crop_type || 'Sugarcane'}</span>
+              {getGisLabel('cropStand', language)}: <span className="font-semibold text-emerald-700">{localizePlotOrCropName(activePlot.crop_type || 'Sugarcane', language)}</span>
             </div>
             <div>
-              Mean NDVI: <span className="font-bold text-emerald-600">{activePlot.latest_ndvi ?? 0.68}</span>
+              NDVI: <span className="font-bold text-emerald-600">{activePlot.latest_ndvi ?? 0.68}</span>
             </div>
           </div>
 

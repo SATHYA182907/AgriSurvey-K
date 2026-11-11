@@ -279,7 +279,7 @@ export const TahsildarAssignInspectionsPage: React.FC = () => {
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
-                  placeholder="Search by survey, worker, ID..."
+                  placeholder={tl("searchSurveyWorkerPlaceholder")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
@@ -291,7 +291,7 @@ export const TahsildarAssignInspectionsPage: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white text-slate-700"
               >
-                <option value="ALL">All Mission Statuses</option>
+                <option value="ALL">{tl("allMissionStatuses")}</option>
                 <option value="ASSIGNED">Assigned</option>
                 <option value="SCHEDULED">Scheduled</option>
                 <option value="IN_PROGRESS">In Progress</option>

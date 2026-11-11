@@ -18,9 +18,13 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { registrationService } from '@/services/registration.service';
 import { Profile, RegistrationApplication, AccountActivationToken } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import { getFarmerLabel } from '@/lib/dashboard-localizer';
 
 export const AccountActivationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const navigate = useNavigate();
 
   const tokenParam = searchParams.get('token') || '';
@@ -129,10 +133,10 @@ export const AccountActivationPage: React.FC = () => {
           </span>
         </Link>
         <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Farmer Account Activation
+          {fl("statusTrackerTitle")}
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-slate-300">
-          Establish your secure password to activate your verified portal access
+          {fl("statusTrackerSubtitle")}
         </p>
       </div>
 
@@ -161,7 +165,7 @@ export const AccountActivationPage: React.FC = () => {
                   icon={<ArrowRight className="w-4 h-4" />}
                   onClick={() => navigate('/auth/login')}
                 >
-                  Proceed to Farmer Login
+                  {fl("goToDashboard")}
                 </Button>
               </div>
             </div>
@@ -209,7 +213,7 @@ export const AccountActivationPage: React.FC = () => {
               <div className="pt-2 text-center text-xs text-slate-500">
                 <span>Awaiting Tahsildar approval? </span>
                 <Link to="/farmer/application-status" className="font-bold text-emerald-700 hover:underline">
-                  Track Application Status
+                  {fl("checkAppStatus")}
                 </Link>
               </div>
             </div>
@@ -312,7 +316,7 @@ export const AccountActivationPage: React.FC = () => {
                 disabled={!isFormValid || isActivating}
                 icon={<Lock className="w-4 h-4" />}
               >
-                {isActivating ? 'Activating Account...' : 'Set Password & Activate Account'}
+                {isActivating ? '...' : fl("btnActivateNow")}
               </Button>
             </form>
           )}

@@ -26,10 +26,11 @@ import { hasEvidenceFile } from '@/lib/evidence';
 import { PhotoMetadata, locationSourceLabel, readPhotoMetadata } from '@/lib/photo-metadata';
 
 import { useLanguage } from '@/context/LanguageContext';
-import { localizePlotOrCropName } from '@/lib/dashboard-localizer';
+import { localizePlotOrCropName, getFarmerLabel } from '@/lib/dashboard-localizer';
 
 export const LandImageUploadPage: React.FC = () => {
   const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const navigate = useNavigate();
   const farmer = mockDb.currentUser;
 
@@ -118,8 +119,8 @@ export const LandImageUploadPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title={t('dashboard.uploadPhotosTitle', 'Upload Land Photographs')}
-      subtitle={t('dashboard.uploadPhotosSubtitle', 'Submit 5–6 ground photographs of your approved agricultural property for drone inspection matching')}
+      title={fl('uploadPhotosTitle')}
+      subtitle={fl('uploadPhotosSubtitle')}
     >
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Approved Property Banner */}
@@ -127,7 +128,7 @@ export const LandImageUploadPage: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold text-slate-500 uppercase">Selected Property</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase">{fl("selectedProperty")}</span>
                 <Badge status={selectedApp.status} size="sm" />
               </div>
               <h3 className="text-base font-bold text-slate-900">
@@ -158,10 +159,10 @@ export const LandImageUploadPage: React.FC = () => {
         <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-5 text-xs text-emerald-950 space-y-2">
           <div className="flex items-center gap-2 font-bold text-emerald-900 text-sm">
             <Camera className="w-4 h-4 text-emerald-700" />
-            <span>Official Land Photographic Guidelines</span>
+            <span>{fl("photoGuidelinesTitle")}</span>
           </div>
           <p className="leading-relaxed">
-            “Upload 5–6 clear photographs of your agricultural land from different viewpoints. Where possible, capture field boundaries, crop rows, irrigation arrangements, and the overall condition of the property.”
+            “{fl("photoGuidelinesText")}”
           </p>
           <div className="text-[11px] text-emerald-800 flex items-center gap-1.5 pt-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -186,7 +187,7 @@ export const LandImageUploadPage: React.FC = () => {
               </span>
             </div>
             <Button size="sm" onClick={() => navigate('/farmer/dashboard')}>
-              Go to Dashboard
+              {fl("goToDashboard")}
             </Button>
           </div>
         )}
@@ -196,7 +197,7 @@ export const LandImageUploadPage: React.FC = () => {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <h4 className="text-sm font-bold text-slate-900">
-                Ground Photograph Gallery (5 to 6 Required)
+                {fl("groundGalleryTitle")}
               </h4>
               <p className="text-xs text-slate-500">
                 {totalImageCount >= 5 && totalImageCount <= 6 ? (

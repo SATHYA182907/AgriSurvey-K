@@ -184,8 +184,8 @@ export const FieldWorkerDashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title={t('dashboard.fieldWorkerTitle', 'Field Drone Operations Portal')}
-      subtitle={`${t('dashboard.fieldWorkerSubtitle', 'Field Surveyor & Certified Pilot • RTK Mission Center')} • ${worker.full_name}`}
+      title={fwl('fieldWorkerTitle')}
+      subtitle={`${fwl('fieldWorkerSubtitle')} • ${worker.full_name}`}
     >
       <div className="space-y-6">
         {/* Top Summary Cards */}
@@ -225,7 +225,7 @@ export const FieldWorkerDashboardPage: React.FC = () => {
 
             {visibleInspections.length === 0 && (
               <div className="bg-white rounded-xl border border-dashed border-slate-300 p-6 text-center text-xs text-slate-500">
-                {listView === 'completed' ? 'No completed surveys yet.' : 'No inspections in this list.'}
+                {listView === 'completed' ? fwl('noSurveysCompleted') : fwl('noInspectionsInList')}
               </div>
             )}
 
@@ -281,7 +281,7 @@ export const FieldWorkerDashboardPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-slate-900 uppercase">Active Mission</span>
+                      <span className="text-xs font-bold text-slate-900 uppercase">{fwl("activeMission")}</span>
                       <Badge status={selectedInspection.inspection_status} size="sm" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900">
@@ -297,7 +297,7 @@ export const FieldWorkerDashboardPage: React.FC = () => {
                         onClick={() => handleUpdateStatus('IN_PROGRESS')}
                         icon={<Play className="w-3.5 h-3.5" />}
                       >
-                        Start Flight Mission
+                        {fwl("startFlight")}
                       </Button>
                     )}
 
@@ -307,7 +307,7 @@ export const FieldWorkerDashboardPage: React.FC = () => {
                       onClick={() => setDroneUploadModal(true)}
                       icon={<Camera className="w-3.5 h-3.5" />}
                     >
-                      Upload Drone Photos
+                      {fwl("uploadDroneImagery")}
                     </Button>
 
                     <Button
@@ -350,7 +350,7 @@ export const FieldWorkerDashboardPage: React.FC = () => {
                         onClick={() => handleUpdateStatus('SUBMITTED_FOR_REVIEW')}
                         icon={<CheckCircle2 className="w-3.5 h-3.5" />}
                       >
-                        Submit to Tahsildar
+                        {fwl("submitToTahsildar")}
                       </Button>
                     )}
                   </div>

@@ -219,7 +219,7 @@ export const TahsildarOverviewPage: React.FC = () => {
               <Activity className="w-4 h-4 text-emerald-600" />
               <span>{tl('quickActionsTitle')}</span>
             </h3>
-            <span className="text-[11px] text-slate-400 font-medium">Pune Division Operations Hub</span>
+            <span className="text-[11px] text-slate-400 font-medium">{tl("puneDivOpsHub")}</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -242,7 +242,7 @@ export const TahsildarOverviewPage: React.FC = () => {
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                  Verify new farmer applications, validate 7/12 land titles, issue approvals, and trigger SMS credentials.
+                  {tl("verifyAppsDesc")}
                 </p>
               </div>
             </Link>
@@ -266,7 +266,7 @@ export const TahsildarOverviewPage: React.FC = () => {
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                  Deploy certified drone pilots and talathi field surveyors to capture 4K orthomosaics and boundary ground truths.
+                  {tl("deployPilotsDesc")}
                 </p>
               </div>
             </Link>
@@ -286,11 +286,11 @@ export const TahsildarOverviewPage: React.FC = () => {
                   </Badge>
                 </div>
                 <h4 className="font-bold text-slate-900 mt-3 group-hover:text-sky-700 transition-colors flex items-center gap-1.5 text-sm">
-                  <span>Drone Surveys & Missions</span>
+                  <span>{tl("droneSurveysTitle")}</span>
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                  Commission UAV flights, review 4K orthomosaics with opacity sliders, inspect EXIF geotags, and certify cadastral dossiers.
+                  {tl("commissionUavDesc")}
                 </p>
               </div>
             </Link>
@@ -306,15 +306,15 @@ export const TahsildarOverviewPage: React.FC = () => {
                     <Eye className="w-5 h-5" />
                   </div>
                   <Badge variant="neutral" className="text-[10px]">
-                    Split-Screen GIS
+                    {tl("splitScreenGis")}
                   </Badge>
                 </div>
                 <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
-                  <span>Image Comparison Workspace</span>
+                  <span>{tl("imageComparisonTitle")}</span>
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                  Side-by-side swipe comparison of Sentinel-2 satellite telemetry vs ultra-high-resolution aerial drone orthophotos.
+                  {tl("imageComparisonDesc")}
                 </p>
               </div>
             </Link>
@@ -330,7 +330,7 @@ export const TahsildarOverviewPage: React.FC = () => {
                     <Sprout className="w-5 h-5" />
                   </div>
                   <Badge variant="success" className="text-[10px]">
-                    Officer verified
+                    {tl("officerVerifiedBadge")}
                   </Badge>
                 </div>
                 <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">
@@ -338,7 +338,7 @@ export const TahsildarOverviewPage: React.FC = () => {
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                  Automated ML crop classification, spectral signatures, and phenology matching against registered 7/12 claims.
+                  {tl("cropVerificationDesc")}
                 </p>
               </div>
             </Link>
@@ -354,7 +354,7 @@ export const TahsildarOverviewPage: React.FC = () => {
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <Badge variant="neutral" className="text-[10px]">
-                    {certifiedReportsCount} Certified
+                    {certifiedReportsCount} {tl("certifiedBadge")}
                   </Badge>
                 </div>
                 <h4 className="font-bold text-slate-900 mt-3 group-hover:text-emerald-700 transition-colors flex items-center gap-1.5 text-sm">

@@ -25,9 +25,13 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { registrationService } from '@/services/registration.service';
 import { RegistrationApplication, Property, RegistrationStatus, NotificationJob } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import { getFarmerLabel, localizePlotOrCropName, getStatusLabel } from '@/lib/dashboard-localizer';
 
 export const FarmerApplicationStatusPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const navigate = useNavigate();
 
   const refParam = searchParams.get('ref') || '';
@@ -148,7 +152,7 @@ export const FarmerApplicationStatusPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link to="/auth/login">
               <Button variant="outline" size="sm">
-                Farmer Login
+                {fl("goToDashboard")}
               </Button>
             </Link>
             <Link to="/farmer/register">
@@ -164,13 +168,13 @@ export const FarmerApplicationStatusPage: React.FC = () => {
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Official Revenue Status Tracker</span>
+            <span>{fl("revenueStatusTracker")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Check Registration Status
+            {fl("statusTrackerTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600">
-            Track your 7/12 land registration application through Tahsildar review, account activation, and credential delivery.
+            {fl("statusTrackerSubtitle")}
           </p>
         </div>
 
@@ -180,7 +184,7 @@ export const FarmerApplicationStatusPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Application Reference Number *
+                  {fl("appRef")} *
                 </label>
                 <input
                   type="text"
@@ -194,7 +198,7 @@ export const FarmerApplicationStatusPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Registered Mobile Number *
+                  {fl("mobileNumber")} *
                 </label>
                 <input
                   type="tel"
@@ -221,7 +225,7 @@ export const FarmerApplicationStatusPage: React.FC = () => {
               disabled={isSearching}
               icon={<Search className="w-4 h-4" />}
             >
-              {isSearching ? 'Searching Revenue Records...' : 'Check Status'}
+              {isSearching ? fl("searchingRecords") : fl("btnCheckStatus")}
             </Button>
           </form>
         </Card>
@@ -273,10 +277,10 @@ export const FarmerApplicationStatusPage: React.FC = () => {
                   <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <h4 className="text-sm font-extrabold text-emerald-950">
-                      Application Approved by Tahsildar!
+                      {fl("appApprovedTitle")}
                     </h4>
                     <p className="text-xs text-emerald-800 leading-relaxed">
-                      Your 7/12 land registration has been officially approved. An SMS notification has been dispatched to your mobile number with your activation link.
+                      {fl("appApprovedMsg")}
                     </p>
                   </div>
                 </div>
@@ -301,7 +305,7 @@ export const FarmerApplicationStatusPage: React.FC = () => {
                   <div className="pt-1">
                     <Link to={`/auth/activate?token=${lookupResult.activationToken}`}>
                       <Button size="md" icon={<ArrowRight className="w-4 h-4" />}>
-                        Activate Account & Set Password
+                        {fl("btnActivateNow")}
                       </Button>
                     </Link>
                   </div>
@@ -309,7 +313,7 @@ export const FarmerApplicationStatusPage: React.FC = () => {
                   <div className="pt-1">
                     <Link to="/auth/login">
                       <Button size="md" icon={<ArrowRight className="w-4 h-4" />}>
-                        Proceed to Farmer Login
+                        {fl("goToDashboard")}
                       </Button>
                     </Link>
                   </div>

@@ -22,9 +22,11 @@ import { notificationService } from '@/services/notification.service';
 import { mockDb } from '@/services/mock-db';
 import { Notification } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
+import { getFarmerLabel } from '@/lib/dashboard-localizer';
 
 export const FarmerNotificationsPage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const farmer = mockDb.currentUser;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
@@ -144,7 +146,7 @@ export const FarmerNotificationsPage: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>All Notifications</span>
+              <span>{fl("allNotifications")}</span>
               <Bell className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalCount}</div>
@@ -153,7 +155,7 @@ export const FarmerNotificationsPage: React.FC = () => {
 
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Unread Notices</span>
+              <span>{fl("unreadNotices")}</span>
               <Clock className="w-4 h-4 text-amber-500" />
             </div>
             <div className="text-2xl font-extrabold text-amber-600 mt-1">{unreadCount}</div>
@@ -211,7 +213,7 @@ export const FarmerNotificationsPage: React.FC = () => {
                 icon={<CheckCheck className="w-3.5 h-3.5" />}
                 onClick={handleMarkAllAsRead}
               >
-                Mark All Read
+                {fl("btnMarkAllRead")}
               </Button>
             )}
 

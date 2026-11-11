@@ -379,7 +379,7 @@ export const GisCropSurveyPage: React.FC = () => {
                   }
                 }}
               >
-                Get Satellite Images by Coordinate
+                {getGisLabel('getSatelliteImagesByCoords', language)}
               </Button>
 
               <Button
@@ -388,7 +388,7 @@ export const GisCropSurveyPage: React.FC = () => {
                 icon={<BarChart3 className="w-3.5 h-3.5" />}
                 onClick={() => setShowAcreagePanel(!showAcreagePanel)}
               >
-                Crop Area Estimation
+                {getGisLabel('cropAreaEstimation', language)}
               </Button>
 
               <Button
@@ -428,7 +428,7 @@ export const GisCropSurveyPage: React.FC = () => {
                   URL.revokeObjectURL(url);
                 }}
               >
-                Export GeoJSON
+                {getGisLabel('exportGeoJson', language)}
               </Button>
 
               <Button
@@ -443,7 +443,7 @@ export const GisCropSurveyPage: React.FC = () => {
 
           {/* Active Pilot Geography Quick Selector */}
           <div className="flex items-center gap-2 pt-2 border-t border-slate-100 mt-2 text-[11px]">
-            <span className="font-semibold text-slate-500">Active Maharashtra Pilot Talukas:</span>
+            <span className="font-semibold text-slate-500">{getGisLabel('activePilotTalukas', language)}</span>
             {ACTIVE_PILOT_TALUKS.map((t) => (
               <button
                 key={t}
@@ -467,7 +467,7 @@ export const GisCropSurveyPage: React.FC = () => {
               }}
               className="text-xs text-slate-400 hover:text-slate-600 ml-auto"
             >
-              Reset to All Pilot Zones
+              {getGisLabel('resetAllPilotZones', language)}
             </button>
           </div>
         </Card>
@@ -708,7 +708,7 @@ export const GisCropSurveyPage: React.FC = () => {
                 <div className="text-xs text-slate-600 flex items-center gap-1.5 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>
-                    {selectedPlot.village}, Taluka {selectedPlot.taluk}, {selectedPlot.district}
+                    {selectedPlot.village}, {localizePlotOrCropName('Taluka', language)} {selectedPlot.taluk}, {selectedPlot.district}
                   </span>
                 </div>
 
@@ -732,7 +732,7 @@ export const GisCropSurveyPage: React.FC = () => {
                     className="w-full p-2.5 rounded-xl border border-emerald-400 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
                   >
                     <Satellite className="w-4 h-4" />
-                    <span>Get Satellite Images by Coordinate</span>
+                    <span>{getGisLabel('getSatelliteImagesByCoords', language)}</span>
                   </button>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -810,7 +810,7 @@ export const GisCropSurveyPage: React.FC = () => {
                       scrollToSatelliteInspector(18.5793, 73.9812);
                     }}
                   >
-                    Get Satellite Images by Coordinate
+                    {getGisLabel('getSatelliteImagesByCoords', language)}
                   </Button>
                 </div>
               </Card>

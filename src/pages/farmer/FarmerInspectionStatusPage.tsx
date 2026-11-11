@@ -27,10 +27,11 @@ import { mockDb } from '@/services/mock-db';
 import { FieldInspection, DroneImagery, InspectionStatus } from '@/types';
 import { EvidenceImage } from '@/components/media/EvidenceImage';
 import { useLanguage } from '@/context/LanguageContext';
-import { localizePlotOrCropName } from '@/lib/dashboard-localizer';
+import { localizePlotOrCropName, getFarmerLabel } from '@/lib/dashboard-localizer';
 
 export const FarmerInspectionStatusPage: React.FC = () => {
   const { t, language } = useLanguage();
+  const fl = (key: string) => getFarmerLabel(key, language);
   const farmer = mockDb.currentUser;
   const [inspections, setInspections] = useState<FieldInspection[]>([]);
   const [droneImages, setDroneImages] = useState<DroneImagery[]>([]);
@@ -102,7 +103,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Total Drone Missions</span>
+              <span>{fl("totalDroneMissions")}</span>
               <Layers className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-slate-900 mt-1">{totalMissions}</div>
@@ -111,7 +112,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
 
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Completed & Verified</span>
+              <span>{fl("completedAndVerified")}</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-extrabold text-emerald-600 mt-1">{completedMissions}</div>
@@ -120,7 +121,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
 
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>In Progress</span>
+              <span>{fl("inProgressMissions")}</span>
               <Activity className="w-4 h-4 text-amber-500" />
             </div>
             <div className="text-2xl font-extrabold text-amber-600 mt-1">{inProgressMissions}</div>
@@ -129,7 +130,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
 
           <Card className="p-4 bg-white border border-slate-200">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>Upcoming / Scheduled</span>
+              <span>{fl("upcomingScheduled")}</span>
               <Clock className="w-4 h-4 text-blue-500" />
             </div>
             <div className="text-2xl font-extrabold text-blue-600 mt-1">{scheduledMissions}</div>
@@ -151,14 +152,14 @@ export const FarmerInspectionStatusPage: React.FC = () => {
                 }`}
               >
                 {st === 'ALL'
-                  ? 'All Missions'
+                  ? fl('allNotifications')
                   : st === 'EVIDENCE_UPLOADED'
-                  ? 'Evidence Ready'
+                  ? fl('completedAndVerified')
                   : st === 'COMPLETED'
-                  ? 'Completed'
+                  ? fl('completedAndVerified')
                   : st === 'IN_PROGRESS'
-                  ? 'In Flight'
-                  : 'Scheduled'}
+                  ? fl('inProgressMissions')
+                  : fl('upcomingScheduled')}
               </button>
             ))}
           </div>
@@ -169,7 +170,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
             icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
             onClick={loadData}
           >
-            Refresh Flights
+            {fl("btnRefreshFlights")}
           </Button>
         </div>
 
@@ -177,7 +178,7 @@ export const FarmerInspectionStatusPage: React.FC = () => {
         {filteredInspections.length === 0 ? (
           <Card className="p-12 text-center bg-white border-dashed border-2 border-slate-200">
             <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-800">No Drone Inspections Found</h3>
+            <h3 className="text-base font-bold text-slate-800">{fl("noMissionsFound")}</h3>
             <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
               There are no drone flights matching the selected filter. Once the Tahsildar assigns an
               aerial inspection to your land parcel, flight logs and orthomosaics will appear here.
