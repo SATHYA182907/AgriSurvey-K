@@ -55,6 +55,16 @@ import {
 import { ClipImageMode, NDVI_CLASSES, NDVI_MASKED_COLOR, SurveyArea, clipUrl, surveyAreaCenter } from '@/lib/sentinel-cog';
 import { HighResFieldMap } from '@/components/satellite/HighResFieldMap';
 import { SceneClipImage } from '@/components/satellite/SceneClipImage';
+import { useLanguage } from '@/context/LanguageContext';
+import {
+  getTimelineLabel,
+  localizeGrowthSummary,
+  localizeCropPatternName,
+  localizeTypicalCrops,
+  localizeCropPatternExplanation,
+  localizeAlertTitle,
+  localizeAlertDetail,
+} from '@/lib/dashboard-localizer';
 
 type AreaMode = 'plot' | 'point' | 'draw';
 type ImageMode = ClipImageMode;
@@ -88,6 +98,7 @@ const STAGE_STYLE: Record<string, string> = {
 };
 
 export const FieldSurveillancePage: React.FC = () => {
+  const { language } = useLanguage();
   const [searchParams] = useSearchParams();
   const plots = mockDb.farmPlots;
 
@@ -563,41 +574,41 @@ export const FieldSurveillancePage: React.FC = () => {
                 </div>
               </div>
 
-              <p className="text-sm text-slate-700">{analysis.summary}</p>
+              <p className="text-sm text-slate-700">{localizeGrowthSummary(analysis.summary, language)}</p>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
                   <h3 className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                    <Sprout className="w-4 h-4" /> Crop type indicator (from the growth pattern)
+                    <Sprout className="w-4 h-4" /> {getTimelineLabel('cropTypeIndicator', language)}
                   </h3>
-                  <p className="text-sm font-semibold text-slate-900">{analysis.cropPattern.pattern}</p>
-                  <p className="text-xs text-slate-700">{analysis.cropPattern.typicalCrops}</p>
-                  <p className="text-[11px] text-slate-600">{analysis.cropPattern.explanation}</p>
+                  <p className="text-sm font-semibold text-slate-900">{localizeCropPatternName(analysis.cropPattern.pattern, language)}</p>
+                  <p className="text-xs text-slate-700">{localizeTypicalCrops(analysis.cropPattern.typicalCrops, language)}</p>
+                  <p className="text-[11px] text-slate-600">{localizeCropPatternExplanation(analysis.cropPattern.explanation, language)}</p>
                   {analysis.cropPattern.declaredCropAgreement !== 'not_declared' && (
                     <p className="text-[11px] font-semibold">
-                      Declared crop "{activeField.declaredCrop}":{' '}
-                      {analysis.cropPattern.declaredCropAgreement === 'consistent' && <span className="text-emerald-800">✓ consistent with the observed pattern</span>}
-                      {analysis.cropPattern.declaredCropAgreement === 'differs' && <span className="text-amber-800">⚠ differs — field verification needed</span>}
-                      {analysis.cropPattern.declaredCropAgreement === 'undetermined' && <span className="text-slate-600">cannot be compared yet</span>}
+                      {getTimelineLabel('targetFarmLabel', language)} "{activeField.declaredCrop}":{' '}
+                      {analysis.cropPattern.declaredCropAgreement === 'consistent' && <span className="text-emerald-800">{getTimelineLabel('consistentWithDeclared', language)}</span>}
+                      {analysis.cropPattern.declaredCropAgreement === 'differs' && <span className="text-amber-800">{getTimelineLabel('differsFromDeclared', language)}</span>}
+                      {analysis.cropPattern.declaredCropAgreement === 'undetermined' && <span className="text-slate-600">{getTimelineLabel('cannotBeComparedYet', language)}</span>}
                     </p>
                   )}
-                  <p className="text-[10px] text-slate-500">Rule-based seasonal indicator, not a validated crop classifier.</p>
+                  <p className="text-[10px] text-slate-500">{getTimelineLabel('ruleBasedNotice', language)}</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                   <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600" /> Surveillance alerts ({analysis.alerts.length})
+                    <AlertTriangle className="w-4 h-4 text-amber-600" /> {getTimelineLabel('alerts', language)} ({analysis.alerts.length})
                   </h3>
                   {analysis.alerts.length === 0 && (
                     <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {isRunning ? 'Checking…' : 'No alerts for the observed periods.'}
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {isRunning ? 'Checking…' : getTimelineLabel('noAlertsPeriod', language)}
                     </p>
                   )}
                   <ul className="space-y-1.5 max-h-48 overflow-y-auto">
                     {analysis.alerts.map((a, i) => (
                       <li key={i} className={`text-[11px] rounded-lg border p-2 ${a.severity === 'critical' ? 'bg-red-50 border-red-200 text-red-900' : a.severity === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-white border-slate-200 text-slate-700'}`}>
                         <strong className="uppercase text-[9px] tracking-wider mr-1">{a.severity}</strong>
-                        <strong>{a.title}.</strong> {a.detail}
+                        <strong>{localizeAlertTitle(a.title, language)}.</strong> {localizeAlertDetail(a.detail, language)}
                         {a.periodIndex !== undefined && (
                           <button type="button" onClick={() => setSelectedIndex(a.periodIndex!)} className="ml-1 underline">View period</button>
                         )}

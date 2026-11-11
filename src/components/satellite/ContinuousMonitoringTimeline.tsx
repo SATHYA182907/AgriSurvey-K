@@ -40,7 +40,20 @@ import { fieldOutline } from '@/services/field-surveillance.service';
 import { HighResFieldMap } from './HighResFieldMap';
 import { ClipImageMode, SceneClipImage } from './SceneClipImage';
 import { useLanguage } from '@/context/LanguageContext';
-import { getTimelineLabel, localizePhenologyStage, localizeIndexMeta } from '@/lib/dashboard-localizer';
+import {
+  getTimelineLabel,
+  localizePhenologyStage,
+  localizeIndexMeta,
+  localizeGrowthSummary,
+  localizeCropPatternName,
+  localizeTypicalCrops,
+  localizeCropPatternExplanation,
+  localizeAlertTitle,
+  localizeAlertDetail,
+  localizeObservationChangeSummary,
+  localizeMissingReason,
+  localizePeriodLabel,
+} from '@/lib/dashboard-localizer';
 
 const fmtIndex = (v: number | null | undefined, d = 3) =>
   typeof v === 'number' && Number.isFinite(v) ? v.toFixed(d) : '—';
@@ -206,7 +219,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
   }, [clipKey, clipScene, area]);
   const activeClip =
     clipSceneId && !clipScene
-      ? { key: clipKey, error: 'Scene details are not cached on this device; press "Check Latest Scan" to reload imagery.' }
+      ? { key: clipKey, error: tl('sceneNotCached') }
       : clip && clip.key === clipKey
       ? clip
       : null;
@@ -261,33 +274,44 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Sprout className="w-4 h-4 text-emerald-600" /> Current growth report
+              <Sprout className="w-4 h-4 text-emerald-600" /> {tl('currentGrowthReport')}
             </h3>
-            {area.growth_summary && <p className="text-sm text-slate-700">{area.growth_summary}</p>}
+            {area.growth_summary && (
+              <p className="text-sm text-slate-700 leading-relaxed">
+                {localizeGrowthSummary(area.growth_summary, language)}
+              </p>
+            )}
             {area.crop_pattern && (
               <div className="pt-2 border-t border-slate-100 text-xs space-y-0.5">
                 <p className="font-semibold text-slate-900">
-                  Crop type indicator: {area.crop_pattern.pattern}{' '}
-                  <span className="font-normal text-slate-600">({area.crop_pattern.typical_crops})</span>
+                  {tl('cropTypeIndicator')}: {localizeCropPatternName(area.crop_pattern.pattern, language)}{' '}
+                  <span className="font-normal text-slate-600">
+                    ({localizeTypicalCrops(area.crop_pattern.typical_crops, language)})
+                  </span>
                 </p>
-                <p className="text-slate-600">{area.crop_pattern.explanation}</p>
+                <p className="text-slate-600 leading-relaxed">
+                  {localizeCropPatternExplanation(area.crop_pattern.explanation, language)}
+                </p>
                 {area.crop_pattern.declared_crop_agreement === 'consistent' && (
-                  <p className="text-emerald-800 font-semibold">✓ Consistent with the declared crop</p>
+                  <p className="text-emerald-800 font-semibold">{tl('consistentWithDeclared')}</p>
                 )}
                 {area.crop_pattern.declared_crop_agreement === 'differs' && (
-                  <p className="text-amber-800 font-semibold">⚠ Differs from the declared crop — field verification needed</p>
+                  <p className="text-amber-800 font-semibold">{tl('differsFromDeclared')}</p>
                 )}
-                <p className="text-[10px] text-slate-500">Rule-based seasonal indicator, not a validated crop classifier.</p>
+                {area.crop_pattern.declared_crop_agreement === 'undetermined' && (
+                  <p className="text-slate-600">{tl('cannotBeComparedYet')}</p>
+                )}
+                <p className="text-[10px] text-slate-500">{tl('ruleBasedNotice')}</p>
               </div>
             )}
           </div>
           <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4 text-amber-600" /> Alerts ({area.alerts?.length ?? 0})
+              <ShieldAlert className="w-4 h-4 text-amber-600" /> {tl('alerts')} ({area.alerts?.length ?? 0})
             </h3>
             {!area.alerts?.length && (
               <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-emerald-600" /> No alerts for the observed periods.
+                <CheckCircle className="w-4 h-4 text-emerald-600" /> {tl('noAlertsPeriod')}
               </p>
             )}
             <ul className="space-y-1.5 max-h-40 overflow-y-auto">
@@ -302,7 +326,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                       : 'bg-slate-50 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <strong>{a.title}.</strong> {a.detail}
+                  <strong>{localizeAlertTitle(a.title, language)}.</strong> {localizeAlertDetail(a.detail, language)}
                 </li>
               ))}
             </ul>
@@ -577,7 +601,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                     </div>
 
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-500">NDVI Delta:</span>
+                      <span className="text-slate-500">{tl('ndviDelta')}:</span>
                       {delta !== null ? (
                         <span
                           className={`font-bold font-mono flex items-center gap-0.5 ${
@@ -598,13 +622,13 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                           {delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2)}
                         </span>
                       ) : (
-                        <span className="text-slate-400 font-mono text-[11px]">Baseline</span>
+                        <span className="text-slate-400 font-mono text-[11px]">{tl('baseline')}</span>
                       )}
                     </div>
                   </div>
                 ) : (
                   <div className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
-                    {obs.missing_reason || 'No clear observation in this period'}
+                    {localizeMissingReason(obs.missing_reason, language) || tl('noClearObsPeriod')}
                   </div>
                 )}
               </div>
@@ -616,7 +640,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
       {/* Sharpest real satellite view of the farm */}
       <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
         <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-          <Eye className="w-4 h-4 text-emerald-600" /> Sharpest satellite view of this farm
+          <Eye className="w-4 h-4 text-emerald-600" /> {tl('sharpestSatelliteView')}
         </h3>
         <HighResFieldMap
           center={{ lat: area.latitude, lon: area.longitude }}
@@ -638,19 +662,21 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-slate-900 text-white text-xs font-bold rounded-md">
-                  {selectedObs.period_label}
+                  {localizePeriodLabel(selectedObs.period_label, language)}
                 </span>
                 <span className="text-xs text-slate-500 font-mono">
                   {selectedObs.has_data
-                    ? `Acquisition Date: ${selectedObs.actual_acquisition_dates.join(', ')}`
-                    : 'No clear satellite scene available'}
+                    ? `${tl('acquisitionDate')}: ${selectedObs.actual_acquisition_dates.join(', ')}`
+                    : tl('noClearScene')}
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-1.5">{selectedObs.change_summary}</p>
+              <p className="text-xs text-slate-600 mt-1.5">
+                {localizeObservationChangeSummary(selectedObs.change_summary, language)}
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Provider:</span>
+              <span className="text-xs text-slate-500">{tl('provider')}:</span>
               <span className="text-xs font-semibold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md">
                 {selectedObs.satellite_provider}
               </span>
@@ -663,7 +689,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
               <div className="md:col-span-2 space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                   <Activity className="w-4 h-4 text-emerald-600" />
-                  Calculated Indices for this 15-Day Composite
+                  {tl('calculatedIndicesHeader')}
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {INDICES_CONFIG.map((idx) => {
@@ -678,7 +704,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                     );
                   })}
                   <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                    <div className="text-[11px] font-semibold text-slate-500">Valid Pixels</div>
+                    <div className="text-[11px] font-semibold text-slate-500">{tl('validPixels')}</div>
                     <div className="text-sm font-bold font-mono text-emerald-700 mt-0.5">
                       {(selectedObs.valid_pixel_fraction * 100).toFixed(1)}%
                     </div>
@@ -686,9 +712,9 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                 </div>
 
                 <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-4 gap-y-1 pt-1">
-                  <span>Scene IDs: <code className="text-slate-700">{selectedObs.scene_ids.join(', ') || 'N/A'}</code></span>
-                  <span>BOA Offset: <code className="text-slate-700">{selectedObs.boa_offset_applied}</code></span>
-                  <span>Scale: <code className="text-slate-700">{selectedObs.scale_factor}</code></span>
+                  <span>{tl('sceneIds')}: <code className="text-slate-700">{selectedObs.scene_ids.join(', ') || 'N/A'}</code></span>
+                  <span>{tl('boaOffset')}: <code className="text-slate-700">{selectedObs.boa_offset_applied}</code></span>
+                  <span>{tl('scale')}: <code className="text-slate-700">{selectedObs.scale_factor}</code></span>
                 </div>
               </div>
 
@@ -696,13 +722,13 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                 <div className="p-3 rounded-xl bg-slate-900 text-white border border-slate-700 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                      <Eye className="w-4 h-4" /> Satellite view
+                      <Eye className="w-4 h-4" /> {tl('satelliteView')}
                     </span>
                     <div className="flex gap-0.5 bg-white/10 p-0.5 rounded text-[10px]" role="group" aria-label="Band combination">
                       {(
                         [
-                          ['visual', 'Natural'],
-                          ['false_color', 'Infrared'],
+                          ['visual', tl('naturalBand')],
+                          ['false_color', tl('infraredBand')],
                           ['ndvi', 'NDVI'],
                         ] as [ClipImageMode, string][]
                       ).map(([m, label]) => (
@@ -725,7 +751,7 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                     className="aspect-square rounded-lg overflow-hidden"
                   />
                   <p className="text-[10px] text-slate-400">
-                    Acquired {selectedObs.actual_acquisition_dates[0]} · yellow outline = monitored area · 10 m pixels, display-stretched.
+                    {tl('acquired')}: {selectedObs.actual_acquisition_dates[0]} · {tl('monitoredAreaLegend')}
                   </p>
                 </div>
               ) : (
@@ -733,16 +759,16 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4" />
-                      Crop Intelligence &amp; Phenology
+                      {tl('cropIntelligencePhenology')}
                     </span>
                   </div>
 
                   <div className="text-xs text-slate-300 leading-relaxed">
-                    Whole-season Sentinel-2 NDVI spectral curve mapped against Maharashtra agro-climatic phenology templates for validated crop classification and growth tracking.
+                    {tl('cropPhenologyDesc')}
                   </div>
                   <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>Monitored Interval</span>
-                    <span className="font-semibold text-emerald-400">Every 15 Days</span>
+                    <span>{tl('monitoredInterval')}</span>
+                    <span className="font-semibold text-emerald-400">{tl('every15Days')}</span>
                   </div>
                 </div>
               )}
@@ -751,9 +777,9 @@ export const ContinuousMonitoringTimeline: React.FC<ContinuousMonitoringTimeline
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
               <CloudOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-amber-800">No clear observation in this period</p>
+                <p className="font-bold text-amber-800">{tl('noClearObsPeriod')}</p>
                 <p className="text-amber-700 mt-1">
-                  {selectedObs.missing_reason || 'No usable satellite view.'} The period is left empty rather than filled with estimated values.
+                  {localizeMissingReason(selectedObs.missing_reason, language) || tl('noClearObsPeriod')} {tl('emptyPeriodNotice')}
                 </p>
               </div>
             </div>

@@ -36,7 +36,13 @@ import { SatelliteScene } from '@/types';
 import { stacSatelliteService, StacSearchResult } from '@/services/stac.service';
 import { satelliteMonitoringService } from '@/services/satellite-monitoring.service';
 import { useLanguage } from '@/context/LanguageContext';
-import { getTahsildarLabel } from '@/lib/dashboard-localizer';
+import {
+  getTahsildarLabel,
+  localizeNdviDensityClass,
+  localizeAgronomicFinding,
+  localizeSkyCondition,
+  localizeJurisdictionPreset,
+} from '@/lib/dashboard-localizer';
 import { loadSceneClip, SceneClip, NDVI_CLASSES, NDVI_MASKED_COLOR } from '@/lib/sentinel-cog';
 
 export interface TahsildarSatelliteCoordinateModalProps {
@@ -490,7 +496,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                     onClick={() => handlePresetSelect(p)}
                     className="text-[11px] px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
                   >
-                    {p.name}
+                    {localizeJurisdictionPreset(p.name, language)}
                   </button>
                 ))}
               </div>
@@ -560,17 +566,17 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Satellite className="w-5 h-5 text-emerald-600" />
-                    <span>Sentinel-2 Satellite Passes Found ({searchResults.scenes.length})</span>
+                    <span>{tl('passesFoundTitle')} ({searchResults.scenes.length})</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Multispectral Level-2A imagery centered at {formatCoord(searchedArea.lat, searchedArea.lon)} (Radius: {searchedArea.radiusKm} km)
+                    {formatCoord(searchedArea.lat, searchedArea.lon)} · {tl('radiusLabel')}: {searchedArea.radiusKm} km
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Live ESA STAC Stream</span>
+                    <span>{tl('liveStacStream')}</span>
                   </span>
                 </div>
               </div>
@@ -628,7 +634,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           }`}
                         >
                           <Camera className="w-3.5 h-3.5" />
-                          <span>Natural Photo</span>
+                          <span>{tl('naturalPhoto')}</span>
                         </button>
                         <button
                           type="button"
@@ -640,7 +646,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           }`}
                         >
                           <Activity className="w-3.5 h-3.5" />
-                          <span>Crop Greenness (NDVI)</span>
+                          <span>{tl('cropGreennessNdvi')}</span>
                         </button>
                         <button
                           type="button"
@@ -652,7 +658,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           }`}
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Plant Health (Infrared)</span>
+                          <span>{tl('plantHealthInfrared')}</span>
                         </button>
                       </div>
                     </div>
@@ -662,7 +668,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                       {clipLoading && (
                         <div className="flex flex-col items-center gap-2.5 text-slate-300 text-xs p-6 text-center">
                           <Loader2 className="w-7 h-7 animate-spin text-emerald-400" />
-                          <span>Fetching 10m Sentinel-2 bands from satellite catalog…</span>
+                          <span>{tl('fetchingBands')}</span>
                         </div>
                       )}
 
@@ -699,7 +705,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
 
                           {/* Simple bottom-left resolution pill */}
                           <div className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-md bg-black/70 text-[10px] font-medium text-slate-200 border border-white/10 backdrop-blur-xs">
-                            10m Resolution &bull; {(searchedArea.radiusKm * 2).toFixed(1)} km Area
+                            {tl('tenMeterRes')} &bull; {(searchedArea.radiusKm * 2).toFixed(1)} km {tl('areaWord')}
                           </div>
                         </>
                       )}
@@ -716,7 +722,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           <div className="absolute inset-x-3 bottom-3 p-2.5 rounded-lg bg-black/80 text-xs text-amber-300 flex items-start gap-2 border border-amber-500/30">
                             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                             <span>
-                              10m band clip unavailable. Showing low-resolution tile overview.
+                              {tl('bandClipUnavailable')}
                             </span>
                           </div>
                         </div>
@@ -726,19 +732,19 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                     {/* NDVI Compact Color Guide (Only shown in NDVI mode) */}
                     {imageryMode === 'ndvi' && activeClip && (
                       <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
-                        <span className="font-semibold text-slate-400">Greenness Scale:</span>
+                        <span className="font-semibold text-slate-400">{tl('greennessScale')}</span>
                         <div className="flex items-center gap-3">
                           <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Dense Crop
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> {tl('denseCrop')}
                           </span>
                           <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-lime-500" /> Developing
+                            <span className="w-2.5 h-2.5 rounded-full bg-lime-500" /> {tl('developing')}
                           </span>
                           <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Sparse
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> {tl('sparse')}
                           </span>
                           <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-amber-800" /> Soil / Tilled
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-800" /> {tl('soilTilled')}
                           </span>
                         </div>
                       </div>
@@ -754,7 +760,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                             : 'bg-slate-800 text-slate-300 border border-slate-700'
                         }`}>
-                          <span>☁️ {selectedScene.cloud_cover_percentage}% Clouds</span>
+                          <span>☁️ {selectedScene.cloud_cover_percentage}% {tl('clouds')}</span>
                         </span>
 
                         <button
@@ -767,7 +773,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           }`}
                         >
                           <MapPin className="w-3.5 h-3.5" />
-                          <span>{showCenterPin ? 'Target Pin: ON' : 'Target Pin: OFF'}</span>
+                          <span>{showCenterPin ? tl('targetPinOn') : tl('targetPinOff')}</span>
                         </button>
                       </div>
 
@@ -787,7 +793,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             title="Overlay this satellite scene footprint onto the GIS Crop Survey map"
                           >
                             <Layers className="w-3.5 h-3.5" />
-                            <span>Overlay on GIS Map</span>
+                            <span>{tl('overlayGisMap')}</span>
                           </button>
                         )}
 
@@ -798,7 +804,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-medium border border-slate-800 inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                           >
                             <Download className="w-3.5 h-3.5" />
-                            <span>Save Photo</span>
+                            <span>{tl('savePhoto')}</span>
                           </button>
                         )}
                       </div>
@@ -815,18 +821,18 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             <Satellite className="w-4 h-4" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-slate-900 text-sm">Satellite Pass Summary</h4>
+                            <h4 className="font-bold text-slate-900 text-sm">{tl('passSummaryTitle')}</h4>
                             <span className="text-[11px] text-slate-500">Copernicus Sentinel-2</span>
                           </div>
                         </div>
                         <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          Direct STAC
+                          {tl('directStacBadge')}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2.5 text-xs">
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Pass Date</span>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">{tl('passDate')}</span>
                           <span className="font-bold text-slate-900 text-sm block">
                             {new Date(selectedScene.acquisition_datetime).toLocaleDateString('en-IN', {
                               day: 'numeric',
@@ -843,36 +849,39 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Sky Condition</span>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">{tl('skyCondition')}</span>
                           <span className="font-bold text-slate-900 text-sm block">
-                            {selectedScene.cloud_cover_percentage <= 15
-                              ? 'Clear Sky'
-                              : selectedScene.cloud_cover_percentage <= 40
-                              ? 'Partly Cloudy'
-                              : 'High Cloud Cover'}
+                            {localizeSkyCondition(
+                              selectedScene.cloud_cover_percentage <= 15
+                                ? 'Clear Sky'
+                                : selectedScene.cloud_cover_percentage <= 40
+                                ? 'Partly Cloudy'
+                                : 'High Cloud Cover',
+                              language
+                            )}
                           </span>
                           <span className="text-[11px] text-slate-500 font-medium">
-                            {selectedScene.cloud_cover_percentage}% cloud cover
+                            {selectedScene.cloud_cover_percentage}% {tl('maxCloudLabel')}
                           </span>
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Area Surveyed</span>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">{tl('areaSurveyed')}</span>
                           <span className="font-bold text-slate-900 text-sm block">
-                            {(searchedArea.radiusKm * 2).toFixed(1)} km Perimeter
+                            {(searchedArea.radiusKm * 2).toFixed(1)} km {tl('perimeter')}
                           </span>
                           <span className="text-[11px] text-slate-500">
-                            Radius {searchedArea.radiusKm} km around center
+                            {tl('radiusAroundCenter')}: {searchedArea.radiusKm} km
                           </span>
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Ground Resolution</span>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">{tl('groundResolution')}</span>
                           <span className="font-bold text-slate-900 text-sm block">
-                            10 Meters
+                            {tl('tenMeters')}
                           </span>
                           <span className="text-[11px] text-slate-500">
-                            High precision multispectral
+                            {tl('highPrecisionMultispectral')}
                           </span>
                         </div>
                       </div>
@@ -886,7 +895,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             <Activity className="w-4 h-4" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-slate-900 text-sm">Crop Greenness & Health</h4>
+                            <h4 className="font-bold text-slate-900 text-sm">{tl('cropGreennessHealth')}</h4>
                             <span className="text-[11px] text-slate-500">Normalized Difference Vegetation Index (NDVI)</span>
                           </div>
                         </div>
@@ -895,7 +904,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                       {clipLoading && (
                         <div className="p-6 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-                          <span>Analyzing vegetation greenness from Sentinel-2 bands…</span>
+                          <span>{tl('analyzingBands')}</span>
                         </div>
                       )}
 
@@ -905,7 +914,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
                             <div>
                               <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider block">
-                                Greenness Score (NDVI)
+                                {tl('greennessScore')}
                               </span>
                               <div className="text-2xl font-extrabold text-emerald-950 font-mono mt-0.5">
                                 {activeClip.stats.ndviMean.toFixed(2)}
@@ -921,10 +930,10 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                                   ? 'bg-amber-500 text-slate-950'
                                   : 'bg-slate-600 text-white'
                               }`}>
-                                {classifyNdvi(activeClip.stats.ndviMean)}
+                                {localizeNdviDensityClass(classifyNdvi(activeClip.stats.ndviMean), language)}
                               </span>
                               <span className="text-[10px] text-slate-500 block mt-1">
-                                Scale: 0.0 to 1.0
+                                {tl('scaleZeroToOne')}
                               </span>
                             </div>
                           </div>
@@ -932,9 +941,9 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                           {/* Visual Spectrum Bar */}
                           <div className="space-y-1">
                             <div className="flex justify-between text-[10px] font-semibold text-slate-500">
-                              <span>Soil (0.0)</span>
-                              <span>Emerging (0.3)</span>
-                              <span>Dense Crop (0.8)</span>
+                              <span>{tl('soilLabel')}</span>
+                              <span>{tl('emergingLabel')}</span>
+                              <span>{tl('denseCropLabel')}</span>
                             </div>
                             <div className="h-2 rounded-full bg-gradient-to-r from-amber-700 via-yellow-400 to-emerald-600 relative overflow-hidden">
                               <div
@@ -948,15 +957,18 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
 
                           {/* Plain Language Agronomic Interpretation */}
                           <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed">
-                            <span className="font-bold text-slate-900 block mb-0.5">Agronomic Finding:</span>
+                            <span className="font-bold text-slate-900 block mb-0.5">{tl('agronomicFinding')}</span>
                             <p className="text-[11px] text-slate-600">
-                              {activeClip.stats.ndviMean > 0.5
-                                ? 'Vigorous crop canopy with dense foliage detected across this parcel zone.'
-                                : activeClip.stats.ndviMean > 0.35
-                                ? 'Active vegetative development with healthy crop ground cover.'
-                                : activeClip.stats.ndviMean > 0.2
-                                ? 'Early vegetative emergence, sparse cover, or light moisture stress.'
-                                : 'Predominantly bare ground, harvested fields, or tilled soil.'}
+                              {localizeAgronomicFinding(
+                                activeClip.stats.ndviMean > 0.5
+                                  ? 'Vigorous crop canopy with dense foliage detected across this parcel zone.'
+                                  : activeClip.stats.ndviMean > 0.35
+                                  ? 'Active vegetative development with healthy crop ground cover.'
+                                  : activeClip.stats.ndviMean > 0.2
+                                  ? 'Early vegetative emergence, sparse cover, or light moisture stress.'
+                                  : 'Predominantly bare ground, harvested fields, or tilled soil.',
+                                language
+                              )}
                             </p>
                           </div>
                         </div>
@@ -964,7 +976,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
 
                       {!clipLoading && (!activeClip || activeClip.stats.ndviMean === null) && (
                         <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">
-                          Clear vegetation index unavailable for this pass date. Please choose a clearer pass below.
+                          {tl('clearIndexUnavailable') || 'Clear vegetation index unavailable for this pass date. Please choose a clearer pass below.'}
                         </div>
                       )}
                     </div>
@@ -977,7 +989,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                 <div className="pt-2">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Select Other Pass Dates to Inspect</span>
+                    <span>{tl('selectOtherPassDates')}</span>
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
                     {searchResults.scenes.map((scene) => {
@@ -998,10 +1010,10 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             {scene.thumbnail_url ? (
                               <img src={scene.thumbnail_url} alt={`Tile preview ${scene.scene_id}`} className="w-full h-full object-cover" loading="lazy" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">No preview</div>
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">{tl('noPreview')}</div>
                             )}
                             <span className="absolute bottom-1 right-1 text-[9px] bg-black/70 text-white font-mono px-1 rounded">
-                              {scene.cloud_cover_percentage}% cloud
+                              {scene.cloud_cover_percentage}% {tl('maxCloudLabel')}
                             </span>
                           </div>
                           <div className="text-[11px] font-bold text-slate-900 truncate">
@@ -1011,7 +1023,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                             })}
                           </div>
                           <div className="text-[10px] text-slate-500">
-                            {isSelected ? '✓ Active Pass' : 'Click to view'}
+                            {isSelected ? tl('activePassBadge') : tl('clickToView')}
                           </div>
                         </button>
                       );
@@ -1027,8 +1039,8 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 shrink-0">
           <span>
             {searchedArea
-              ? `Searched: ${formatCoord(searchedArea.lat, searchedArea.lon)} · radius ${searchedArea.radiusKm} km`
-              : 'Enter coordinates and fetch imagery'}
+              ? `${formatCoord(searchedArea.lat, searchedArea.lon)} · ${tl('radiusLabel')}: ${searchedArea.radiusKm} km`
+              : tl('targetCoordinates')}
           </span>
           {embedded ? (
             <button
@@ -1037,7 +1049,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
               className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <ArrowUp className="w-3.5 h-3.5" />
-              <span>Back to GIS Map</span>
+              <span>{tl('backToGisMap')}</span>
             </button>
           ) : (
             <button
@@ -1045,7 +1057,7 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
               onClick={onClose}
               className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-semibold transition-colors cursor-pointer"
             >
-              Close
+              {tl('closeModal')}
             </button>
           )}
         </div>
