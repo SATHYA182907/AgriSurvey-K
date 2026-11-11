@@ -45,6 +45,8 @@ import { plantIntelligenceService } from '@/services/plant-intelligence.service'
 import { mockDb } from '@/services/mock-db';
 import { Profile, AuditLog, StaffRegion, NotificationJob, CropHealthThreshold } from '@/types';
 import { PUNE_TALUKS, MAHARASHTRA_DISTRICTS } from '@/lib/constants';
+import { useLanguage } from '@/context/LanguageContext';
+import { getAdminLabel } from '@/lib/dashboard-localizer';
 
 type AdminTab = 'overview' | 'users' | 'regions' | 'audit' | 'sms' | 'thresholds';
 
@@ -58,6 +60,7 @@ const tabForPath = (pathname: string): AdminTab => {
 };
 
 export const AdminDashboardPage: React.FC = () => {
+  const { t, language } = useLanguage();
   const { pathname } = useLocation();
   const [activeTab, setActiveTab] = useState<AdminTab>(() => tabForPath(pathname));
   const [tabPath, setTabPath] = useState(pathname);
@@ -163,19 +166,19 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      title="State Administration & Governance Center"
+      title={getAdminLabel('systemOverview', language)}
       subtitle="Dr. Meenakshi Sundaram, IAS • Joint Director of Land Records & System Superuser"
     >
       <div className="space-y-6">
         {/* Navigation Tabs */}
         <div className="flex border-b border-slate-200 bg-white rounded-xl px-4 shadow-xs">
           {[
-            { id: 'overview', label: 'Overview & Recharts Analytics', icon: BarChart3 },
-            { id: 'thresholds', label: 'Crop Health Thresholds & Policies', icon: Sprout },
-            { id: 'users', label: 'User & Staff Provisioning', icon: Users },
-            { id: 'regions', label: 'Geographic Allocations', icon: MapPin },
+            { id: 'overview', label: t('dashboard.overview', 'Overview & Recharts Analytics'), icon: BarChart3 },
+            { id: 'thresholds', label: t('dashboard.systemSettings', 'Crop Health Thresholds & Policies'), icon: Sprout },
+            { id: 'users', label: t('dashboard.userManagement', 'User & Staff Provisioning'), icon: Users },
+            { id: 'regions', label: t('dashboard.geoRegions', 'Geographic Allocations'), icon: MapPin },
             { id: 'sms', label: 'SMS & Delivery Queue', icon: Smartphone },
-            { id: 'audit', label: 'Immutable Audit Logs', icon: History },
+            { id: 'audit', label: t('dashboard.auditLogs', 'Immutable Audit Logs'), icon: History },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

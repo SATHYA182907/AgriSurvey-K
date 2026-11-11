@@ -25,6 +25,8 @@ import {
 import { FarmPlot, MonitoringArea } from '@/types';
 import { satelliteMonitoringService } from '@/services/satellite-monitoring.service';
 import { mockDb } from '@/services/mock-db';
+import { useLanguage } from '@/context/LanguageContext';
+import { getTimelineLabel } from '@/lib/dashboard-localizer';
 
 interface CoordinateMonitoringModalProps {
   isOpen: boolean;
@@ -63,6 +65,8 @@ const CoordinateMonitoringModalContent: React.FC<CoordinateMonitoringModalProps>
   defaultPlot,
   onAreaCreated,
 }) => {
+  const { language } = useLanguage();
+  const tl = (key: string) => getTimelineLabel(key, language);
 
   // Selected plot linkage
   const [selectedPlotId, setSelectedPlotId] = useState<string>(defaultPlot?.id || 'none');
@@ -217,9 +221,9 @@ const CoordinateMonitoringModalContent: React.FC<CoordinateMonitoringModalProps>
               <Compass className="w-6 h-6 animate-spin-slow" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Start 15-Day Satellite Farm Monitoring</h2>
+              <h2 className="text-lg font-bold">{tl('startMonitoringModalTitle')}</h2>
               <p className="text-xs text-slate-300">
-                Automatic updates every 15 days &bull; Crop growth, health and moisture tracking
+                {tl('startMonitoringModalSubtitle')}
               </p>
             </div>
           </div>
@@ -446,7 +450,7 @@ const CoordinateMonitoringModalContent: React.FC<CoordinateMonitoringModalProps>
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             >
-              Cancel
+              {tl('cancel')}
             </button>
 
             <button
@@ -462,7 +466,7 @@ const CoordinateMonitoringModalContent: React.FC<CoordinateMonitoringModalProps>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Start 15-Day Monitoring</span>
+                  <span>{tl('startMonitoringBtn')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

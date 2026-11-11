@@ -37,6 +37,7 @@ import { mockDb } from '@/services/mock-db';
 import { DroneMissionRecord, GeotaggedPhoto, FarmPlot } from '@/types';
 import { computeGeodesicMeasurements } from '@/lib/geospatial';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDroneSurveyLabel, getTahsildarLabel } from '@/lib/dashboard-localizer';
 
 // Fix Leaflet icons in Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -66,7 +67,8 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
 }
 
 export const TahsildarDroneSurveyPage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const tl = (key: string) => getDroneSurveyLabel(key, language);
   const navigate = useNavigate();
   const currentUser = mockDb.currentUser;
 
@@ -298,11 +300,11 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
                   Drone Survey & Photogrammetry Desk
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  RTK Centimeter Precision
+                  {tl('rtkPrecision')}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Dispatch certified UAV pilots, inspect aerial orthomosaics with opacity sliders, and authenticate cadastral farm boundaries.
+                {tl('droneMissionSubtitle')}
               </p>
             </div>
           </div>
@@ -314,7 +316,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Schedule Drone Survey</span>
+              <span>{tl('scheduleDroneSurvey')}</span>
             </button>
 
             <button
@@ -323,7 +325,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
             >
               <Camera className="w-4 h-4 text-slate-500" />
-              <span>Upload Drone Photos</span>
+              <span>{tl('uploadDronePhotos')}</span>
             </button>
 
             <button
@@ -333,7 +335,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
               title="Download Official PDF Dossier"
             >
               <Download className="w-4 h-4 text-slate-500" />
-              <span>Export Dossier (PDF)</span>
+              <span>{tl('exportDossier')}</span>
             </button>
 
             <button
@@ -351,7 +353,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
           <Card className="p-4 bg-white border-slate-200 hover:border-emerald-300 transition-colors flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                <span>Total Missions</span>
+                <span>{tl('totalMissions')}</span>
                 <Plane className="w-4 h-4 text-slate-400" />
               </div>
               <div className="text-2xl font-extrabold text-slate-900 mt-1">{kpis.total}</div>
@@ -362,7 +364,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
           <Card className="p-4 bg-emerald-50/50 border-emerald-200 hover:border-emerald-300 transition-colors flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
-                <span>Verified & Certified</span>
+                <span>{tl('verifiedCertified')}</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-2xl font-extrabold text-emerald-950 mt-1">{kpis.verified}</div>
@@ -373,7 +375,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
           <Card className="p-4 bg-amber-50/50 border-amber-200 hover:border-amber-300 transition-colors flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-amber-800">
-                <span>In-Flight / Scheduled</span>
+                <span>{tl('inFlightScheduled')}</span>
                 <Clock className="w-4 h-4 text-amber-600" />
               </div>
               <div className="text-2xl font-extrabold text-amber-950 mt-1">{kpis.inFlight + kpis.scheduled}</div>
@@ -384,7 +386,7 @@ export const TahsildarDroneSurveyPage: React.FC = () => {
           <Card className="p-4 bg-sky-50/50 border-sky-200 hover:border-sky-300 transition-colors flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-sky-800">
-                <span>Aerial Photographs</span>
+                <span>{tl('aerialPhotographs')}</span>
                 <Camera className="w-4 h-4 text-sky-600" />
               </div>
               <div className="text-2xl font-extrabold text-sky-950 mt-1">{kpis.totalPhotos}</div>

@@ -72,6 +72,7 @@ import {
   localizeAlertAction,
   getTargetLabel,
   getAgronomicRuleTitle,
+  getTimelineLabel,
 } from '@/lib/dashboard-localizer';
 
 const HEALTH_COLORS = {
@@ -305,7 +306,7 @@ export const FarmerDashboardPage: React.FC = () => {
               icon={<Satellite className="w-3.5 h-3.5 text-emerald-600" />}
               onClick={() => setCoordModalOpen(true)}
             >
-              Monitor Coordinates
+              {getTimelineLabel('monitorCoordinates', language)}
             </Button>
           </div>
         </div>
@@ -380,11 +381,11 @@ export const FarmerDashboardPage: React.FC = () => {
                   <Satellite className="w-5 h-5" />
                 </span>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  15-Day Satellite Farm & Crop Monitoring
+                  {getTimelineLabel('timelineTitle', language)}
                 </h3>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Automated satellite passes every 15 days &bull; Crop growth stage, moisture & greenness tracking
+                {getTimelineLabel('timelineSubtitle', language)}
               </p>
             </div>
 
@@ -409,7 +410,7 @@ export const FarmerDashboardPage: React.FC = () => {
                 icon={<PlusCircle className="w-3.5 h-3.5" />}
                 onClick={() => setCoordModalOpen(true)}
               >
-                Add Farm Coordinates to Monitor
+                {getTimelineLabel('addFarmCoords', language)}
               </Button>
             </div>
           </div>
@@ -425,16 +426,16 @@ export const FarmerDashboardPage: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
                 <Satellite className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-800">No Satellite Monitoring Areas Active</h4>
+              <h4 className="text-sm font-bold text-slate-800">{getTimelineLabel('noActiveAreas', language)}</h4>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Enter your farm plot coordinates or select a cadastral parcel to begin automated 15-day Sentinel-2 L2A satellite monitoring and crop phenology analysis.
+                {getTimelineLabel('noActiveAreasDesc', language)}
               </p>
               <Button
                 size="sm"
                 icon={<Compass className="w-4 h-4" />}
                 onClick={() => setCoordModalOpen(true)}
               >
-                Input Coordinates & Start Monitoring
+                {getTimelineLabel('addFarmCoords', language)}
               </Button>
             </div>
           )}

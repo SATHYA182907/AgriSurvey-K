@@ -122,7 +122,11 @@ export const FarmerReportsPage: React.FC = () => {
         {/* Action Header */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-slate-600">
-            Showing all revenue reports for Khatedar <span className="font-bold text-slate-800">{farmer.full_name}</span>
+            {language === 'mr'
+              ? `खातेदार ${farmer.full_name} यांचे सर्व महसूल व पडताळणी अहवाल`
+              : language === 'hi'
+              ? `खातेदार ${farmer.full_name} की सभी राजस्व एवं सत्यापन रिपोर्ट`
+              : `Showing all revenue reports for Khatedar ${farmer.full_name}`}
           </div>
 
           <Button
@@ -131,7 +135,7 @@ export const FarmerReportsPage: React.FC = () => {
             icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
             onClick={loadData}
           >
-            Refresh Reports
+            {t('dashboard.liveRefresh', 'Refresh Reports')}
           </Button>
         </div>
 
@@ -139,10 +143,15 @@ export const FarmerReportsPage: React.FC = () => {
         {reports.length === 0 ? (
           <Card className="p-12 text-center bg-white border-dashed border-2 border-slate-200">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-800">No Verification Reports Yet</h3>
+            <h3 className="text-base font-bold text-slate-800">
+              {language === 'mr' ? 'अद्याप कोणतेही पडताळणी अहवाल उपलब्ध नाहीत' : language === 'hi' ? 'अभी तक कोई सत्यापन रिपोर्ट नहीं' : 'No Verification Reports Yet'}
+            </h3>
             <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
-              Once the Tahsildar completes the examination of your 7/12 extract and aerial drone
-              survey, the signed certificate will be available here for official download.
+              {language === 'mr'
+                ? 'तहसीलदारांकडून ७/१२ उतारा आणि ड्रोन पाहणी पूर्ण झाल्यानंतर अधिकृत स्वाक्षरी केलेले प्रमाणपत्र येथे उपलब्ध होईल.'
+                : language === 'hi'
+                ? 'तहसीलदार द्वारा ७/१२ खतौनी एवं ड्रोन सर्वेक्षण पूरा होने के बाद आधिकारिक प्रमाण पत्र यहां डाउनलोड के लिए उपलब्ध होगा।'
+                : 'Once the Tahsildar completes the examination of your 7/12 extract and aerial drone survey, the signed certificate will be available here for official download.'}
             </p>
           </Card>
         ) : (

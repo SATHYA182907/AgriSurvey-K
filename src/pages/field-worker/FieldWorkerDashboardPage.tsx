@@ -33,9 +33,11 @@ import { hasEvidenceFile } from '@/lib/evidence';
 import { PhotoMetadata, locationSourceLabel, readPhotoMetadata } from '@/lib/photo-metadata';
 
 import { useLanguage } from '@/context/LanguageContext';
+import { getFieldWorkerLabel } from '@/lib/dashboard-localizer';
 
 export const FieldWorkerDashboardPage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const fwl = (key: string) => getFieldWorkerLabel(key, language);
   const { pathname } = useLocation();
   // Sidebar links: /inspections = still open, /completed = done, /drone-upload = opens upload dialog
   const listView = pathname.endsWith('/completed') ? 'completed' : pathname.endsWith('/inspections') ? 'active' : 'all';
@@ -189,21 +191,21 @@ export const FieldWorkerDashboardPage: React.FC = () => {
         {/* Top Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card className="p-4">
-            <div className="text-[11px] font-semibold text-slate-500 uppercase">Assigned Missions</div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase">{fwl('assignedMissions')}</div>
             <div className="text-2xl font-bold text-slate-900 mt-1">{totalAssigned}</div>
           </Card>
           <Card className="p-4 border-amber-200 bg-amber-50/20">
-            <div className="text-[11px] font-semibold text-amber-700 uppercase">In Progress</div>
+            <div className="text-[11px] font-semibold text-amber-700 uppercase">{fwl('inProgress')}</div>
             <div className="text-2xl font-bold text-amber-800 mt-1">{inProgressCount}</div>
           </Card>
           <Card className="p-4 border-teal-200 bg-teal-50/20">
-            <div className="text-[11px] font-semibold text-teal-700 uppercase">Evidence Uploaded</div>
+            <div className="text-[11px] font-semibold text-teal-700 uppercase">{fwl('evidenceUploaded')}</div>
             <div className="text-2xl font-bold text-teal-800 mt-1">
               {inspections.filter((i) => i.inspection_status === 'EVIDENCE_UPLOADED').length}
             </div>
           </Card>
           <Card className="p-4 border-emerald-200 bg-emerald-50/20">
-            <div className="text-[11px] font-semibold text-emerald-700 uppercase">Submitted to Tahsildar</div>
+            <div className="text-[11px] font-semibold text-emerald-700 uppercase">{fwl('submittedToTahsildar')}</div>
             <div className="text-2xl font-bold text-emerald-800 mt-1">{completedCount}</div>
           </Card>
         </div>
@@ -214,10 +216,10 @@ export const FieldWorkerDashboardPage: React.FC = () => {
           <div className="lg:col-span-5 space-y-4">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               {listView === 'completed'
-                ? 'Completed Surveys'
+                ? fwl('completedSurveys')
                 : listView === 'active'
-                ? 'Open Field Inspections'
-                : 'Assigned Field Inspections'}{' '}
+                ? fwl('openInspections')
+                : fwl('assignedMissions')}{' '}
               ({visibleInspections.length})
             </h3>
 
