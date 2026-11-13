@@ -22,7 +22,7 @@ import {
   BarChart3,
   Sliders,
   Satellite,
-} from 'lucide-react';
+}from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
