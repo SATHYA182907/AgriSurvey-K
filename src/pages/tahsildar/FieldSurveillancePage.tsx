@@ -28,6 +28,12 @@ import {
   Undo2,
   CheckCircle2,
   CloudOff,
+  Activity,
+  Compass,
+  Search,
+  Sparkles,
+  Table,
+  Check,
 } from 'lucide-react';
 import { Polygon, CircleMarker, useMapEvents } from 'react-leaflet';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
@@ -57,6 +63,11 @@ import { HighResFieldMap } from '@/components/satellite/HighResFieldMap';
 import { SceneClipImage } from '@/components/satellite/SceneClipImage';
 import { useLanguage } from '@/context/LanguageContext';
 import {
+  classifySeason,
+  CROP_LABELS,
+  SeasonClassification,
+} from '@/lib/crop-phenology';
+import {
   getTimelineLabel,
   localizeGrowthSummary,
   localizeCropPatternName,
@@ -75,6 +86,19 @@ const rgb = (c: [number, number, number]) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
 const fmt = (v: number | null | undefined, d = 2) => (v === null || v === undefined ? '—' : v.toFixed(d));
 const shortDate = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString(undefined, { day: '2-digit', month: 'short', timeZone: 'UTC' });
+
+const formatCoord = (lat: number, lon: number) =>
+  `${Math.abs(lat).toFixed(5)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(5)}° ${lon >= 0 ? 'E' : 'W'}`;
+
+const MAHARASHTRA_JURISDICTIONS = [
+  { name: 'Haveli, Pune (Wagholi Sugarcane)', lat: 18.5793, lon: 73.9812, crop: 'Sugarcane', radiusM: 500 },
+  { name: 'Baramati, Pune (Supae Soybean)', lat: 18.1519, lon: 74.5772, crop: 'Soybean', radiusM: 500 },
+  { name: 'Shirur, Pune (Koregaon Bhima Onion)', lat: 18.8277, lon: 74.3792, crop: 'Onion', radiusM: 500 },
+  { name: 'Junnar, Pune (Otur Grapes & Gram)', lat: 19.2083, lon: 73.8769, crop: 'Grapes', radiusM: 500 },
+  { name: 'Indapur, Pune (Bhigwan Sugarcane)', lat: 18.1158, lon: 75.0342, crop: 'Sugarcane', radiusM: 500 },
+  { name: 'Daund, Pune (Patas Kharif)', lat: 18.4633, lon: 74.5804, crop: 'Maize', radiusM: 500 },
+  { name: 'Khed, Pune (Chakan Green Belts)', lat: 18.8475, lon: 73.9042, crop: 'Vegetables', radiusM: 500 },
+];
 
 const DrawClicks: React.FC<{ enabled: boolean; onAdd: (p: [number, number]) => void }> = ({ enabled, onAdd }) => {
   useMapEvents({
@@ -105,22 +129,60 @@ export const FieldSurveillancePage: React.FC = () => {
   // ---------------- Field setup ----------------
   const qLat = searchParams.get('lat');
   const qLon = searchParams.get('lon');
+  const qAuto = searchParams.get('auto') === 'true';
   const [mode, setMode] = useState<AreaMode>(qLat && qLon ? 'point' : plots.length ? 'plot' : 'point');
   const [name, setName] = useState('');
   const [plotId, setPlotId] = useState(plots[0]?.id ?? '');
-  const [lat, setLat] = useState(qLat ?? '18.4633');
-  const [lon, setLon] = useState(qLon ?? '74.5804');
+  const [lat, setLat] = useState(qLat ?? '18.5793');
+  const [lon, setLon] = useState(qLon ?? '73.9812');
+  const [rawCoordInput, setRawCoordInput] = useState<string>(
+    qLat && qLon ? `${qLat}, ${qLon}` : '18.5793, 73.9812'
+  );
   const [radiusM, setRadiusM] = useState(() => {
     const r = parseFloat(searchParams.get('r') ?? '');
-    return Number.isFinite(r) && r > 0 ? Math.min(1000, Math.round(r * 1000)) : 100;
+    return Number.isFinite(r) && r > 0 ? (r < 10 ? Math.round(r * 1000) : Math.round(r)) : 500;
   });
   const [drawPoints, setDrawPoints] = useState<[number, number][]>([]);
   const [startDate, setStartDate] = useState(() => isoDate(new Date(Date.now() - 180 * DAY_MS)));
   const [endDate, setEndDate] = useState('');
-  const [declaredCrop, setDeclaredCrop] = useState(() => (qLat && qLon ? '' : plots[0]?.crop_type ?? ''));
+  const [declaredCrop, setDeclaredCrop] = useState(() => (qLat && qLon ? 'Sugarcane' : plots[0]?.crop_type ?? 'Sugarcane'));
   const [formError, setFormError] = useState<string | null>(null);
 
   const selectedPlot = plots.find((p) => p.id === plotId);
+
+  const handleCoordInputChange = (val: string) => {
+    setRawCoordInput(val);
+    const parts = val.split(/[,\s]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const pLat = parseFloat(parts[0]);
+      const pLon = parseFloat(parts[1]);
+      if (!isNaN(pLat) && !isNaN(pLon) && Math.abs(pLat) <= 90 && Math.abs(pLon) <= 180) {
+        setLat(pLat.toFixed(5));
+        setLon(pLon.toFixed(5));
+        setFormError(null);
+      }
+    }
+  };
+
+  const handleLatChange = (val: string) => {
+    setLat(val);
+    setRawCoordInput(`${val}, ${lon}`);
+  };
+
+  const handleLonChange = (val: string) => {
+    setLon(val);
+    setRawCoordInput(`${lat}, ${val}`);
+  };
+
+  const handlePresetSelect = (preset: typeof MAHARASHTRA_JURISDICTIONS[0]) => {
+    setMode('point');
+    setLat(preset.lat.toString());
+    setLon(preset.lon.toString());
+    setRawCoordInput(`${preset.lat}, ${preset.lon}`);
+    setRadiusM(preset.radiusM);
+    if (preset.crop) setDeclaredCrop(preset.crop);
+    setName(`${preset.name} - 15-Day Growth Analysis`);
+  };
 
   const draftArea: SurveyArea | null = useMemo(() => {
     if (mode === 'plot') {
@@ -242,6 +304,52 @@ export const FieldSurveillancePage: React.FC = () => {
     () => (activeField && results.length ? analyseGrowth(results as PeriodResult[], activeField) : null),
     [results, activeField]
   );
+
+  // Derived ML crop phenology classification matching against double-logistic templates
+  const mlClassification: SeasonClassification | null = useMemo(() => {
+    if (!results.length) return null;
+    const observations = results
+      .filter((r): r is PeriodResult => !!r && !!r.clip && r.clip.stats.ndviMean !== null && !!r.scene)
+      .map((r) => ({
+        date: r.scene!.acquisition_datetime.slice(0, 10),
+        ndvi: r.clip!.stats.ndviMean!,
+      }));
+    if (observations.length < 2) return null;
+    try {
+      return classifySeason('kharif', 2026, observations);
+    } catch (err) {
+      console.warn('ML crop classifySeason error:', err);
+      return null;
+    }
+  }, [results]);
+
+  // Auto-run on mount if coordinates are provided via URL parameters
+  useEffect(() => {
+    if (qLat && qLon && !activeField) {
+      const latNum = parseFloat(qLat);
+      const lonNum = parseFloat(qLon);
+      if (!isNaN(latNum) && !isNaN(lonNum) && Math.abs(latNum) <= 90 && Math.abs(lonNum) <= 180) {
+        const rParam = searchParams.get('r');
+        const rVal = rParam ? parseFloat(rParam) : NaN;
+        const targetRadiusM = !isNaN(rVal) && rVal > 0 ? (rVal < 10 ? Math.round(rVal * 1000) : Math.round(rVal)) : 500;
+        const targetCrop = searchParams.get('crop') || (latNum === 18.5793 ? 'Sugarcane' : declaredCrop || 'Sugarcane');
+
+        const field: SurveillanceField = {
+          id: `fld-${Date.now()}`,
+          name: `Field at ${formatCoord(latNum, lonNum)} (${targetRadiusM}m)`,
+          area: { kind: 'circle', center: { lat: latNum, lon: lonNum }, radiusKm: targetRadiusM / 1000 },
+          startDate,
+          endDate,
+          intervalDays: 15,
+          declaredCrop: targetCrop,
+          createdAt: new Date().toISOString(),
+        };
+        saveField(field);
+        setSavedFields(listSavedFields());
+        startRun(field);
+      }
+    }
+  }, [qLat, qLon, qAuto]);
   const isRunning = !!progress && progress.stage !== 'done';
 
   const effectiveSelected =
@@ -358,19 +466,108 @@ export const FieldSurveillancePage: React.FC = () => {
             )}
 
             {mode === 'point' && (
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                <label className="block">
-                  <span className="font-semibold text-slate-600">Latitude</span>
-                  <input type="number" step="any" value={lat} onChange={(e) => setLat(e.target.value)} className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono" />
-                </label>
-                <label className="block">
-                  <span className="font-semibold text-slate-600">Longitude</span>
-                  <input type="number" step="any" value={lon} onChange={(e) => setLon(e.target.value)} className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono" />
-                </label>
-                <label className="block">
-                  <span className="font-semibold text-slate-600">Radius: {radiusM} m</span>
-                  <input type="range" min={20} max={1000} step={10} value={radiusM} onChange={(e) => setRadiusM(parseInt(e.target.value, 10))} className="mt-2.5 w-full accent-emerald-600" />
-                </label>
+              <div className="space-y-3.5 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                      <Compass className="w-3.5 h-3.5 text-emerald-600" />
+                      Target Geographic Coordinates
+                    </label>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full font-medium">
+                      Direct paste supported (lat, lon)
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={rawCoordInput}
+                    onChange={(e) => handleCoordInputChange(e.target.value)}
+                    placeholder="18.5793, 73.9812"
+                    className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <label className="block">
+                    <span className="font-semibold text-slate-600 text-[11px]">Latitude (°N)</span>
+                    <input
+                      type="number"
+                      step="any"
+                      value={lat}
+                      onChange={(e) => handleLatChange(e.target.value)}
+                      className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono bg-white text-slate-800"
+                      required
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="font-semibold text-slate-600 text-[11px]">Longitude (°E)</span>
+                    <input
+                      type="number"
+                      step="any"
+                      value={lon}
+                      onChange={(e) => handleLonChange(e.target.value)}
+                      className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono bg-white text-slate-800"
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                    <span>Surveillance Radius:</span>
+                    <span className="text-emerald-700 font-mono font-bold">{radiusM} meters ({(radiusM / 1000).toFixed(1)} km)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={50}
+                      max={2000}
+                      step={50}
+                      value={radiusM}
+                      onChange={(e) => setRadiusM(parseInt(e.target.value, 10))}
+                      className="flex-1 accent-emerald-600"
+                    />
+                    <div className="flex gap-1">
+                      {[100, 500, 1000, 1500].map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setRadiusM(r)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-colors ${
+                            radiusM === r ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          {r >= 1000 ? `${(r / 1000).toFixed(1)}k` : `${r}m`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Maharashtra Pilot Jurisdiction Presets */}
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                    Quick Jurisdiction Locations (Pune Division):
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MAHARASHTRA_JURISDICTIONS.map((preset) => {
+                      const isSel = Math.abs(parseFloat(lat) - preset.lat) < 0.001 && Math.abs(parseFloat(lon) - preset.lon) < 0.001;
+                      return (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => handlePresetSelect(preset)}
+                          className={`text-[10px] px-2.5 py-1 rounded-md border text-left transition-all cursor-pointer ${
+                            isSel
+                              ? 'bg-emerald-100 text-emerald-900 border-emerald-400 font-bold shadow-2xs'
+                              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          {preset.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -427,9 +624,22 @@ export const FieldSurveillancePage: React.FC = () => {
                   ? `${fieldAreaHectares(draftArea).toFixed(2)} ha · ${buildPeriods(startDate, endDate || isoDate(new Date()), 15).length} periods of 15 days`
                   : 'Define the field to continue'}
               </span>
-              <button type="submit" disabled={isRunning} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-md disabled:opacity-60">
-                {isRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                Save &amp; analyse field
+              <button
+                type="submit"
+                disabled={isRunning}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-md disabled:opacity-60 transition-all cursor-pointer"
+              >
+                {isRunning ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Analyzing 15-Day Growth…</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    <span>Analyze Coordinates &amp; Crop Growth</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -620,6 +830,114 @@ export const FieldSurveillancePage: React.FC = () => {
             </div>
 
             {/* -------------------------------------------------------------- */}
+            {/* Machine Learning Phenology & Crop Classification Card          */}
+            {/* -------------------------------------------------------------- */}
+            {mlClassification && mlClassification.scores.length > 0 && (
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white border border-emerald-800/40 shadow-md space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                      <Sprout className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        Machine Learning Crop Classification &amp; Phenology
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                          cropsurvey (GM-ML-V2)
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Double-logistic temporal growth curve matching (Zhang et al. 2003) across {mlClassification.observations.length} clear satellite dates
+                      </p>
+                    </div>
+                  </div>
+                  {mlClassification.verdict.crop && (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-slate-950 shadow-xs flex items-center gap-1.5 self-start sm:self-auto">
+                      <Check className="w-3.5 h-3.5" />
+                      Classified: {CROP_LABELS[mlClassification.verdict.crop] || mlClassification.verdict.crop}
+                    </span>
+                  )}
+                </div>
+
+                {/* Top 3 Crop Candidates */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {mlClassification.scores.slice(0, 3).map((score, idx) => (
+                    <div
+                      key={score.crop}
+                      className={`p-3.5 rounded-xl border transition-all ${
+                        idx === 0
+                          ? 'bg-emerald-900/40 border-emerald-500/50 text-white ring-1 ring-emerald-500/30'
+                          : 'bg-white/5 border-white/10 text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-semibold text-white">
+                          #{idx + 1} {CROP_LABELS[score.crop] || score.crop}
+                        </span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          {(score.fit * 100).toFixed(1)}% Fit
+                        </span>
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden my-1.5">
+                        <div
+                          className={`h-full rounded-full ${idx === 0 ? 'bg-emerald-400' : 'bg-slate-400'}`}
+                          style={{ width: `${Math.max(5, Math.min(100, score.fit * 100))}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
+                        <span>Shift: {score.shiftDays > 0 ? `+${score.shiftDays}` : score.shiftDays}d</span>
+                        <span>Confidence: {(score.fit * 100).toFixed(0)}%</span>
+                        <span>Rank: #{idx + 1}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Phenological Growth Dynamics */}
+                {mlClassification.phenology && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 text-xs">
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Start of Season (SOS)</span>
+                      <span className="font-bold text-white font-mono text-sm">
+                        Day {Math.round(mlClassification.phenology.sos)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">Initial emergence</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Peak Biomass Day</span>
+                      <span className="font-bold text-white font-mono text-sm">
+                        Day {Math.round(mlClassification.phenology.peakDay)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">Peak NDVI: {mlClassification.phenology.peakValue.toFixed(2)}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Crop Cycle Length</span>
+                      <span className="font-bold text-white font-mono text-sm">
+                        {Math.round(mlClassification.phenology.length)} Days
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">Integral: {mlClassification.phenology.integral.toFixed(1)}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Seasonal Amplitude</span>
+                      <span className="font-bold text-white font-mono text-sm">
+                        {mlClassification.phenology.amplitude.toFixed(2)} NDVI
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">Base: {mlClassification.phenology.baseValue.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-xs text-slate-300 flex items-start gap-2">
+                  <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold text-emerald-300">Agronomic Phenology Assessment: </span>
+                    <span>{mlClassification.verdict.message}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* -------------------------------------------------------------- */}
             {/* Growth chart                                                    */}
             {/* -------------------------------------------------------------- */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
@@ -641,6 +959,111 @@ export const FieldSurveillancePage: React.FC = () => {
                 </ResponsiveContainer>
               </div>
               <p className="text-[10px] text-slate-500 mt-1">Dashed brown line: NDVI 0.25, below which the field is treated as bare soil.</p>
+            </div>
+
+            {/* -------------------------------------------------------------- */}
+            {/* 15-Day Continuous Orbit Multi-Spectral Index Breakdown Table   */}
+            {/* -------------------------------------------------------------- */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <Table className="w-4 h-4 text-emerald-600" />
+                    15-Day Continuous Orbit Multi-Spectral Index Breakdown
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    7 radiometric indices derived from Sentinel-2 BOA reflectance (B02 Blue, B03 Green, B04 Red, B08 NIR, B05 RedEdge, B11 SWIR)
+                  </p>
+                </div>
+                <span className="text-xs text-slate-500 font-mono">
+                  {results.length} Periods · {loadedResults.length} Usable Passes
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600">
+                      <th className="py-2.5 px-3">Period &amp; Dates</th>
+                      <th className="py-2.5 px-3">Acquisition</th>
+                      <th className="py-2.5 px-3">Status &amp; Cloud</th>
+                      <th className="py-2.5 px-3 font-mono">NDVI</th>
+                      <th className="py-2.5 px-3 font-mono">EVI</th>
+                      <th className="py-2.5 px-3 font-mono">SAVI</th>
+                      <th className="py-2.5 px-3 font-mono">NDWI</th>
+                      <th className="py-2.5 px-3 font-mono">NDMI</th>
+                      <th className="py-2.5 px-3 font-mono">NDRE</th>
+                      <th className="py-2.5 px-3 font-mono">GCVI</th>
+                      <th className="py-2.5 px-3">Growth Stage</th>
+                      <th className="py-2.5 px-3 font-mono">&Delta;NDVI</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {results.map((r, i) => {
+                      const g = analysis.perPeriod[i];
+                      const isSelected = effectiveSelected === i;
+                      const stats = r?.clip?.stats;
+                      return (
+                        <tr
+                          key={i}
+                          onClick={() => setSelectedIndex(i)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected ? 'bg-emerald-50/70 font-semibold' : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          <td className="py-2.5 px-3 font-medium text-slate-900 whitespace-nowrap">
+                            P{i + 1} ({shortDate(r?.period?.start || '')} – {shortDate(r?.period?.end || '')})
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                            {r?.scene ? r.scene.acquisition_datetime.slice(0, 10) : '—'}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {r ? (
+                              <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                                r.status === 'ok'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : r.status === 'partly_cloudy'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {periodStatusLabel(r.status)}
+                                {stats ? ` (${stats.validCoveragePct.toFixed(0)}%)` : ''}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">Loading…</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono font-bold text-emerald-700">{fmt(stats?.ndviMean)}</td>
+                          <td className="py-2.5 px-3 font-mono text-slate-700">{fmt(stats?.eviMean)}</td>
+                          <td className="py-2.5 px-3 font-mono text-slate-700">{fmt(stats?.saviMean)}</td>
+                          <td className="py-2.5 px-3 font-mono text-slate-700">{fmt(stats?.ndwiMean)}</td>
+                          <td className="py-2.5 px-3 font-mono text-sky-700">{fmt(stats?.ndmiMean)}</td>
+                          <td className="py-2.5 px-3 font-mono text-slate-700">{fmt(stats?.ndreMean)}</td>
+                          <td className="py-2.5 px-3 font-mono text-slate-700">{fmt(stats?.gcviMean)}</td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {g && g.ndvi !== null ? (
+                              <span className={`text-[10px] px-2 py-0.5 rounded border ${STAGE_STYLE[g.stage]}`}>
+                                {g.stage}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-[10px]">Cloud Outage</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono text-[11px] whitespace-nowrap">
+                            {g?.deltaNdvi !== null && g?.deltaNdvi !== undefined ? (
+                              <span className={g.deltaNdvi > 0 ? 'text-emerald-600 font-bold' : g.deltaNdvi < 0 ? 'text-amber-600' : 'text-slate-500'}>
+                                {g.deltaNdvi >= 0 ? `+${g.deltaNdvi.toFixed(2)}` : g.deltaNdvi.toFixed(2)}
+                              </span>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* -------------------------------------------------------------- */}

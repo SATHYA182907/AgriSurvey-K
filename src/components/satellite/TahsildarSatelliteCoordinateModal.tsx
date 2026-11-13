@@ -573,7 +573,18 @@ const TahsildarSatelliteCoordinateModalContent: React.FC<TahsildarSatelliteCoord
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate(`/tahsildar/field-surveillance?lat=${searchedArea.lat}&lon=${searchedArea.lon}&r=${searchedArea.radiusKm}&auto=true`);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                    title="Open full 15-day crop growth timeline and phenology analysis for these coordinates"
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>{tl('open15dSurveillanceBtn')}</span>
+                  </button>
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span>{tl('liveStacStream')}</span>
